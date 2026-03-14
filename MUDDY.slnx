@@ -5,6 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/src/">
+    <Project Path="Shared/Shared.csproj" Id="6bb70c47-3af7-4442-888a-c5cbcde0dd4c" />
     <Project Path="src/Client/Client.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
