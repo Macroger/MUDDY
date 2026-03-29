@@ -2,7 +2,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace Shared.Networking
+namespace Shared.Protocol.Transport
 {
 
     /// <summary>
