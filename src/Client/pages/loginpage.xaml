@@ -1,0 +1,19 @@
+<Page
+    x:Class="MuddyClient.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="10" Padding="30">
+
+        <TextBlock Text="Login" FontSize="24"/>
+
+        <TextBox x:Name="txtUsername" Header="Username"/>
+        <PasswordBox x:Name="txtPassword" Header="Password"/>
+
+        <Button Content="Login" Click="Login_Click"/>
+        <Button Content="Create Account" Click="CreateAccount_Click"/>
+
+        <TextBlock x:Name="lblStatus"/>
+
+    </StackPanel>
+</Page>
