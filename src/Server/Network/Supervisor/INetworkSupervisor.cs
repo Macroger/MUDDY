@@ -1,5 +1,4 @@
 ﻿using Server.Network.Model;
-using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using Shared.Identity;
 
@@ -7,8 +6,7 @@ namespace Server.Network.Supervisor
 {
     public interface INetworkSupervisor
     {
-        bool CheckNetworkIsRunning();
-
+        public bool IsListeningForConnections { get; }
         bool StartAcceptingClients();
 
         bool StopAcceptingClients();
@@ -17,7 +15,7 @@ namespace Server.Network.Supervisor
 
         void ProcessNewConnection(AcceptedConnection acceptedConnection);
 
-        bool BroadcastMessage(MessageEnvelope msg);
+        void BroadcastMessage(MessageEnvelope msg);
 
         void SendToClient(ConnectionId client, MessageEnvelope msg);
     }

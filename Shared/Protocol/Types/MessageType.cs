@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.Protocol.Types
+﻿namespace Shared.Protocol.Types
 {
     public enum MessageType
     {

@@ -15,7 +15,7 @@ namespace Server.Network.Model
     /// new client connection is established. The class is sealed to prevent inheritance.</remarks>
     public sealed class AcceptedConnection
     {
-        public ConnectionId Id { get; }
+        public ConnectionId connId { get; }
         public Socket clientSocket { get; }
 
         public EndPoint? RemoteEndPoint { get; }
@@ -28,7 +28,7 @@ namespace Server.Network.Model
             ConnectionId id,
             Socket socket)
         {
-            Id = id;
+            connId = id;
             clientSocket = socket;
 
             RemoteEndPoint = socket.RemoteEndPoint;

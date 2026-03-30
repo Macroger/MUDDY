@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.Protocol.Types
+﻿namespace Shared.Protocol.Types
 {
     public enum ConnectionCloseReason
     {
@@ -17,18 +13,15 @@ namespace Shared.Protocol.Types
 
         // Timeouts
         IdleTimeout,
-        AuthenticationTimeout,
 
         // Protocol / behavior
         ProtocolViolation,
         MalformedMessage,
         MessageSizeExceeded,
-        UnsupportedProtocolVersion,
 
         // Security
         AuthenticationFailed,
         AuthorizationDenied,
-        RateLimitExceeded,
 
         // Errors
         TransportError,
