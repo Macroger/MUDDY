@@ -9,12 +9,11 @@ namespace Server.Infrastructure.Identity.MessageId
         private static int _counter = 0;
         public Shared.Identity.MessageId New()
         {
-            int next = System.Threading.Interlocked.Increment(ref _counter);
+            // Interlocked.Increment returns the incremented value, so we can directly cast it to UInt32.
+            UInt32 next = (UInt32)System.Threading.Interlocked.Increment(ref _counter);
 
-            // Add a prefix to help distinguish connections from other elements in the logs
-            string value = $"msg-{next}";
-
-            return new Shared.Identity.MessageId(value);
+            // Return a new MessageId struct with the generated value.
+            return new Shared.Identity.MessageId(next);
         }
     }
 }

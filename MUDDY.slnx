@@ -5,7 +5,10 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/src/">
-    <Project Path="Shared/Shared.csproj" Id="6bb70c47-3af7-4442-888a-c5cbcde0dd4c" />
+    <Project Path="Shared/Shared.csproj" Id="6bb70c47-3af7-4442-888a-c5cbcde0dd4c">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="Debug|x86" Project="x86" />
+    </Project>
     <Project Path="src/Client/Client.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -19,5 +22,8 @@
       <Deploy />
     </Project>
   </Folder>
-  <Folder Name="/tests/" />
+  <Project Path="Server.Tests/Server.Tests.csproj" Id="d347891e-c0d9-4408-bc11-cc3a07fa60ac">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Debug|x86" Project="x86" />
+  </Project>
 </Solution>

@@ -1,28 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.Identity
+﻿namespace Shared.Identity
 {
-    public readonly struct MessageId : IEquatable<MessageId>
+    /// <summary>
+    /// A wrapper to represent the unique identifier for a message type in the protocol.
+    /// This helps prevent accidentally using a message ID in place of another uint value, and vice versa.
+    /// </summary>
+    public readonly struct MessageId
     {
-        private readonly string _value;
+        public uint Value { get; }
 
-        public MessageId(string value)
+        public MessageId(uint value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("MessageId cannot be empty.", nameof(value));
-
-            _value = value;
-        }
-
-        public override string ToString() => _value;
-
-        public bool Equals(MessageId other) => _value == other._value;
-        public override bool Equals(object? obj) => obj is MessageId other && Equals(other);
-        public override int GetHashCode() => _value.GetHashCode();
-
-        public static bool operator ==(MessageId left, MessageId right) => left.Equals(right);
-        public static bool operator !=(MessageId left, MessageId right) => !left.Equals(right);
+            Value = value;
+        }       
     }
 }
