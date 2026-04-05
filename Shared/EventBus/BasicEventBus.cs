@@ -1,4 +1,5 @@
-﻿using Shared.Protocol.Types;
+﻿using Shared.EventBus.SubscriptionToken;
+using Shared.Protocol.Types;
 
 namespace Shared.EventBus
 {
@@ -27,9 +28,9 @@ namespace Shared.EventBus
             }
         }
 
-        public void Subscribe(EventMessageType messageType, Action<EventEnvelope> handler)
+        public ISubscriptionToken Subscribe(EventMessageType messageType, Action<EventEnvelope> handler)
         {
-            // Make sure this subscriber doesn't already exist in the list for this message type
+            //Check if there is a bucket for this type of eventMessage in the subscribers dict.
             if (!_subscribers.TryGetValue(messageType, out var handlers))
             {
                 handlers = new List<Action<EventEnvelope>>();
@@ -37,14 +38,16 @@ namespace Shared.EventBus
             }
 
             handlers.Add(handler);
+
+            // Generate a new subscription token and return it
+            return new BasicSubscriptionToken(() => handlers.Remove(handler));
         }
 
-        public void SubscribeAll(Action<EventEnvelope> handler)
+        public ISubscriptionToken SubscribeAll(Action<EventEnvelope> handler)
         {
             _globalSubscribers.Add(handler);
+
+            return new BasicSubscriptionToken( () => _globalSubscribers.Remove(handler));
         }
     }
-
-
-
 }
