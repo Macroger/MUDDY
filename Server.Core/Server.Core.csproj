@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Network\Protocol\" />
+    <Folder Include="Command Pipeline\" />
   </ItemGroup>
 
   <ItemGroup>

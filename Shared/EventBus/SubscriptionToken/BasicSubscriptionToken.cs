@@ -6,28 +6,25 @@ namespace Shared.EventBus.SubscriptionToken
 {
     internal sealed class BasicSubscriptionToken : ISubscriptionToken
     {
-        private readonly BasicEventBus _eventBus;
-        private readonly EventMessageType _eventType;
-        private readonly Action<object> _handler;
+        private readonly Action _unsubscribe;
         private bool _isDisposed;
 
 
-        public BasicSubscriptionToken(
-            BasicEventBus eventBus,
-            EventMessageType eventType,
-            Action<object> handler)
+        public BasicSubscriptionToken(Action unsubscribe)
         {
-            _eventBus = eventBus;
-            _eventType = eventType;
-            _handler = handler;
+            // Assign the unsubscribe action; if the action is invalid throw an exception
+            _unsubscribe = unsubscribe ?? throw new ArgumentNullException(nameof(unsubscribe)); 
         }
 
         public void Dispose()
         {
-
+            // Check if already disposed
             if (_isDisposed) return;
 
-            _eventBus.Unsubscribe(_eventType, _handler);
+            // Perform the unsubscribe action
+            _unsubscribe();
+
+            // Register this token as disposed.
             _isDisposed = true;
 
         }
