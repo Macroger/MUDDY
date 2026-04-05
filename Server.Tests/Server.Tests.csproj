@@ -5,16 +5,19 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Platforms>AnyCPU;x64;x86</Platforms>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.0.2" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+	<PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
+	<PackageReference Include="MSTest.TestAdapter" Version="4.0.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Server.Core\Server.Core.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
-    <ProjectReference Include="..\src\Server\Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,6 +11,18 @@
     /// Muddy protocol packets are serialized and deserialized.</remarks>
     public struct MuddyPacketHeader
     {
+        public const int Size = 12;
+
+        public const int BodyLengthOffset = 0;
+        public const int MsgIdOffset = 4;
+        public const int MsgTypeOffset = 8;
+        public const int BitFlagsOffset = 10;
+
+        public const int BodyLengthSize = 4;
+        public const int MsgIdSize = 4;
+        public const int MsgTypeSize = 2;
+        public const int BitFlagsSize = 2;
+
         public UInt32 BodyLength;
         public UInt32 MsgId;
         public UInt16 MsgType;
