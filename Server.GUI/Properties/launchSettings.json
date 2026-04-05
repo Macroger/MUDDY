@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Server.GUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Server.GUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

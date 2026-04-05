@@ -4,19 +4,29 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/src/">
-    <Project Path="src/Client/Client.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Deploy />
-    </Project>
-    <Project Path="src/Server/Server.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Deploy />
-    </Project>
-  </Folder>
-  <Folder Name="/tests/" />
+  <Project Path="Client.Core/Client.Core.csproj" Id="940905c0-356a-40ad-9bf7-8d6bf2b44646" />
+  <Project Path="Client.GUI/Client.GUI.csproj" Id="27639277-29e4-45f6-885a-f1296fadfcbe">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
+  <Project Path="Server.CLI/Server.CLI.csproj" Id="b3b80c23-390d-4658-abea-9017d0cc4a5b" />
+  <Project Path="Server.Core/Server.Core.csproj" Id="111424d6-f503-4edf-b4cd-b7cd393e31a9">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Server.GUI/Server.GUI.csproj" Id="f8b49397-82d6-4566-a8a2-02fcf8b03818">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
+  <Project Path="Server.Tests/Server.Tests.csproj" Id="d347891e-c0d9-4408-bc11-cc3a07fa60ac">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Debug|x86" Project="x86" />
+  </Project>
+  <Project Path="Shared/Shared.csproj" Id="6bb70c47-3af7-4442-888a-c5cbcde0dd4c">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Debug|x86" Project="x86" />
+  </Project>
 </Solution>
