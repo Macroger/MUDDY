@@ -2,7 +2,7 @@
 
 namespace Server.Core.CommandPipeline.Types
 {
-    public class CommandJson
+    public class JsonCommand
     {
         /// <summary>
         /// Gets or sets the verb associated with the command.

@@ -1,6 +1,6 @@
 ﻿namespace Server.Core.CommandPipeline
 {
-    internal interface ICommandRouter
+    public interface ICommandRouter
     {
     }
 }

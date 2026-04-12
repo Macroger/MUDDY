@@ -17,7 +17,7 @@ namespace Server.Core.CommandPipeline.Parser
                 string json = Encoding.UTF8.GetString(envelope.Payload);
 
                 // Deserialize JSON
-                var cmdJson = JsonSerializer.Deserialize<CommandJson>(json);
+                var cmdJson = JsonSerializer.Deserialize<JsonCommand>(json);
 
                 // Validate deserialization
                 if (cmdJson == null) return CreateErrorResult("Payload is not valid JSON", CommandErrorType.INVALID_JSON);
