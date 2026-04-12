@@ -7,13 +7,27 @@ using System.Collections.Concurrent;
 
 namespace Server.Core.Network.Worker
 {
+    /// <summary>
+    /// Manages a single TCP connection: send and receive loops, packet parsing and event dispatch.
+    ///
+    /// The worker maintains a send queue and a byte accumulator for incoming data. It runs background
+    /// tasks to receive bytes from the socket, parse complete packets using the provided packet serializer/factory
+    /// and to send outgoing messages. Events are raised for received messages, connection closure and errors.
+    /// </summary>
     public class TcpConnectionWorker : IConnectionWorker
     {
         #region Properties and fields
 
         #region Collection fields for managing send queue and receive buffer
 
-        private BlockingCollection<Shared.Protocol.Types.ProtocolEnvelope> sendQue = new BlockingCollection<Shared.Protocol.Types.ProtocolEnvelope>(new ConcurrentQueue<Shared.Protocol.Types.ProtocolEnvelope>());
+        /// <summary>
+        /// Queue of outbound protocol envelopes to be sent to the remote endpoint.
+        /// </summary>
+        private BlockingCollection<TransportEnvelope> sendQue = new BlockingCollection<TransportEnvelope>(new ConcurrentQueue<TransportEnvelope>());
+
+        /// <summary>
+        /// Accumulator buffer used for assembling bytes read from the socket until complete packets are available.
+        /// </summary>
         private List<byte> _byteAccumulatorBuffer = new List<byte>();
 
         #endregion
@@ -21,8 +35,9 @@ namespace Server.Core.Network.Worker
         #region Core dependencies for managing the connection, packet processing, and serialization
 
         private AcceptedConnection _acceptedConnection;
-        private IPacketFactory _packetFactory;
         private MuddyProtocolLimits _packetLimits;
+
+        private IPacketFactory _packetFactory;        
         private IPacketSerializer _packetSerializer;
 
         #endregion
@@ -44,8 +59,10 @@ namespace Server.Core.Network.Worker
 
         #region Public properties
 
+        /// <summary>The connection identifier associated with this worker.</summary>
         public ConnectionId ConnId { get; init; }
 
+        /// <summary>Indicates whether the worker is currently running.</summary>
         public bool IsRunning
         {
             get => _isRunning;
@@ -56,8 +73,13 @@ namespace Server.Core.Network.Worker
 
         #region Events for message reception, connection closure, and error reporting
 
-        public event EventHandler<Shared.Protocol.Types.ProtocolEnvelope>? MessageReceived;
+        /// <summary>Raised when a complete protocol message has been received and parsed.</summary>
+        public event EventHandler<TransportEnvelope>? MessageReceived;
+
+        /// <summary>Raised when the connection has been closed or the worker has shut down.</summary>
         public event EventHandler? ConnectionClosed;
+
+        /// <summary>Raised when an error occurs within the worker.</summary>
         public event EventHandler<Exception>? ErrorOccurred;
 
         #endregion
@@ -67,6 +89,14 @@ namespace Server.Core.Network.Worker
         #region Methods
 
         #region Constructor to initialize the connection worker with necessary dependencies and configuration
+        /// <summary>
+        /// Constructs a new <see cref="TcpConnectionWorker"/>.
+        /// </summary>
+        /// <param name="acceptedConnection">Information about the accepted connection including the socket and connection id.</param>
+        /// <param name="cts">Cancellation token used to signal shutdown for this worker.</param>
+        /// <param name="packetFactory">Factory used to create wire packets from protocol envelopes for sending.</param>
+        /// <param name="packetSerializer">Serializer/deserializer for packet headers and bodies.</param>
+        /// <param name="limits">Protocol limits (header size, tail size, max packet bytes) used for validation.</param>
         public TcpConnectionWorker(
             AcceptedConnection acceptedConnection,
             CancellationToken cts,
@@ -85,6 +115,10 @@ namespace Server.Core.Network.Worker
 
         #region Lifecycle management methods for starting and stopping the connection worker
 
+        /// <summary>
+        /// Starts the worker's send and receive background loops.
+        /// </summary>
+        /// <remarks>If the worker is already running this method is a no-op. Background tasks for sending and receiving are started using the provided cancellation token.</remarks>
         public void Start()
         {
             // If the connection is already running, there's no need to start it again
@@ -96,6 +130,10 @@ namespace Server.Core.Network.Worker
             _receiveTask = ReceiveLoopAsync(_ct);
         }
 
+        /// <summary>
+        /// Requests the worker to stop and initiates shutdown.
+        /// </summary>
+        /// <remarks>If the worker is not running this method is a no-op. Otherwise it triggers the shutdown sequence which will stop sending and close the socket.</remarks>
         public void Stop()
         {
             // If the connection is not running, there's nothing to stop
@@ -104,6 +142,11 @@ namespace Server.Core.Network.Worker
             InitiateShutdown();
         }
 
+        /// <summary>
+        /// Performs the one-time shutdown sequence for the worker.
+        /// </summary>
+        /// <param name="cause">Optional exception that triggered the shutdown.</param>
+        /// <remarks>Ensures shutdown runs exactly once, completes the send queue, closes the socket and raises the connection closed event.</remarks>
         private void InitiateShutdown(Exception? cause = null)
         {
             // Ensure shutdown logic runs exactly once
@@ -128,7 +171,12 @@ namespace Server.Core.Network.Worker
 
         #region Send and Receive messages
 
-        public bool SendMessage(Shared.Protocol.Types.ProtocolEnvelope msg)
+        /// <summary>
+        /// Enqueues a protocol envelope for sending to the remote endpoint.
+        /// </summary>
+        /// <param name="msg">The protocol envelope to send.</param>
+        /// <returns>true if the message was accepted for sending; false if the worker is not running or the queue cannot accept the message.</returns>
+        public bool SendMessage(TransportEnvelope msg)
         {
             if (!IsRunning)
                 return false;
@@ -144,12 +192,20 @@ namespace Server.Core.Network.Worker
             }
         }
 
+        /// <summary>
+        /// Background loop that receives bytes from the socket, accumulates them and parses complete packets.
+        /// </summary>
+        /// <param name="ct">Cancellation token that signals the loop to stop.</param>
+        /// <returns>A task representing the lifetime of the receive loop.</returns>
+        /// <remarks>Reads from the socket into a temporary buffer, appends bytes to the accumulator and attempts to parse complete packets. Partial packets are left in the accumulator until more bytes arrive. Oversized packets are rejected by throwing an InvalidDataException.</remarks>
         private Task ReceiveLoopAsync(CancellationToken ct)
         {
             return Task.Run(() =>
             {
                 try
                 {
+                    // A buffer used for accumulating incoming bytes from the socket.
+                    // We will read from the socket into a temporary buffer and then append those bytes to this accumulator buffer.
                     byte[] tempBuffer = new byte[4096];
 
                     while (!ct.IsCancellationRequested)
@@ -162,33 +218,44 @@ namespace Server.Core.Network.Worker
 
                         // Append received bytes to the accumulator buffer
                         _byteAccumulatorBuffer.AddRange(tempBuffer.AsSpan(0, bytesReceived));
-                                              
-                        while(_byteAccumulatorBuffer.Count >= _packetLimits.headerSize )
+
+                        // Process complete packets from the accumulator buffer
+                        // Keep looping as long as we have enough bytes to read a full header (which is the minimum requirement to determine packet size)
+                        while (_byteAccumulatorBuffer.Count >= _packetLimits.headerSize )
                         {
+                            // Copy the header bytes to a separate array for deserialization
                             byte[] headerBytes = _byteAccumulatorBuffer.GetRange(0, _packetLimits.headerSize).ToArray();
 
+                            // Deserialize the header
                             MuddyPacketHeader pktHeader = _packetSerializer.DeserializeHeader(headerBytes);
+
+                            // Determine the total packet size based on the header information (header + body + tail)
                             int totalPacketSize = _packetLimits.headerSize + (int)pktHeader.BodyLength + _packetLimits.tailSize;
 
-                            if( totalPacketSize > _packetLimits.MaxJsonPacketBytes) throw new InvalidDataException($"Packet too large for a JSON packet. Size: {totalPacketSize}");
+                            // Validate the packet size against the maximum allowed size for JSON packets
+                            if ( totalPacketSize > _packetLimits.MaxJsonPacketBytes) throw new InvalidDataException($"Packet too large for a JSON packet. Size: {totalPacketSize}");
 
+                            // Validate that we have enough bytes in the accumulator buffer to read the full packet, if not, break.
                             if (_byteAccumulatorBuffer.Count < totalPacketSize) break;
 
                             // We have a complete packet, so we can deserialize it
                             byte[] fullPacketBytes = _byteAccumulatorBuffer.GetRange(0, totalPacketSize).ToArray();
 
-                            // Remove the processed packet bytes from the accumulator buffer
+                            // Remove the processed packet bytes from the accumulator buffer - prevents reprocessing the same bytes in the next loop iteration
                             _byteAccumulatorBuffer.RemoveRange(0, totalPacketSize);
 
                             MuddyPacket pkt = _packetSerializer.Deserialize(fullPacketBytes);
 
-                            var msg = new Shared.Protocol.Types.ProtocolEnvelope(
-                                new MessageId(pktHeader.MsgId),
-                                (ProtocolMessageType)pktHeader.MsgType,
-                                (MessageFlags)pkt.Header.BitFlags,
-                                pkt.Body
+                            // Create a TransportEnvelope from the deserialized packet
+                            var msg = new Shared.Protocol.Transport.TransportEnvelope(
+                                messageId: new MessageId(pktHeader.MsgId),                                
+                                messageType: (TransportMessageType)pktHeader.MsgType,
+                                flags: (MessageFlags)pkt.Header.BitFlags,
+                                payload: pkt.Body,
+                                connectionId: ConnId
                             );
 
+                            // Pass the received message to subscribers via the MessageReceived event
                             OnMessageReceived(msg);
                         }
                     }
@@ -204,14 +271,25 @@ namespace Server.Core.Network.Worker
             }, ct);
         }
 
+        /// <summary>
+        /// Background loop that sends queued protocol envelopes over the socket.
+        /// </summary>
+        /// <param name="ct">Cancellation token used to stop the send loop.</param>
+        /// <returns>A task representing the lifetime of the send loop.</returns>
+        /// <remarks>Dequeues envelopes from the send queue, serializes them to wire packets and sends the resulting bytes. Exceptions are reported via the ErrorOccurred event and will trigger shutdown.</remarks>
         private Task SendLoopAsync(CancellationToken ct)
         {
-            // The send loop runs in a background task, consuming messages from the sendQue and sending them over the socket
+            // The send loop runs in a background task. It processes messages from the sendQue and sends them over the socket.
+            // It will continue running until cancellation is requested or an exception occurs. Any exceptions are reported via the ErrorOccurred event.
             return Task.Run(() => {
                 try
                 {
+                    // GetConsumingEnumerable will block until items are available in the queue.
+                    // This allows the send loop to efficiently wait for messages to send without busy-waiting.
                     var loopObject = sendQue.GetConsumingEnumerable();
-                    foreach (Shared.Protocol.Types.ProtocolEnvelope msg in loopObject)
+
+                    // Process each message in the queue and send it over the socket
+                    foreach (TransportEnvelope msg in loopObject)
                     {
                         // Optional secondary cancellation guard - to ensure we don't attempt to send messages after cancellation has been requested
                         if (ct.IsCancellationRequested) break;
@@ -238,16 +316,19 @@ namespace Server.Core.Network.Worker
 
         #region Event invokers for raising events to subscribers
 
-        private void OnMessageReceived(Shared.Protocol.Types.ProtocolEnvelope msg)
+        /// <summary>Invokes the MessageReceived event with the provided protocol envelope.</summary>
+        private void OnMessageReceived(TransportEnvelope msg)
         {
             MessageReceived?.Invoke(this, msg);
         }
 
+        /// <summary>Invokes the ConnectionClosed event to signal subscribers that the connection has closed.</summary>
         private void OnConnectionClosed()
         {
             ConnectionClosed?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>Invokes the ErrorOccurred event to report an error to subscribers.</summary>
         private void OnErrorOccurred(Exception ex)
         {
             ErrorOccurred?.Invoke(this, ex);

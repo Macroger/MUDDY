@@ -1,7 +1,5 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Network.Model;
 using Server.Core.Network.Supervisor;
@@ -14,8 +12,9 @@ namespace Server.Core.Network.Listener
         private readonly INetworkSupervisor _supervisor;
         private readonly IConnectionIdGenerator _connectionIdGenerator;
         private IListenerErrorHandler _listenerErrorHandler;
-        private IPEndPoint _endPoint;
+        private IConnectionAcceptedHandler _connectionAcceptedHandler;
 
+        private IPEndPoint _endPoint;
         private CancellationTokenSource? _cts;
         private readonly TcpListener _listener;
         private Task? _acceptClientsTask;
@@ -27,12 +26,14 @@ namespace Server.Core.Network.Listener
             IPEndPoint localEndPoint, 
             INetworkSupervisor supervisor, 
             IConnectionIdGenerator connIdGenerator,
-            IListenerErrorHandler handler
+            IListenerErrorHandler listenerErrorHandler,
+            IConnectionAcceptedHandler connectionAcceptedHandler
             )
         {
             _supervisor = supervisor;
             _connectionIdGenerator = connIdGenerator;
-            _listenerErrorHandler = handler;
+            _listenerErrorHandler = listenerErrorHandler;
+            _connectionAcceptedHandler = connectionAcceptedHandler;
             _endPoint = localEndPoint;
             _listener = new TcpListener(_endPoint);
             ConnectionEndPoint = _endPoint;
@@ -109,7 +110,7 @@ namespace Server.Core.Network.Listener
 
                     try
                     {
-                        _supervisor.ProcessNewConnection(acceptedConnection);
+                        _connectionAcceptedHandler.OnConnectionAccepted(acceptedConnection);
                     }
                     catch (Exception ex)
                     {

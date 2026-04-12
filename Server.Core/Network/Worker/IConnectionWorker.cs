@@ -1,5 +1,5 @@
 ﻿using Shared.Identity;
-using Shared.Protocol.Types;
+using Shared.Protocol.Transport;
 
 namespace Server.Core.Network.Worker
 {
@@ -9,9 +9,9 @@ namespace Server.Core.Network.Worker
         public ConnectionId ConnId { get; }
         void Start();
         void Stop();
-        bool SendMessage(Shared.Protocol.Types.ProtocolEnvelope msg);
+        bool SendMessage(TransportEnvelope msg);
 
-        event EventHandler<Shared.Protocol.Types.ProtocolEnvelope> MessageReceived;
+        event EventHandler<TransportEnvelope> MessageReceived;
         event EventHandler ConnectionClosed;
         event EventHandler<Exception> ErrorOccurred;
     }

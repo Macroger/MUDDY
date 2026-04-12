@@ -28,9 +28,9 @@ public class PacketSerializerTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };        
         
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(123),
-            (ProtocolMessageType)1,
+            (TransportMessageType)1,
             (MessageFlags)0,
             body
             );
@@ -59,9 +59,9 @@ public class PacketSerializerTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(123),
-            (ProtocolMessageType)1,
+            (TransportMessageType)1,
             (MessageFlags)0,
             body
             );
@@ -87,9 +87,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = Array.Empty<byte>();
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(1),
-            ProtocolMessageType.Ping,
+            TransportMessageType.Ping,
             MessageFlags.None,
             body);
 
@@ -117,7 +117,7 @@ public class PacketSerializerTests
         {
             BodyLength = 10, // incorrect on purpose
             MsgId = 1,
-            MsgType = (ushort)ProtocolMessageType.Chat,
+            MsgType = (ushort)TransportMessageType.Chat,
             BitFlags = 0
         };
 
@@ -142,9 +142,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02 };
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(1),
-            ProtocolMessageType.Chat,
+            TransportMessageType.Chat,
             MessageFlags.None,
             body);
 
@@ -163,9 +163,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(1),
-            ProtocolMessageType.Chat,
+            TransportMessageType.Chat,
             MessageFlags.None,
             body);
 
@@ -185,9 +185,9 @@ public class PacketSerializerTests
         // Arrange
         byte[] body = new byte[_limits.MaxJsonBodyBytes + 1];
 
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(1),
-            ProtocolMessageType.Chat,
+            TransportMessageType.Chat,
             MessageFlags.None,
             body);
 
@@ -203,9 +203,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02 };
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(42),
-            ProtocolMessageType.Chat,
+            TransportMessageType.Chat,
             MessageFlags.None,
             body);
 

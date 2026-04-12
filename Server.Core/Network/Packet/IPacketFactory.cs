@@ -1,5 +1,4 @@
 ﻿using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
 
 namespace Server.Core.Network.Packet
 {
@@ -9,6 +8,6 @@ namespace Server.Core.Network.Packet
     /// </summary>
     public interface IPacketFactory
     {
-        MuddyPacket CreateMuddyPacket(Shared.Protocol.Types.ProtocolEnvelope message);
+        MuddyPacket CreateMuddyPacket(TransportEnvelope message);
     }
 }
