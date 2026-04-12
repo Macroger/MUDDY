@@ -1,6 +1,6 @@
-﻿namespace Shared.Protocol.Types
+﻿namespace Shared.Protocol.Transport
 {
-    public enum ProtocolMessageType
+    public enum TransportMessageType
     {
         Command = 0,   // Client → server request
         Response,      // Server → client reply to a command

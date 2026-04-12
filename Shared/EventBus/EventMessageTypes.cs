@@ -4,6 +4,7 @@ namespace Shared.EventBus
 
     public enum EventMessageType
     {
+        Authentication, // Login/logout, session management
         Log,            // Structured logging events
         System,         // Server/process lifecycle & global state
         Network,        // Server-side networking and connections

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Server.Core.Infrastructure.Lifecycle
+﻿namespace Server.Core.Infrastructure.Lifecycle
 {
     /// <summary>
     /// An interface used to mark items as shutdown aware, meaning they have a Shutdown method that can

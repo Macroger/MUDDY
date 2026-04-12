@@ -2,6 +2,7 @@
 using Shared.Protocol.Types;
 using Shared.Identity;
 using Shared.EventBus;
+using Shared.Protocol.Transport;
 
 namespace Server.Core.Network.Supervisor
 {
@@ -16,8 +17,8 @@ namespace Server.Core.Network.Supervisor
 
         void ProcessNewConnection(AcceptedConnection acceptedConnection);
 
-        void BroadcastMessage(Shared.Protocol.Types.ProtocolEnvelope msg);
+        void BroadcastMessage(TransportEnvelope msg);
 
-        void SendToClient(ConnectionId client, Shared.Protocol.Types.ProtocolEnvelope msg);
+        void SendToClient(ConnectionId client, TransportEnvelope msg);
     }
 }

@@ -4,6 +4,7 @@ using Server.Core.Network.Listener;
 using Server.Core.Network.Model;
 using Server.Core.Network.Supervisor;
 using Shared.Identity;
+using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using System;
 using System.Net;
@@ -28,8 +29,8 @@ namespace Server.Core.Network.Listener.Tests
             {
                 LastConnection = connection;
             }
-            public void BroadcastMessage(Shared.Protocol.Types.ProtocolEnvelope msg) { }
-            public void SendToClient(ConnectionId client, Shared.Protocol.Types.ProtocolEnvelope msg) { }
+            public void BroadcastMessage(TransportEnvelope msg) { }
+            public void SendToClient(ConnectionId client, TransportEnvelope msg) { }
         }
 
         private class DummyConnectionIdGenerator : IConnectionIdGenerator
