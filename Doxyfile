@@ -1,0 +1,51 @@
+# Doxyfile generated for Project IV
+# Basic settings tuned for C# projects
+
+PROJECT_NAME           = "Project IV"
+OUTPUT_DIRECTORY       = docs/doxygen
+CREATE_SUBDIRS         = NO
+
+# Input
+INPUT                  = Server Shared
+RECURSIVE              = YES
+FILE_PATTERNS          = *.cs
+EXTENSION_MAPPING      = cs=C#
+
+# C# specific
+OPTIMIZE_OUTPUT_FOR_CSHARP = YES
+MARKDOWN_SUPPORT       = YES
+
+# Extraction
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_METHODS  = NO
+
+# Build outputs
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+GENERATE_LATEX         = NO
+
+# Preprocessing
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+
+# Diagrams
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 0
+DOT_IMAGE_FORMAT       = svg
+
+# Warnings
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED  = YES
+WARN_IF_DOC_ERROR      = YES
+
+# Misc
+QUIET                  = NO
+GENERATE_TREEVIEW      = YES
+
+# Main page (optional)
+# Use README.md at repo root as main page if present
+USE_MDFILE_AS_MAINPAGE = README.md
