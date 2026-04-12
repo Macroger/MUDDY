@@ -1,4 +1,7 @@
-﻿using Server.Core.Infrastructure.Identity.MessageId;
+﻿using Server.Core.CommandPipeline.ContextBuilder;
+using Server.Core.CommandPipeline.Parser;
+using Server.Core.CommandPipeline.Types;
+using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Supervisor;
 using Shared.EventBus;
@@ -157,9 +160,9 @@ namespace Server.Core.CommandPipeline
                     TransportEnvelope response = CreateErrorResponse(
                         errorType: TransportMessageType.Error, 
                         message: result.ErrorMessage ?? "Unknown parsing error",
-                        connId: msg.connId);
+                        connId: msg.ConnId);
 
-                    _networkSupervisor.SendToClient(msg.connId, response);
+                    _networkSupervisor.SendToClient(msg.ConnId, response);
 
                     // As soon as any policy fails, we stop processing this message.
                     return;
@@ -180,10 +183,18 @@ namespace Server.Core.CommandPipeline
             }
 
             // Build context (player state, inventory, effects, etc.)
-            var context = await _contextBuilder.BuildAsync(parseResult.Command);
-            if (context == null)
+            CommandContext context = await _contextBuilder.BuildContextAsync(msg.ConnId, parseResult.Command!);
+            if (context.Success == false)
             {
-                _networkSupervisor.SendToClient(msg.ConnId, PlayerNotFoundResponse);
+                TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                    messageId: _messageIdGenerator.New(),
+                    messageCorrelationId: msg.MessageId,
+                    messageType: TransportMessageType.Error,
+                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown context building error"),
+                    connectionId: msg.ConnId
+                );
+                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
                 return;
             }
 

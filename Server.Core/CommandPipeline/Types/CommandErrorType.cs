@@ -1,4 +1,4 @@
-﻿namespace Server.Core.CommandPipeline
+﻿namespace Server.Core.CommandPipeline.Types
 {
     public enum CommandErrorType
     {
