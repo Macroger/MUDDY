@@ -1,11 +1,10 @@
 ﻿using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
 
 namespace Server.Core.Network.Packet
 {
     public class MuddyPacketFactory : IPacketFactory
     {
-        public MuddyPacket CreateMuddyPacket(Shared.Protocol.Types.ProtocolEnvelope message)
+        public MuddyPacket CreateMuddyPacket(TransportEnvelope message)
         {
             if(message == null) throw new ArgumentNullException("message cannot be null.");
 

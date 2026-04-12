@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Server.Core.Infrastructure.Lifecycle
+﻿namespace Server.Core.Infrastructure.Lifecycle
 {
     /// <summary>
     /// An interface to mark items as startup aware, meaning they have an OnStartup method

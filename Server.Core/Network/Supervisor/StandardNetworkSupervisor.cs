@@ -1,55 +1,93 @@
-﻿using Server.Core.Infrastructure.Identity.ConnectionId;
-using Server.Core.Network.Packet;
+﻿using Server.Core.CommandPipeline;
+using Server.Core.Infrastructure.Identity.ConnectionId;
+using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Listener;
 using Server.Core.Network.Model;
-using Shared.Protocol.Transport;
+using Server.Core.Network.Packet;
 using Server.Core.Network.Worker;
+using Shared.EventBus;
 using Shared.Identity;
+using Shared.Protocol.System;
+using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using System.Collections.Concurrent;
 using System.Net;
-using Shared.EventBus;
-using Shared.Types;
 
 namespace Server.Core.Network.Supervisor
 {
-    public class StandardNetworkSupervisor : INetworkSupervisor, IListenerErrorHandler
+    public class StandardNetworkSupervisor : 
+        INetworkSupervisor,
+        IListenerErrorHandler,
+        IConnectionAcceptedHandler,
+        IStartable,
+        IStoppable
     {
-        #region Dependency Injections
+        #region Dependencies
+        private IConnectionIdGenerator _connectionIdGenerator;        
+        private IEventBus _eventBus;
+        private CommandPipelineOrchestrator _commandPipeline;
         private TcpConnectionListener _tcpConnectionListener;
-        private IConnectionIdGenerator _connectionIdGenerator;
         private MuddyPacketFactory _packetFactory;
         private MuddyProtocolLimits _packetLimits;
         private MuddyPacketSerializer _packetSerializer;
-        private IEventBus _eventBus;
         private CancellationTokenSource _serverCts;
         private IPEndPoint _listenerEndPoint;
+        private readonly IServerLifecycle _lifecycle;
         #endregion
+
+        // Add event for new connections
+        public event EventHandler<AcceptedConnection>? NewConnectionAccepted;
 
         private ConcurrentDictionary<ConnectionId, ConnectionContext> _activeConnections = new ConcurrentDictionary<ConnectionId, ConnectionContext>();
 
-        private const int serverPort = 33300;
-
         public bool IsListeningForConnections { get; private set; } = false;
 
-        public StandardNetworkSupervisor(
-            TcpConnectionListener tcpListener, 
+        /// <summary>
+        /// Constructs a new <see cref="StandardNetworkSupervisor"/>.
+        /// </summary>
+        /// <param name="tcpListener">A TCP connection listener instance (not used directly in current implementation but reserved for DI scenarios).</param>
+        /// <param name="commandPipeline">Command pipeline orchestrator used to process incoming messages.</param>
+        /// <param name="bus">The event bus used for publishing network and error events.</param>
+        /// <param name="port">The port number on which the supervisor should listen for incoming connections. Must be in the range 1..65535.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if the provided <paramref name="port"/> is outside the valid range.</exception>
+        public StandardNetworkSupervisor( 
+            CommandPipelineOrchestrator commandPipeline,
+            IServerLifecycle lifeCycle,
             IEventBus bus, 
-            int port)
+            int port = 30333)
         {
-            if(port <= 0 || port > 65535) throw new ArgumentOutOfRangeException(nameof(port), "Port number must be between 1 and 65535.");
+            // Validate port number is acceptable.
+            if(port <= 1 || port > 65535) throw new ArgumentOutOfRangeException(nameof(port), "Port number must be between 1 and 65535.");
 
+            // Dependencies - Generate new instances for use internally
             _connectionIdGenerator = new ConnectionIdGenerator();
             _listenerEndPoint = new IPEndPoint(IPAddress.Any, port);
-            _tcpConnectionListener = new TcpConnectionListener(_listenerEndPoint, this, _connectionIdGenerator, this);
+            _tcpConnectionListener = new TcpConnectionListener(
+               localEndPoint: _listenerEndPoint,
+               supervisor: this,
+               connIdGenerator: _connectionIdGenerator,
+               listenerErrorHandler: this,
+               connectionAcceptedHandler: this);
             _serverCts = new CancellationTokenSource();
             _packetFactory = new MuddyPacketFactory();
             _packetLimits = new MuddyProtocolLimits();
             _packetSerializer = new MuddyPacketSerializer(_packetLimits);
+
+            // Wire up DI items
+            _commandPipeline = commandPipeline;
             _eventBus = bus;
+            _lifecycle = lifeCycle;
+
+            // Subscribe to the server lifecycle's state change event
+            _lifecycle.StateChanged += OnServerStateChanged;
         }
 
-        public void BroadcastMessage(Shared.Protocol.Types.ProtocolEnvelope msg)
+        /// <summary>
+        /// Broadcasts a protocol message to all active client connections.
+        /// </summary>
+        /// <param name="msg">The protocol envelope to broadcast to all clients.</param>
+        /// <remarks>Publishes a network event indicating a broadcast is taking place and iterates through all active connections, sending the provided message to each client's connection worker. If sending to a particular client fails, an error event is published and the broadcast continues for remaining clients.</remarks>
+        public void BroadcastMessage(TransportEnvelope msg)
         {
             EventBusHelper.PublishEvent(
                 _eventBus,
@@ -82,7 +120,12 @@ namespace Server.Core.Network.Supervisor
             }
         }
 
-
+        /// <summary>
+        /// Marks a specific connection for closure and attempts to terminate it.
+        /// </summary>
+        /// <param name="connectionId">The identifier of the connection to close.</param>
+        /// <param name="reason">The reason for closing the connection.</param>
+        /// <remarks>Attempts to locate the connection context for the given connection ID. If found, the connection's cancellation token is requested and its worker is stopped. A network event is published for both success and the case where the connection was not found. Any exceptions during the process are published as error events.</remarks>
         public void CloseConnection(ConnectionId connectionId, ConnectionCloseReason reason)
         {
             try
@@ -122,8 +165,12 @@ namespace Server.Core.Network.Supervisor
                 ));
             }
         }
-
         
+        /// <summary>
+        /// Processes a newly accepted TCP connection and registers it for active management.
+        /// </summary>
+        /// <param name="acceptedConnection">The accepted connection information provided by the TCP listener.</param>
+        /// <remarks>Creates a connection worker and context, registers event handlers for message receipt, closure and errors, and starts the worker. The new connection is added to the active connections dictionary. Any exceptions encountered during setup are published to the event bus.</remarks>
         public void ProcessNewConnection(AcceptedConnection acceptedConnection)
         {
             try
@@ -192,138 +239,12 @@ namespace Server.Core.Network.Supervisor
         }
 
         /// <summary>
-        /// Handles errors that occur in a connection worker by terminating the associated connection and publishing an
-        /// error event.
-        /// </summary>
-        /// <remarks>If the connection worker is found in the active connections, the connection is marked
-        /// for closure and an error event is published. If the connection is not found, an error event is still
-        /// published indicating the missing connection. This method does not throw exceptions if the sender is not an
-        /// IConnectionWorker.</remarks>
-        /// <param name="sender">The source of the error event. Must be an instance of IConnectionWorker representing the connection worker
-        /// where the error occurred.</param>
-        /// <param name="e">The exception that was thrown by the connection worker.</param>
-        private void OnWorkerErrorOccurred(object? sender, Exception e)
-        {
-            // Check if the sender of the event is a connection worker, if not return.
-            if (sender is not IConnectionWorker worker) return;
-
-
-            // Try to find the connection worker for the connection that experienced the error in the active connections dictionary
-            // using the connection ID as the key, and if found, cancel the connection's cancellation token source and stop the
-            // connection worker to terminate the connection.
-            if (_activeConnections.TryGetValue(worker.ConnId, out var context))
-            {
-                context.CancellationSource.Cancel();
-                context.Worker.Stop();
-
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason(
-                        "Error occurred in connection worker, connection marked for closure",
-                        new { connectionId = worker.ConnId, errorMessage = e.Message }
-                    )
-                );
-            }
-            else
-            {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason(
-                        "Error occurred in connection worker, but connection not found in active connections",
-                        new { connectionId = worker.ConnId, errorMessage = e.Message }
-                    )
-                );
-            }
-        }
-
-        /// <summary>
-        /// Handles the closure of a worker connection by removing it from the active connections and performing
-        /// necessary cleanup.
-        /// </summary>
-        /// <remarks>If the connection is found in the active connections, its associated resources are
-        /// disposed and a network event is published. If not found, an error event is published. This method is
-        /// intended to be used as an event handler for connection closure events.</remarks>
-        /// <param name="sender">The source of the event. Must be an object implementing the IConnectionWorker interface representing the
-        /// closed connection.</param>
-        /// <param name="e">An EventArgs instance containing the event data.</param>
-        private void OnWorkerConnectionClosed(object? sender, EventArgs e)
-        {
-            // Check if the sender of the event is a connection worker, if not return.
-            if (sender is not IConnectionWorker worker) return;
-
-            // Try to remove the connection worker for the closed connection from the active connections dictionary using
-            // the connection ID as the key, and if successful, dispose of the connection's cancellation token source and
-            // log the connection closure event to the eventBus.
-            if (_activeConnections.TryRemove(worker.ConnId, out var context))
-            {
-                context.CancellationSource.Dispose();
-                
-                // log connection closed
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Network,
-                    new EventReason(
-                        "Connection closed and removed from active connections",
-                        new { connectionId = worker.ConnId }
-                    )
-                );
-            }
-            else
-            {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason(
-                        "Connection closed, but connection not found in active connections",
-                        new { connectionId = worker.ConnId }
-                    )
-                );
-            }
-        }
-
-        /// <summary>
-        /// Handles messages received from a worker by publishing a corresponding event to the event bus.
-        /// </summary>
-        /// <param name="sender">The source of the event. This parameter can be null.</param>
-        /// <param name="e">The protocol envelope containing the message data received from the client.</param>
-        private void OnWorkerMessageReceived(object? sender, Shared.Protocol.Types.ProtocolEnvelope e)
-        {            
-            // Forward into command / message pipeline
-            // or publish onto EventBus
-            // For now just log it and move on
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.Network,
-                new EventReason(
-                    "Message received from client",
-                    new { messageId = e.MessageId, messageType = e.MessageType }
-                )
-            );
-        }
-
-        public void OnListenerError(Exception e)
-        {
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.Error,
-                new EventReason(
-                    "Error occurred in TCP listener",
-                    new { errorMessage = e.Message }
-                )
-            );
-        }
-
-        /// <summary>
         /// Sends a protocol message to the specified client connection.
         /// </summary>
-        /// <remarks>If the specified client connection is not active, the message is not sent and an
-        /// error event is published to the event bus. This method logs both successful and failed send attempts using
-        /// the event bus.</remarks>
         /// <param name="client">The identifier of the client connection to which the message will be sent.</param>
         /// <param name="msg">The protocol envelope containing the message to send to the client.</param>
-        public void SendToClient(ConnectionId client, Shared.Protocol.Types.ProtocolEnvelope msg)
+        /// <remarks>If the specified client connection is not active, the message is not sent and an error event is published to the event bus. This method logs both successful and failed send attempts using the event bus.</remarks>
+        public void SendToClient(ConnectionId client, TransportEnvelope msg)
         {
             try
             {
@@ -364,10 +285,8 @@ namespace Server.Core.Network.Supervisor
         /// <summary>
         /// Starts listening for incoming client connections on the configured network endpoint.
         /// </summary>
-        /// <remarks>If the listener is already running, this method returns <see langword="true"/>
-        /// without taking further action. If starting the listener fails, the method returns <see langword="false"/>
-        /// and does not throw an exception.</remarks>
-        /// <returns>true if the listener is successfully started or is already running; otherwise, false.</returns>
+        /// <returns>True if the listener is successfully started or is already running; otherwise, false.</returns>
+        /// <remarks>If the listener is already running, this method returns true without taking further action. If starting the listener fails, the method returns false and does not throw an exception.</remarks>
         public bool StartAcceptingClients()
         {
             // Check if the network is already running, if so return true.
@@ -406,15 +325,12 @@ namespace Server.Core.Network.Supervisor
 
             return true;
         }
-
        
         /// <summary>
         /// Stops the server from accepting new client connections.
         /// </summary>
-        /// <remarks>This method does not disconnect existing clients. It only prevents new connections
-        /// from being accepted. If the server is already not accepting clients, the method returns true
-        /// immediately.</remarks>
-        /// <returns>true if the server successfully stops accepting new clients or was already stopped; otherwise, false.</returns>
+        /// <returns>True if the server successfully stops accepting new clients or was already stopped; otherwise, false.</returns>
+        /// <remarks>If the server is already in the stopped state, this method returns true immediately. If the stopping process encounters any errors, they are logged as error events, and the method returns false.</remarks>
         public bool StopAcceptingClients()
         {
             // Check if the listener is already off, if so return true.
@@ -452,15 +368,11 @@ namespace Server.Core.Network.Supervisor
             return true;
         }
 
-
         /// <summary>
-        /// Initiates a graceful shutdown of the server, terminating all active client connections and stopping the
-        /// acceptance of new connections.
+        /// Initiates a graceful shutdown of the server, terminating all active client connections and stopping the acceptance of new connections.
         /// </summary>
-        /// <remarks>This method signals all connection workers to terminate, ensuring that existing
-        /// client connections are closed cleanly. Any errors encountered during the shutdown process are logged to the
-        /// event bus. After calling this method, the server will no longer accept new client connections.</remarks>
-        public void ShutdownServer()
+        /// <remarks>This method signals all connection workers to terminate, ensuring that existing client connections are closed cleanly. Any errors encountered during the shutdown process are logged to the event bus. After calling this method, the server will no longer accept new client connections.</remarks>
+        public void ShutdownSupervisor()
         {
             try
             {
@@ -499,5 +411,262 @@ namespace Server.Core.Network.Supervisor
                 );
             }
         }
+
+        /// <summary>
+        /// Validates whether the server is currently in a state that can accept and process incoming messages.
+        /// </summary>
+        /// <returns> 
+        /// ValidationResult: An object which contains a boolean indicating pass or fail, along with an optional fail message.
+        /// </returns>
+        private ValidationResult ValidateSystemCanAcceptMessages()
+        {
+            // Check if the server is in the shutting down state. If so, provide rejection response.
+            if(_lifecycle.IsShuttingDown)
+            {
+                // This is an error level event. Create appropriate response.
+                SystemResponse response = new SystemResponse(SystemResponseType.ServerShuttingDown,
+                    SystemResponseSeverity.Error,
+                    "The server is shutting down and cannot process messages at this time.",
+                    retryable: false);
+
+                ValidationResult result = ValidationResult.Invalid(response);
+                return result;
+            }
+
+            // Check if the server is in the maintenance state. If so, provide rejection response.
+            if (_lifecycle.IsInMaintenance)
+            {
+                // This is a warning level event. Create appropriate response.
+                SystemResponse response = new SystemResponse(SystemResponseType.ServerMaintenance,
+                    SystemResponseSeverity.Warning,
+                    "The server is currently in maintenance mode and cannot process messages at this time.",
+                    retryable: true);
+
+                ValidationResult result = ValidationResult.Invalid(response);
+                return result;
+            }
+
+            // Validation passed - create a positive validationResult to return to caller.
+            ValidationResult validResult = ValidationResult.Valid();
+            return validResult;
+        }
+
+        /// <summary>
+        /// Starts the network supervisor by initiating the TCP listener and enabling acceptance of incoming client connections.
+        /// </summary>
+        public void Start()
+        {
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.System,
+                new EventReason(
+                    "Network supervisor starting",
+                    new { endpoint = _listenerEndPoint }
+                )
+            );
+
+            StartAcceptingClients();
+        }
+
+        /// <summary>
+        /// Stops the network supervisor and performs necessary cleanup operations.
+        /// </summary>
+        /// <remarks>
+        /// This method publishes a system event indicating that the network supervisor is
+        /// stopping before shutting down internal resources. After calling this method, the supervisor will no longer
+        /// process network events.
+        /// </remarks>
+        public void Stop()
+        {
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.System,
+                new EventReason(
+                    "Network supervisor stopping",
+                    new { endpoint = _listenerEndPoint }
+                )
+            );
+
+            ShutdownSupervisor();
+        }
+
+        #region Event Handlers
+
+        /// <summary>
+        /// Handles errors that occur in a connection worker by terminating the associated connection and publishing an error event.
+        /// </summary>
+        /// <param name="sender">The source of the error event. Must be an instance of <see cref="IConnectionWorker"/> representing the connection worker where the error occurred.</param>
+        /// <param name="e">The exception that was thrown by the connection worker.</param>
+        /// <remarks>If the connection worker is found in the active connections, the connection is marked for closure and an error event is published. If the connection is not found, an error event is still published indicating the missing connection. This method does not throw exceptions if the sender is not an IConnectionWorker.</remarks>
+        private void OnWorkerErrorOccurred(object? sender, Exception e)
+        {
+            // Check if the sender of the event is a connection worker, if not return.
+            if (sender is not IConnectionWorker worker) return;
+
+
+            // Try to find the connection worker for the connection that experienced the error in the active connections dictionary
+            // using the connection ID as the key, and if found, cancel the connection's cancellation token source and stop the
+            // connection worker to terminate the connection.
+            if (_activeConnections.TryGetValue(worker.ConnId, out var context))
+            {
+                context.CancellationSource.Cancel();
+                context.Worker.Stop();
+
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Error,
+                    new EventReason(
+                        "Error occurred in connection worker, connection marked for closure",
+                        new { connectionId = worker.ConnId, errorMessage = e.Message }
+                    )
+                );
+            }
+            else
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Error,
+                    new EventReason(
+                        "Error occurred in connection worker, but connection not found in active connections",
+                        new { connectionId = worker.ConnId, errorMessage = e.Message }
+                    )
+                );
+            }
+        }
+
+        /// <summary>
+        /// Handles the closure of a worker connection by removing it from the active connections and performing necessary cleanup.
+        /// </summary>
+        /// <param name="sender">The source of the event. Must be an object implementing the <see cref="IConnectionWorker"/> interface representing the closed connection.</param>
+        /// <param name="e">An <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <remarks>If the connection is found in the active connections, its associated resources are disposed and a network event is published. If not found, an error event is published.</remarks>
+        private void OnWorkerConnectionClosed(object? sender, EventArgs e)
+        {
+            // Check if the sender of the event is a connection worker, if not return.
+            if (sender is not IConnectionWorker worker) return;
+
+            // Try to remove the connection worker for the closed connection from the active connections dictionary using
+            // the connection ID as the key, and if successful, dispose of the connection's cancellation token source and
+            // log the connection closure event to the eventBus.
+            if (_activeConnections.TryRemove(worker.ConnId, out var context))
+            {
+                context.CancellationSource.Dispose();
+
+                // log connection closed
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Network,
+                    new EventReason(
+                        "Connection closed and removed from active connections",
+                        new { connectionId = worker.ConnId }
+                    )
+                );
+            }
+            else
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Error,
+                    new EventReason(
+                        "Connection closed, but connection not found in active connections",
+                        new { connectionId = worker.ConnId }
+                    )
+                );
+            }
+        }
+
+        /// <summary>
+        /// Handles messages received from a worker by publishing a corresponding event to the event bus.
+        /// </summary>
+        /// <param name="sender">The source of the event. This parameter can be null.</param>
+        /// <param name="e">The protocol envelope containing the message data received from the client.</param>
+        private void OnWorkerMessageReceived(object? sender, TransportEnvelope e)
+        {
+            // Forward into command / message pipeline
+            // or publish onto EventBus
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.Network,
+                new EventReason(
+                    "Message received from client",
+                    new { messageId = e.MessageId, messageType = e.MessageType, payload = e.Payload }
+                )
+            );
+
+            TransportEnvelope response = _commandPipeline.ProcessMessage(e);
+
+        }
+
+        /// <summary>
+        /// Callback invoked when the TCP listener encounters an error.
+        /// </summary>
+        /// <param name="e">The exception that occurred in the listener.</param>
+        /// <remarks>Publishes an error event to the event bus containing the exception message. Intended to be used as the implementation of the <see cref="IListenerErrorHandler"/> interface.</remarks>
+        public void OnListenerError(Exception e)
+        {
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.Error,
+                new EventReason(
+                    "Error occurred in TCP listener",
+                    new { errorMessage = e.Message }
+                )
+            );
+        }
+
+        /// <summary>
+        /// Event handler for changes in the server's lifecycle state. This method responds to state changes by starting or stopping
+        /// the acceptance of client connections based on the new state of the server.
+        /// </summary>
+        /// <param name="sender">The object that emitted the event.</param>
+        /// <param name="e">ServerStateChangedEventData: An object containing info about the event.</param>
+        private void OnServerStateChanged(object? sender, ServerStateChangedEventData e)
+        {
+            // Log the state change
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.System,
+                new EventReason(
+                    "Server state changed",
+                    new
+                    {
+                        previousState = e.PreviousState,
+                        newState = e.NewState
+                    }
+                )
+            );
+
+            if (e.NewState == ServerStateEnum.SHUTTING_DOWN || e.NewState == ServerStateEnum.MAINTENANCE)
+            {                
+                StopAcceptingClients(); // Proactively stop accepting connections
+            }
+            else if(e.NewState == ServerStateEnum.ACTIVE)
+            {
+                StartAcceptingClients(); // Start accepting clients if the server becomes active
+            }
+        }
+
+        /// <summary>
+        /// Event handler for when a new client connection is accepted by the TCP listener.
+        /// </summary>
+        /// <param name="connection">
+        /// The new connection that has been accepted.
+        /// </param>
+        public void OnConnectionAccepted(AcceptedConnection connection)
+        {
+            // Log the acceptance
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.Network,
+                new EventReason(
+                    "Connection accepted",
+                    new { connectionId = connection.connId }
+                )
+            );
+
+            ProcessNewConnection(connection);
+        }
+
+        #endregion
     }
 }

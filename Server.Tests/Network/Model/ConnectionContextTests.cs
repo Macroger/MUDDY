@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Server.Core.Network.Model;
 using Server.Core.Network.Worker;
 using Shared.Identity;
-using Shared.Protocol.Types;
+using Shared.Protocol.Transport;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -32,10 +32,10 @@ namespace Server.Core.Network.Model.Tests
         {
             public bool IsRunning => false;
             public ConnectionId ConnId => new();
-            public event EventHandler<Shared.Protocol.Types.ProtocolEnvelope>? MessageReceived;
+            public event EventHandler<TransportEnvelope>? MessageReceived;
             public event EventHandler? ConnectionClosed;
             public event EventHandler<Exception>? ErrorOccurred;
-            public bool SendMessage(Shared.Protocol.Types.ProtocolEnvelope msg) => true;
+            public bool SendMessage(TransportEnvelope msg) => true;
             public void Start() { }
             public void Stop() { }
         }
