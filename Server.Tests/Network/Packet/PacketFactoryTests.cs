@@ -1,5 +1,6 @@
 using Server.Core.Network.Packet;
 using Shared.Identity;
+using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using System.Net.Sockets;
 
@@ -22,9 +23,9 @@ public class PacketFactoryTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new Shared.Protocol.Types.ProtocolEnvelope(
+        var message = new Shared.Protocol.Types.TransportEnvelope(
             new MessageId(123),
-            (ProtocolMessageType)1,
+            (TransportMessageType)1,
             (MessageFlags)0,
             body
             );
@@ -35,7 +36,7 @@ public class PacketFactoryTests
         // Assert
         Assert.AreEqual((uint)body.Length, newPacket.Header.BodyLength);
         Assert.AreEqual(message.MessageId.Value, newPacket.Header.MsgId);
-        Assert.AreEqual(message.MessageType, (ProtocolMessageType)newPacket.Header.MsgType);
+        Assert.AreEqual(message.MessageType, (TransportMessageType)newPacket.Header.MsgType);
         Assert.AreEqual(message.Flags, (MessageFlags)newPacket.Header.BitFlags);
         Assert.AreEqual(body, newPacket.Body);
     }
@@ -44,7 +45,7 @@ public class PacketFactoryTests
     public void Test_PacketFactory_ThrowsWhenMessageNull()
     {
         // Arrange
-        Shared.Protocol.Types.ProtocolEnvelope? message = null;
+        TransportEnvelope? message = null;
 
         // Act
         // Assert

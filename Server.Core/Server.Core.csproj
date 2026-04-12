@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
     <Platforms>x86;x64</Platforms>
   </PropertyGroup>
-  <ItemGroup>
-    <Folder Include="Network\Protocol\" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
