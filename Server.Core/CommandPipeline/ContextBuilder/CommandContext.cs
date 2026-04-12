@@ -1,4 +1,5 @@
-﻿using Server.Core.Domain.Player;
+﻿using Server.Core.CommandPipeline.Types;
+using Server.Core.Domain.Player;
 using Server.Core.Domain.World;
 using System;
 using System.Collections.Generic;
@@ -22,5 +23,19 @@ namespace Server.Core.CommandPipeline.ContextBuilder
 
         /// <summary>Error details if context building failed.</summary>
         public string? ErrorMessage { get; init; }
+
+        public CommandContext(
+            ParsedCommand command,
+            PlayerState? playerState,
+            WorldState? worldState,
+            bool success,
+            string? errorMessage)
+        {
+            Command = command;
+            PlayerState = playerState;
+            WorldState = worldState;
+            Success = success;
+            ErrorMessage = errorMessage;
+        }
     }
 }

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Server.Core.Domain.World;
+using Shared.Identity;
 
-namespace Server.Core.Domain.World
+namespace Server.Core.Persistence
 {
     public interface IWorldRepository
     {
@@ -10,6 +9,6 @@ namespace Server.Core.Domain.World
         Task<WorldState> GetWorldStateAsync();
 
         /// <summary>Gets a specific room's state.</summary>
-        Task<RoomState?> GetRoomAsync(string roomId);
+        Task<RoomState?> GetRoomAsync(RoomId roomId);
     }
 }

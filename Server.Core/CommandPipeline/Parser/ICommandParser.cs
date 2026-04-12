@@ -1,6 +1,7 @@
-﻿using Shared.Protocol.Transport;
+﻿using Server.Core.CommandPipeline.Types;
+using Shared.Protocol.Transport;
 
-namespace Server.Core.CommandPipeline
+namespace Server.Core.CommandPipeline.Parser
 {
     public interface ICommandParser
     {

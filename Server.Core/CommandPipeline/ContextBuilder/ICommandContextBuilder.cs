@@ -1,4 +1,5 @@
-﻿using Shared.Identity;
+﻿using Server.Core.CommandPipeline.Types;
+using Shared.Identity;
 using System;
 using System.Collections.Generic;
 using System.Text;

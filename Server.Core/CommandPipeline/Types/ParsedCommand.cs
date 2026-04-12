@@ -1,6 +1,6 @@
 ﻿using Shared.Identity;
 
-namespace Server.Core.CommandPipeline
+namespace Server.Core.CommandPipeline.Types
 {
     /// <summary>
     /// A structured command extracted from a transport envelope.

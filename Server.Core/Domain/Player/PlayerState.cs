@@ -14,8 +14,8 @@ namespace Server.Core.Domain.Player
     {
         public ConnectionId ConnId { get; init; }       // Required - every player must have a connection ID.
         public string? PlayerName { get; init; }        // Allow null for players who haven't set a name yet.
-        public string? CurrentLocation { get; init; }   // Allow null for players who haven't entered the world yet.
-        
+        public RoomId CurrentLocation { get; init; }    // Required - every player always has a location.
+
         /// <summary>
         /// Gets the set of conditions that are currently active for the player.
         /// </summary>
@@ -23,7 +23,7 @@ namespace Server.Core.Domain.Player
         /// Conditions may affect gameplay or player abilities depending on their type.</remarks>
         public IReadOnlySet<PlayerCondition> ActiveConditions { get; init; } = new HashSet<PlayerCondition>();
 
-        public PlayerState(ConnectionId connection, string? playerName, string? playerLocation)
+        public PlayerState(ConnectionId connection, string? playerName, RoomId playerLocation)
         {
             ConnId = connection;
             PlayerName = playerName;

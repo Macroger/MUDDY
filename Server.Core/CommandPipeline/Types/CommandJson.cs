@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Server.Core.CommandPipeline.Parser
+namespace Server.Core.CommandPipeline.Types
 {
     public class CommandJson
     {
