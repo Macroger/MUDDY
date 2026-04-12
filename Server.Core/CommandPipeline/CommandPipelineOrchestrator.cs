@@ -1,5 +1,7 @@
-﻿using Server.Core.CommandPipeline.ContextBuilder;
+﻿using Server.Core.CommandPipeline.Authentication;
+using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Parser;
+using Server.Core.CommandPipeline.Policies;
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;
@@ -7,11 +9,8 @@ using Server.Core.Network.Supervisor;
 using Shared.EventBus;
 using Shared.Identity;
 using Shared.Protocol.Transport;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Text;
-using System.Text.Json;
 
 namespace Server.Core.CommandPipeline
 {
@@ -19,6 +18,7 @@ namespace Server.Core.CommandPipeline
     {
         private readonly BlockingCollection<TransportEnvelope> _msgEnvelopeQueue = new BlockingCollection<TransportEnvelope>();
 
+        private bool _started;
         #region Dependencies
 
         private readonly IEventBus _eventBus;
@@ -27,8 +27,9 @@ namespace Server.Core.CommandPipeline
         private readonly ICommandParser _cmdParser;
         private readonly ICommandRouter _cmdRouter;
         private readonly ICommandContextBuilder _contextBuilder;
-        private readonly List<ICommandPolicy> _preParsePolicies;
-        private readonly List<ICommandPolicy> _postParsePolicies;
+        private readonly IAuthenticationPipeline _authenticationPipeline;
+        private readonly List<IFirstPassPolicy> _firstPassPolicies;
+        private readonly List<ISecondPassPolicy> _secondPassPolicies;
 
         #endregion
 
@@ -42,8 +43,9 @@ namespace Server.Core.CommandPipeline
         ICommandParser parser,
         IMessageIdGenerator messageIdGenerator,
         ICommandContextBuilder contextBuilder,
-        IEnumerable<ICommandPolicy> preParsePolicy,
-        IEnumerable<ICommandPolicy> postParsePolicy)
+        IAuthenticationPipeline authenticationPipeline,
+        IEnumerable<IFirstPassPolicy> firstPassPolicies,
+        IEnumerable<ISecondPassPolicy> secondPassPolicies)
         {
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _cmdRouter = router ?? throw new ArgumentNullException(nameof(router));
@@ -51,8 +53,9 @@ namespace Server.Core.CommandPipeline
             _messageIdGenerator = messageIdGenerator ?? throw new ArgumentNullException(nameof(messageIdGenerator));
             _networkSupervisor = networkSupervisor ?? throw new ArgumentNullException(nameof(_networkSupervisor));
             _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
-            _preParsePolicies = preParsePolicy?.ToList() ?? throw new ArgumentNullException(nameof(preParsePolicy));
-            _postParsePolicies = postParsePolicy?.ToList() ?? throw new ArgumentNullException(nameof(postParsePolicy));
+            _authenticationPipeline = authenticationPipeline ?? throw new ArgumentNullException(nameof(authenticationPipeline));
+            _firstPassPolicies = firstPassPolicies?.ToList() ?? throw new ArgumentNullException(nameof(firstPassPolicies));
+            _secondPassPolicies = secondPassPolicies?.ToList() ?? throw new ArgumentNullException(nameof(secondPassPolicies));
         }
 
         /// <summary>
@@ -67,10 +70,32 @@ namespace Server.Core.CommandPipeline
             _msgEnvelopeQueue.Add(envelope);
         }
 
+       /// <summary>
+       /// Starts the message processing operation if it has not already been started.
+       /// </summary>
+       /// <remarks>Subsequent calls to this method have no effect if the operation is already running. Use
+       /// this method to initiate background message processing.</remarks>
         public void Start()
         {
+            if(_started) return; // Prevent multiple starts
+
             _cts = new CancellationTokenSource();
             _msgProcessingTask = ProcessMessagesAsync(_cts.Token);
+            _started = true;
+        }
+
+        /// <summary>
+        /// Stops the current operation if it has been started.
+        /// </summary>
+        /// <remarks>If the operation has not been started, this method performs no action. This method is
+        /// asynchronous and returns immediately; any ongoing stop process continues in the background.</remarks>
+        public async void Stop()
+        {
+            if(!_started) return; // If not started, nothing to stop
+
+            await StopAsync();
+
+            _started = false;
         }
 
         public async Task StopAsync()
@@ -125,6 +150,7 @@ namespace Server.Core.CommandPipeline
             }
         }
 
+
         private async Task HandleMessageAsync(TransportEnvelope msg)
         {
             // Validate that the msg is not null.
@@ -141,10 +167,10 @@ namespace Server.Core.CommandPipeline
                 return;
             }
             
-            // 1st pass Policy check
-            foreach (var policy in _preParsePolicies)
+            // 1st pass Policy check - AuthenticationPolicy
+            foreach (var policy in _firstPassPolicies)
             {
-                var result = policy.Check(msg);
+                PolicyResult result = await policy.CheckPolicyAsync(msg);
                 if (!result.IsValid)
                 {
                     // Log the policy failure event
@@ -152,14 +178,14 @@ namespace Server.Core.CommandPipeline
                         _eventBus,
                         EventMessageType.Error,
                         new EventReason(
-                            "Pre-parse policy check failed",
+                            result.ErrorMessage ?? "Authentication failed",
                             new { policy = policy.GetType().Name, messageId = msg.MessageId }
                         )
                     );
 
                     TransportEnvelope response = CreateErrorResponse(
                         errorType: TransportMessageType.Error, 
-                        message: result.ErrorMessage ?? "Unknown parsing error",
+                        message: result.ErrorMessage ?? "Authentication failed",
                         connId: msg.ConnId);
 
                     _networkSupervisor.SendToClient(msg.ConnId, response);
@@ -169,29 +195,43 @@ namespace Server.Core.CommandPipeline
                 }
             }
 
+            // Check if unauthenticated - route to auth pipeline instead of main pipeline
+            if (msg.SessionToken == SessionId.Unauthenticated)
+            {
+                await _authenticationPipeline.ProcessAuthCommandAsync(msg);
+                return;  // Don't continue to main pipeline
+            }
+            // Player is authenticated - continue with main pipeline
+
             // Parse
             ParseResult parseResult = _cmdParser.Parse(msg);
             if (!parseResult.Success)
             {
-                TransportEnvelope response = CreateErrorResponse(
-                        errorType: TransportMessageType.Error,
-                        message: parseResult.ErrorMessage ?? "Unknown parsing error",
-                        connId: msg.ConnId);
+                TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                    messageId: _messageIdGenerator.New(),
+                    sessionId: null,
+                    messageCorrelationId: msg.MessageId,
+                    messageType: TransportMessageType.Error,
+                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    payload: Encoding.UTF8.GetBytes(parseResult.ErrorMessage ?? "Unknown authentication error."),
+                    connectionId: msg.ConnId
+                );
 
-                _networkSupervisor.SendToClient(msg.ConnId, response);
+                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
                 return;
             }
 
             // Build context (player state, inventory, effects, etc.)
             CommandContext context = await _contextBuilder.BuildContextAsync(msg.ConnId, parseResult.Command!);
-            if (context.Success == false)
+            if (!context.Success)
             {
                 TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
                     messageId: _messageIdGenerator.New(),
+                    sessionId: null,
                     messageCorrelationId: msg.MessageId,
                     messageType: TransportMessageType.Error,
                     flags: Shared.Protocol.Types.MessageFlags.None,
-                    payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown context building error"),
+                    payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown parsing error."),
                     connectionId: msg.ConnId
                 );
                 _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
@@ -199,12 +239,21 @@ namespace Server.Core.CommandPipeline
             }
 
             // 2nd Pass: Dynamic policy (player-state level)
-            foreach (var policy in _postParsePolicy)
+            foreach (var policy in _secondPassPolicies)
             {
-                var result = policy.Check(context);  // <-- Has access to player state AND command type
+                var result = await policy.CheckPolicyAsync(context); 
                 if (!result.IsValid)
                 {
-                    _networkSupervisor.SendToClient(msg.ConnId, result.ErrorResponse);
+                    TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                    messageId: _messageIdGenerator.New(),
+                    sessionId: null,
+                    messageCorrelationId: msg.MessageId,
+                    messageType: TransportMessageType.Error,
+                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    payload: Encoding.UTF8.GetBytes(result.ErrorMessage ?? "Unknown policy error."),
+                    connectionId: msg.ConnId
+                    );
+                    _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
                     return;
                 }
             }
@@ -213,7 +262,16 @@ namespace Server.Core.CommandPipeline
             var handler = _cmdRouter.Route(context.Command);
             if (handler == null)
             {
-                _networkSupervisor.SendToClient(msg.ConnId, CommandNotFoundResponse);
+                TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                    messageId: _messageIdGenerator.New(),
+                    sessionId: null,
+                    messageCorrelationId: msg.MessageId,
+                    messageType: TransportMessageType.Error,
+                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown routing error."),
+                    connectionId: msg.ConnId
+                    );
+                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
                 return;
             }
 
@@ -226,6 +284,7 @@ namespace Server.Core.CommandPipeline
         {
             TransportEnvelope response = new TransportEnvelope(
                     messageId: _messageIdGenerator.New(),
+                    sessionId: null,
                     messageCorrelationId: msgId,
                     messageType: errorType ?? TransportMessageType.Error,
                     flags: Shared.Protocol.Types.MessageFlags.None,
@@ -235,5 +294,7 @@ namespace Server.Core.CommandPipeline
 
             return response;
         }
+
+
     }
 }

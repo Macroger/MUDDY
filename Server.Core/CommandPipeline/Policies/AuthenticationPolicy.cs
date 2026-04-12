@@ -1,4 +1,5 @@
-﻿using Shared.Protocol.Transport;
+﻿using Server.Core.Domain.Authentication;
+using Shared.Protocol.Transport;
 
 namespace Server.Core.CommandPipeline.Policies
 {
@@ -9,9 +10,34 @@ namespace Server.Core.CommandPipeline.Policies
     /// </summary>
     public class AuthenticationPolicy : IFirstPassPolicy
     {
-        public PolicyResult CheckPolicy(TransportEnvelope msg)
+        private readonly IAuthenticationService _authService;
+
+        /// <summary>
+        /// Creates a new AuthenticationPolicy with the given auth service.
+        /// </summary>
+        public AuthenticationPolicy(IAuthenticationService authService)
         {
-            throw new NotImplementedException();
+            _authService = authService;
+        }
+        public async Task<PolicyResult> CheckPolicyAsync(TransportEnvelope msg)
+        {
+            // If unauthenticated (SessionId = 0), allow it to pass
+            // The orchestrator will route to auth pipeline
+            if (msg.SessionToken.Value == 0)
+            {
+                return await Task.FromResult(PolicyResult.Success());
+            }
+
+            // If authenticated, validate the session is real
+            bool isValid = await _authService.ValidateSessionAsync(msg.SessionToken, msg.ConnId);
+
+            if (!isValid)
+            {
+                // Session is no longer valid, reject the message. The client will need to re-authenticate.
+                return await Task.FromResult(PolicyResult.Failure("Invalid or expired session. Please reconnect to get a new session."));
+            }
+
+            return await Task.FromResult(PolicyResult.Success());
         }
     }
 }

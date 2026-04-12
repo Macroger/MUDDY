@@ -16,7 +16,7 @@ namespace Shared.Protocol.Transport
         // This is optional and may be null for messages that are not tied to a specific connection (e.g., system-level messages).
         public ConnectionId ConnId { get; init; }
 
-        public SessionId SessionToken { get; init; }
+        public SessionId? SessionToken { get; init; }
 
         /// <summary>
         /// Gets the identifier used to correlate this message with related messages.
@@ -48,12 +48,12 @@ namespace Shared.Protocol.Transport
         /// <param name="connectionId">Optional connection ID associated with the message.</param>
         /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="payload"/> is null.</exception>
         public TransportEnvelope(
-            MessageId messageId,  
-            SessionId sessionId,
+            MessageId messageId,             
             TransportMessageType messageType,            
             MessageFlags flags,
             byte[] payload,
             ConnectionId connectionId,
+            SessionId? sessionId,
             MessageId? messageCorrelationId = null
             )
         {

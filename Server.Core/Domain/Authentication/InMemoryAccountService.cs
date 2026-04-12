@@ -7,7 +7,7 @@ namespace Server.Core.Domain.Authentication
     /// Simple in-memory account storage for v1.
     /// Stores username and password pairs.
     /// </summary>
-    public class InMemoryAccountService
+    public class InMemoryAccountService : IAccountService
     {
         private readonly ConcurrentDictionary<string, string> _accounts;
 

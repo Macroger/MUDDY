@@ -5,6 +5,6 @@ namespace Server.Core.CommandPipeline.Policies
 {
     public interface ISecondPassPolicy
     {
-        PolicyResult CheckPolicy(CommandContext context);
+        Task<PolicyResult> CheckPolicyAsync(CommandContext context);
     }
 }
