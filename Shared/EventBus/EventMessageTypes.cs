@@ -13,6 +13,7 @@ namespace Shared.EventBus
         Command,        // Command parsing and execution pipeline
         Domain,         // Game-world/domain events (rooms, items, players)
         Persistence,    // Database, saving/loading, storage operations
+        Chat,           // In-game chat messages and events
         Error           // Cross-cutting error reporting
     }
 

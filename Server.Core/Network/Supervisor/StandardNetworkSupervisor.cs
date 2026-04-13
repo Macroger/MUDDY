@@ -6,12 +6,15 @@ using Server.Core.Network.Model;
 using Server.Core.Network.Packet;
 using Server.Core.Network.Worker;
 using Shared.EventBus;
+using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using Shared.Protocol.System;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Text;
+using static Shared.EventBus.DomainEvents.ChatEvents;
 
 namespace Server.Core.Network.Supervisor
 {
@@ -33,10 +36,12 @@ namespace Server.Core.Network.Supervisor
         private CancellationTokenSource _serverCts;
         private IPEndPoint _listenerEndPoint;
         private readonly IServerLifecycle _lifecycle;
+        private ISubscriptionToken? _chatEventSubscription;
         #endregion
 
         // Add event for new connections
         public event EventHandler<AcceptedConnection>? NewConnectionAccepted;
+       
 
         private ConcurrentDictionary<ConnectionId, ConnectionContext> _activeConnections = new ConcurrentDictionary<ConnectionId, ConnectionContext>();
 
@@ -465,6 +470,12 @@ namespace Server.Core.Network.Supervisor
                 )
             );
 
+            // Subscribe and keep the token
+            _chatEventSubscription = _eventBus.Subscribe(
+                EventMessageType.Chat,
+                OnPlayerSaid
+                );
+
             StartAcceptingClients();
         }
 
@@ -486,6 +497,8 @@ namespace Server.Core.Network.Supervisor
                     new { endpoint = _listenerEndPoint }
                 )
             );
+            
+            _chatEventSubscription?.Dispose();
 
             ShutdownSupervisor();
         }
@@ -665,6 +678,32 @@ namespace Server.Core.Network.Supervisor
             );
 
             ProcessNewConnection(connection);
+        }
+
+        /// <summary>
+        /// Handles PlayerSaidEvent from the event bus.
+        /// </summary>
+        private void OnPlayerSaid(EventEnvelope envelope)
+        {
+            envelope.Payload.GetType();
+            // Deserialize the typed event from the envelope
+            if (envelope.Reason.Data is not PlayerSaidEvent @event)
+                return;
+
+            // Now broadcast to the players
+            foreach (var connId in @event.PlayersInRoom)
+            {
+                var broadcastEnvelope = new TransportEnvelope(
+                    messageId: _messageIdGenerator.New(),
+                    sessionId: null,
+                    messageType: TransportMessageType.Notification,
+                    flags: MessageFlags.None,
+                    payload: Encoding.UTF8.GetBytes(@event.Message),
+                    connectionId: connId
+                );
+
+                SendToClient(connId, broadcastEnvelope);
+            }
         }
 
         #endregion
