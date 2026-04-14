@@ -19,7 +19,12 @@ namespace Server.Core.Network.Packet
         /// </exception>
         MuddyPacket Deserialize(ReadOnlySpan<byte> buffer);
 
-        public MuddyPacketHeader DeserializeHeader(byte[] serializedHeader);
+        /// <summary>
+        /// Deserializes a packet header from the specified read-only span of bytes.
+        /// </summary>
+        /// <param name="serializedHeader">A read-only span of bytes containing the serialized packet header data to deserialize.</param>
+        /// <returns>A MuddyPacketHeader instance representing the deserialized header data.</returns>
+        public MuddyPacketHeader DeserializeHeader(ReadOnlySpan<byte> serializedHeader);
     }
 
 }

@@ -90,17 +90,17 @@ namespace Server.Core.CommandPipeline
         /// </summary>
         /// <remarks>If the operation has not been started, this method performs no action. This method is
         /// asynchronous and returns immediately; any ongoing stop process continues in the background.</remarks>
-        public async void Stop()
+        public void Stop()
         {
             if(!_started) return; // If not started, nothing to stop
 
-            await StopAsync();
-
-            _started = false;
+            _ = StopAsync();
         }
 
         public async Task StopAsync()
         {
+            if (!_started) return; // If not started, nothing to stop
+
             _msgEnvelopeQueue.CompleteAdding(); // Signals that we want to stop adding items
             _cts?.Cancel();                     // Signal that we want to cancel all other activities
 
@@ -108,6 +108,7 @@ namespace Server.Core.CommandPipeline
             if ( _msgProcessingTask != null )  await _msgProcessingTask.ConfigureAwait(false);
 
             _cts?.Dispose();                     // Dispose of the cancellation token source
+            _started = false;
         }
 
         private async Task ProcessMessagesAsync(CancellationToken cancellationToken)
@@ -268,7 +269,7 @@ namespace Server.Core.CommandPipeline
                     messageCorrelationId: msg.MessageId,
                     messageType: TransportMessageType.Error,
                     flags: Shared.Protocol.Types.MessageFlags.None,
-                    payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown routing error."),
+                    payload: Encoding.UTF8.GetBytes($"Unknown command: {parseResult.Command?.CommandType}"),
                     connectionId: msg.ConnId
                     );
                 _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
