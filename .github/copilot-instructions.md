@@ -17,7 +17,9 @@
   - `WorldState`: Comprises `IReadOnlyDictionary` of rooms and `IReadOnlySet` of global conditions.
   - `RoomState`: Includes `RoomId`, `Description`, `Conditions`, and `PlayersPresent`.
 - Implement init-only properties where applicable for all state models.
-- Use identity wrapper pattern for identifiers: `ConnectionId`, `MessageId`, `SessionId`, and `RoomId` should all be readonly structs. 
-  - Ensure `SessionId.Unauthenticated` is set to `0` and `RoomId` validates non-null/non-empty.
+- Use identity wrapper pattern for identifiers: `ConnectionId`, `MessageId`, `SessionId`, and `RoomId` should all be readonly structs.
+  - `SessionId`: Guid-based identifier for authenticated sessions. `SessionId.Unauthenticated = Guid.Empty` for unauthenticated clients.
+  - All identity wrappers must implement `IEquatable<T>` with `==`, `!=` operators.
+  - `RoomId` validates non-null/non-empty strings.
   - Use nullable `SessionId?` for `TransportEnvelope.SessionToken`.
 - Replace primitive types with the above-defined types throughout the codebase.

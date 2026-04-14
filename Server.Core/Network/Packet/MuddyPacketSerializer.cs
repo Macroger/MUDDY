@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Specialized;
 using System.IO.Hashing;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Server.Core.Network.Packet
 {
@@ -32,9 +33,6 @@ namespace Server.Core.Network.Packet
 
         public MuddyPacket Deserialize(ReadOnlySpan<byte> buffer)
         {
-            // Create a new header object to hold the deserialized header values.
-            MuddyPacketHeader newHeader = new MuddyPacketHeader();
-
             // Validate that the serialized packet is large enough to contain at least the header and CRC.
             if (buffer.Length < (headerSize + tailSize))
                 throw new InvalidDataException($"Packet truncated or malformed; expected at least {headerSize + tailSize} bytes, got {buffer.Length}.");
@@ -47,10 +45,8 @@ namespace Server.Core.Network.Packet
             ReadOnlySpan<byte> headerSpan = buffer.Slice(0, headerSize);
 
             // Deserialize the header fields from the header span using BinaryPrimitives.ReadUIntx methods.
-            newHeader.BodyLength = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(0, 4));
-            newHeader.MsgId = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(4, 4));
-            newHeader.MsgType = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(8, 2));
-            newHeader.BitFlags = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(10, 2));         
+            // Create a new header object to hold the deserialized header values.
+            MuddyPacketHeader newHeader = DeserializeHeader(buffer[..headerSize]);     
 
             int expectedSize = headerSize + (int)newHeader.BodyLength + tailSize;
 
@@ -164,6 +160,7 @@ namespace Server.Core.Network.Packet
             Span<byte> serializedHeader = stackalloc byte[packetLimits.headerSize];
 
             // Copy the header fields into the serializedHeader via BinaryPrimitives.WriteUIntx
+            WriteSessionId(serializedHeader.Slice(MuddyPacketHeader.SessionIdOffset, MuddyPacketHeader.SessionIdSize), header.SessionId);
             BinaryPrimitives.WriteUInt32LittleEndian(serializedHeader.Slice(MuddyPacketHeader.BodyLengthOffset, MuddyPacketHeader.BodyLengthSize), header.BodyLength);
             BinaryPrimitives.WriteUInt32LittleEndian(serializedHeader.Slice(MuddyPacketHeader.MsgIdOffset, MuddyPacketHeader.MsgIdSize), header.MsgId);
             BinaryPrimitives.WriteUInt16LittleEndian(serializedHeader.Slice(MuddyPacketHeader.MsgTypeOffset, MuddyPacketHeader.MsgTypeSize), header.MsgType);
@@ -172,20 +169,31 @@ namespace Server.Core.Network.Packet
             return serializedHeader.ToArray();
         }
 
-        public MuddyPacketHeader DeserializeHeader(byte[] serializedHeader)
+        public MuddyPacketHeader DeserializeHeader(ReadOnlySpan<byte> serializedHeader)
         {
             if (serializedHeader.Length != packetLimits.headerSize)
                 throw new InvalidDataException($"Serialized header size mismatch; expected {packetLimits.headerSize} bytes, got {serializedHeader.Length} bytes.");
 
             MuddyPacketHeader newHeader = new MuddyPacketHeader();
-            ReadOnlySpan<byte> headerSpan = serializedHeader.AsSpan();
+            ReadOnlySpan<byte> headerSpan = serializedHeader;
 
-            newHeader.BodyLength = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(0, 4));
-            newHeader.MsgId = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(4, 4));
-            newHeader.MsgType = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(8, 2));
-            newHeader.BitFlags = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(10, 2));
+            newHeader.SessionId = ReadSessionId(headerSpan.Slice(MuddyPacketHeader.SessionIdOffset, MuddyPacketHeader.SessionIdSize));
+            newHeader.BodyLength = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(MuddyPacketHeader.BodyLengthOffset, MuddyPacketHeader.BodyLengthSize));
+            newHeader.MsgId = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(MuddyPacketHeader.MsgIdOffset, MuddyPacketHeader.MsgIdSize));
+            newHeader.MsgType = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(MuddyPacketHeader.MsgTypeOffset, MuddyPacketHeader.MsgTypeSize));
+            newHeader.BitFlags = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(MuddyPacketHeader.BitFlagsOffset, MuddyPacketHeader.BitFlagsSize));
 
             return newHeader;
+        }
+
+        private static void WriteSessionId(Span<byte> buffer, Guid sessionId)
+        {
+            MemoryMarshal.Write(buffer, sessionId);
+        }
+
+        private static Guid ReadSessionId(ReadOnlySpan<byte> buffer)
+        {
+            return MemoryMarshal.Read<Guid>(buffer);
         }
     }
 }

@@ -1,13 +1,10 @@
 ﻿using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Player;
 using Server.Core.Domain.World;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Core.CommandPipeline.ContextBuilder
 {
-    public class CommandContext
+    public record CommandContext
     {
         /// <summary>The original parsed command.</summary>
         public ParsedCommand Command { get; init; }

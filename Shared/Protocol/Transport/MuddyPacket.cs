@@ -1,4 +1,6 @@
-﻿namespace Shared.Protocol.Transport
+﻿using Windows.Media.Audio;
+
+namespace Shared.Protocol.Transport
 {
 
     /// <summary>
@@ -11,18 +13,29 @@
     /// Muddy protocol packets are serialized and deserialized.</remarks>
     public struct MuddyPacketHeader
     {
-        public const int Size = 12;
+        public const int Size = 28;
 
-        public const int BodyLengthOffset = 0;
-        public const int MsgIdOffset = 4;
-        public const int MsgTypeOffset = 8;
-        public const int BitFlagsOffset = 10;
-
+        public const int SessionIdSize = 16;
         public const int BodyLengthSize = 4;
         public const int MsgIdSize = 4;
         public const int MsgTypeSize = 2;
         public const int BitFlagsSize = 2;
 
+        public const int SessionIdOffset = 0;                                  // SessionId is the first segment, so it goes into offset 0.
+        public const int BodyLengthOffset = SessionIdOffset + SessionIdSize;  // BodyLength goes after SessionId, so its offset is the sum of SessionIdOffset and SesssionIdSize.
+        public const int MsgIdOffset = BodyLengthOffset + BodyLengthSize;       // MsgId goes after BodyLength, so its offset is the sum of BodyLengthOffset and BodyLengthSize.
+        public const int MsgTypeOffset = MsgIdOffset + MsgIdSize;               // MsgType goes after MsgId, so its offset is the sum of MsgIdOffset and MsgIdSize.
+        public const int BitFlagsOffset = MsgTypeOffset + MsgTypeSize;          // BitFlags goes after MsgType, so its offset is the sum of MsgTypeOffset and MsgTypeSize. Total header size is the sum of all field sizes, which is 28 bytes.
+
+
+        //public const int SessionIdOffset = 0;       // SessionId size is 16 bytes, so next field starts at offset 16.
+        //public const int BodyLengthOffset = 16;     // BodyLength is 4 bytes, so next field starts at offset 20.
+        //public const int MsgIdOffset = 20;          // MsgId is 4 bytes, so next field starts at offset 24.
+        //public const int MsgTypeOffset = 24;        // MsgType is 2 bytes, so next field starts at offset 26.
+        //public const int BitFlagsOffset = 26;       // BitFlags is 2 bytes, so total header size is 28 bytes.
+
+
+        public Guid SessionId;
         public UInt32 BodyLength;
         public UInt32 MsgId;
         public UInt16 MsgType;
@@ -32,10 +45,9 @@
     /// <summary>
     /// Represents a network packet containing a header, body, and CRC for integrity verification.
     /// </summary>
-    /// <remarks>The packet can be constructed from either a JSON string or binary data, and includes a header
-    /// with metadata such as session ID, message ID, type, and flags. Use the static Deserialize method to reconstruct
-    /// a packet from a serialized byte span. The class enforces maximum body size limits and validates CRC to ensure
-    /// data integrity. Exceptions are thrown if the packet is malformed or corrupted.</remarks>
+    /// <remarks>The packet can be constructed from binary data using MuddyPacketSerializer. 
+    /// The class holds the deserialized packet data including header, body, and CRC for validation.
+    /// Exceptions are thrown during deserialization if the packet is malformed or corrupted.</remarks>
     public sealed class MuddyPacket
     {        
         public MuddyPacketHeader Header { get; init; }          // Store the header as a struct for easy access to its fields.

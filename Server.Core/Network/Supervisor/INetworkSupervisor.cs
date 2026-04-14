@@ -1,8 +1,9 @@
-﻿using Server.Core.Network.Model;
-using Shared.Protocol.Types;
-using Shared.Identity;
+﻿using Server.Core.CommandPipeline;
+using Server.Core.Network.Model;
 using Shared.EventBus;
+using Shared.Identity;
 using Shared.Protocol.Transport;
+using Shared.Protocol.Types;
 
 namespace Server.Core.Network.Supervisor
 {
@@ -61,5 +62,13 @@ namespace Server.Core.Network.Supervisor
         /// null or contain null elements.</param>
         /// <param name="msg">The transport envelope containing the message to send to the specified clients. Cannot be null.</param>
         void SendToMultipleClients(IEnumerable<ConnectionId> clients, TransportEnvelope msg);
+
+        /// <summary>
+        /// Sets the command pipeline orchestrator to be used for processing commands.
+        /// </summary>
+        /// <param name="pipeline">The command pipeline orchestrator that defines the sequence of processing steps for commands. Cannot be
+        /// null.</param>
+        /// <returns>true if the pipeline was set successfully; otherwise, false.</returns>
+        public bool SetCommandPipeline(CommandPipelineOrchestrator pipeline);
     }
 }

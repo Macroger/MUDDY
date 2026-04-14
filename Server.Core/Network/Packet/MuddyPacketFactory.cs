@@ -1,4 +1,5 @@
-﻿using Shared.Protocol.Transport;
+﻿using Shared.Identity;
+using Shared.Protocol.Transport;
 
 namespace Server.Core.Network.Packet
 {
@@ -10,6 +11,7 @@ namespace Server.Core.Network.Packet
 
             MuddyPacketHeader newHeader = new MuddyPacketHeader();
 
+            newHeader.SessionId = message.SessionToken?.Value ?? SessionId.Unauthenticated.Value;
             newHeader.BodyLength = (UInt32)message.Payload.Length;
             newHeader.MsgId = (UInt32)message.MessageId.Value;
             newHeader.MsgType = (UInt16)message.MessageType;

@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Server.Core.CommandPipeline;
 using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Network.Listener;
 using Server.Core.Network.Model;
@@ -31,6 +32,16 @@ namespace Server.Core.Network.Listener.Tests
             }
             public void BroadcastMessage(TransportEnvelope msg) { }
             public void SendToClient(ConnectionId client, TransportEnvelope msg) { }
+
+            public void SendToMultipleClients(IEnumerable<ConnectionId> clients, TransportEnvelope msg)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool SetCommandPipeline(CommandPipelineOrchestrator pipeline)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class DummyConnectionIdGenerator : IConnectionIdGenerator

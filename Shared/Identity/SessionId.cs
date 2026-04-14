@@ -13,24 +13,11 @@
             Value = value;
         }
 
-        /// <summary>
-        /// Returns a SessionId representing an unauthenticated session.
-        /// </summary>
-        public static SessionId Unauthenticated => new SessionId(Guid.Empty);
-
-        /// <summary>Compares two SessionId values for equality.</summary>
-        public bool Equals(SessionId other) => Value == other.Value;
-
-        /// <summary>Returns the hash code for this SessionId.</summary>
-        public override int GetHashCode() => Value.GetHashCode();
-
-        /// <summary>Determines whether two SessionId values are equal.</summary>
-        public static bool operator ==(SessionId left, SessionId right) => left.Equals(right);
-
-        /// <summary>Determines whether two SessionId values are not equal.</summary>
-        public static bool operator !=(SessionId left, SessionId right) => !(left == right);
-
-        /// <summary>Compares this SessionId with an object for equality.</summary>
-        public override bool Equals(object? obj) => obj is SessionId other && Equals(other);
+        public static SessionId Unauthenticated => new SessionId(Guid.Empty);   /// Returns a SessionId representing an unauthenticated session.
+        public bool Equals(SessionId other) => Value == other.Value;            /// Determines whether the specified SessionId is equal to the current SessionId.
+        public override int GetHashCode() => Value.GetHashCode();               /// Returns a hash code for the current SessionId.
+        public static bool operator ==(SessionId left, SessionId right) => left.Equals(right); /// Determines whether two SessionId instances are equal.
+        public static bool operator !=(SessionId left, SessionId right) => !(left == right);   /// Determines whether two SessionId instances are not equal.
+        public override bool Equals(object? obj) => obj is SessionId other && Equals(other);   /// Determines whether the specified object is equal to the current SessionId.
     }
 }

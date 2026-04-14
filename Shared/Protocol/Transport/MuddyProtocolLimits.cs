@@ -17,7 +17,7 @@
 
         public bool AllowBinaryPayloads { get; } = true;           // Whether the server accepts binary payloads at all, as an additional layer of control over protocol usage
 
-        public int headerSize { get; } = 12;          // The size in bytes of the header.
+        public int headerSize { get; } = 28;          // The size in bytes of the header.
         
         public int tailSize { get; } = 4;             // The size in bytes of the CRC value at the end of the packet.
     }

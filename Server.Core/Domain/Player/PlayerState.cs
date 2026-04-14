@@ -11,21 +11,18 @@ namespace Server.Core.Domain.Player
     /// </remarks>
     public class PlayerState
     {
-        public ConnectionId ConnId { get; init; }       // Required - every player must have a connection ID.
-        public string PlayerName { get; init; }         // Required - every player must have a name.
-        public RoomId CurrentLocation { get; init; }    // Required - every player always has a location.
+        public required ConnectionId ConnId { get; init; }       // Required - every player must have a connection ID.
+        public required string PlayerName { get; init; }         // Required - every player must have a name.
+        public required RoomId CurrentLocation { get; init; }    // Required - every player always has a location.
 
-        /// <summary> Gets the set of conditions that are currently active for the player. </summary>
-        /// <remarks>The set is read-only and reflects the current state of all active conditions.
-        /// Conditions may affect gameplay or player abilities depending on their type.</remarks>
-        public IReadOnlySet<PlayerCondition> ActiveConditions { get; init; } = new HashSet<PlayerCondition>();
+        public required IReadOnlySet<PlayerCondition> ActiveConditions { get; init; }  // Required - every player must have an active conditions set, even if it's empty.
 
-        public PlayerState(ConnectionId connection, string playerName, RoomId playerLocation)
+        public PlayerState(ConnectionId connection, string playerName, RoomId playerLocation, IReadOnlySet<PlayerCondition>? playerConditions)
         {
             ConnId = connection;
             PlayerName = playerName;
             CurrentLocation = playerLocation;
-            ActiveConditions = new HashSet<PlayerCondition>();
+            ActiveConditions = playerConditions ?? new HashSet<PlayerCondition>();
         }
     }
 }

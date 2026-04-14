@@ -8,7 +8,7 @@ namespace Shared.Identity
     /// A wrapper to represent the unique identifier for a room in the game world.
     /// This helps prevent accidentally using a room ID in place of another string value, and vice versa.
     /// </summary>
-    public readonly struct RoomId
+    public readonly struct RoomId : IEquatable<RoomId>
     {
         public string Value { get; }
 
@@ -19,5 +19,11 @@ namespace Shared.Identity
 
             Value = value;
         }
+
+        public bool Equals(RoomId other) => Value == other.Value;       /// Determines whether the specified RoomId is equal to the current RoomId.       
+        public override int GetHashCode() => Value.GetHashCode();       /// Returns a hash code for the current RoomId.
+        public override bool Equals(object? obj) => obj is RoomId other && Equals(other);   /// Determines whether the specified object is equal to the current RoomId.
+        public static bool operator ==(RoomId left, RoomId right) => left.Equals(right);    /// Determines whether two RoomId instances are equal.
+        public static bool operator !=(RoomId left, RoomId right) => !left.Equals(right);   /// Determines whether two RoomId instances are not equal.
     }
 }
