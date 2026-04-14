@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Server.Core.CommandPipeline.Parser
 {
-    public class StandardCommandParser
+    public class StandardCommandParser : ICommandParser
     {
         public ParseResult Parse(TransportEnvelope envelope)
         {

@@ -21,16 +21,24 @@ namespace Server.Core.Domain.World
         /// </summary>
         public IReadOnlySet<ConnectionId> PlayersPresent { get; init; } = new HashSet<ConnectionId>();
 
+        /// <summary>
+        /// Maps direction names (e.g. "north") to the destination <see cref="RoomId"/>.
+        /// If a direction is not in this dictionary, there is no exit in that direction.
+        /// </summary>
+        public IReadOnlyDictionary<string, RoomId> Exits { get; init; } = new Dictionary<string, RoomId>();
+
         public RoomState(
             RoomId id,
             string? description,
             IReadOnlySet<RoomCondition> roomConditions,
-            IReadOnlySet<ConnectionId> playersInRoom)
+            IReadOnlySet<ConnectionId> playersInRoom,
+            IReadOnlyDictionary<string, RoomId>? exits = null)
         {
             Id = id;
             Description = description ?? "";
             Conditions = roomConditions ?? new HashSet<RoomCondition>();
             PlayersPresent = playersInRoom ?? new HashSet<ConnectionId>();
+            Exits = exits ?? new Dictionary<string, RoomId>();
         }
     }
 }

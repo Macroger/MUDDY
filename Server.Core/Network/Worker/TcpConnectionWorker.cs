@@ -247,7 +247,7 @@ namespace Server.Core.Network.Worker
                             MuddyPacket pkt = _packetSerializer.Deserialize(fullPacketBytes);
 
                             // Create a TransportEnvelope from the deserialized packet
-                            var msg = new Shared.Protocol.Transport.TransportEnvelope(
+                            var msg = new TransportEnvelope(
                                 messageId: new MessageId(pktHeader.MsgId),                                
                                 messageType: (TransportMessageType)pktHeader.MsgType,
                                 flags: (MessageFlags)pkt.Header.BitFlags,

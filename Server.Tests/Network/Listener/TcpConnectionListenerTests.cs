@@ -49,11 +49,27 @@ namespace Server.Core.Network.Listener.Tests
             }
         }
 
+        private sealed class DummyListenerNewConnectionHandler : IConnectionAcceptedHandler
+        {
+            public AcceptedConnection? LastAcceptedConnection { get; private set; }
+
+            public void OnConnectionAccepted(AcceptedConnection connection)
+            {
+                LastAcceptedConnection = connection;
+            }
+
+            public void OnNewConnection(AcceptedConnection connection)
+            {
+                LastAcceptedConnection = connection;
+            }
+        }
+
 
         private IPEndPoint _localEndPoint;
         private DummySupervisor _supervisor;
         private DummyConnectionIdGenerator _connIdGen;
         private DummyListenerErrorHandler _listenerErrorHandler;
+        private DummyListenerNewConnectionHandler _listenerNewConnectionHandler;
 
         [TestInitialize]
         public void Setup()
@@ -62,13 +78,14 @@ namespace Server.Core.Network.Listener.Tests
             _supervisor = new DummySupervisor();
             _connIdGen = new DummyConnectionIdGenerator();
             _listenerErrorHandler = new DummyListenerErrorHandler();
+            _listenerNewConnectionHandler = new DummyListenerNewConnectionHandler();
         }
 
         [TestMethod]
         public void Start_SetsListenerIsRunning_AndStartsListener()
         {
             // Arrange
-            var listener = new TcpConnectionListener(_localEndPoint, _supervisor, _connIdGen, _listenerErrorHandler);
+            var listener = new TcpConnectionListener(_localEndPoint, _supervisor, _connIdGen, _listenerErrorHandler, _listenerNewConnectionHandler);
 
             // Act
             listener.Start();
@@ -84,7 +101,7 @@ namespace Server.Core.Network.Listener.Tests
         public void Start_WhenAlreadyRunning_DoesNotThrow()
         {
             // Arrange
-            var listener = new TcpConnectionListener(_localEndPoint, _supervisor, _connIdGen, _listenerErrorHandler);
+            var listener = new TcpConnectionListener(_localEndPoint, _supervisor, _connIdGen, _listenerErrorHandler, _listenerNewConnectionHandler);
             listener.Start();
 
             // Act & Assert
@@ -98,7 +115,7 @@ namespace Server.Core.Network.Listener.Tests
         public async Task StopAsync_StopsListenerAndIsIdempotent()
         {
             // Arrange
-            var listener = new TcpConnectionListener(_localEndPoint, _supervisor, _connIdGen, _listenerErrorHandler);
+            var listener = new TcpConnectionListener(_localEndPoint, _supervisor, _connIdGen, _listenerErrorHandler, _listenerNewConnectionHandler);
             listener.Start();
 
             // Act
@@ -119,7 +136,7 @@ namespace Server.Core.Network.Listener.Tests
             usedPort.Start();
             var port = ((IPEndPoint)usedPort.LocalEndpoint).Port;
             var ep = new IPEndPoint(IPAddress.Loopback, port);
-            var listener = new TcpConnectionListener(ep, _supervisor, _connIdGen, _listenerErrorHandler);
+            var listener = new TcpConnectionListener(ep, _supervisor, _connIdGen, _listenerErrorHandler, _listenerNewConnectionHandler);
 
             // Act
             try 
@@ -148,7 +165,8 @@ namespace Server.Core.Network.Listener.Tests
                 _localEndPoint,
                 _supervisor,
                 _connIdGen,
-                _listenerErrorHandler
+                _listenerErrorHandler,
+                _listenerNewConnectionHandler
             );
 
             // Act & Assert

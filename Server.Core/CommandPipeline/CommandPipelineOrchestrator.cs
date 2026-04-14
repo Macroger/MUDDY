@@ -1,4 +1,5 @@
 ﻿using Server.Core.CommandPipeline.Authentication;
+using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Parser;
 using Server.Core.CommandPipeline.Policies;
@@ -150,7 +151,6 @@ namespace Server.Core.CommandPipeline
             }
         }
 
-
         private async Task HandleMessageAsync(TransportEnvelope msg)
         {
             // Validate that the msg is not null.
@@ -259,7 +259,7 @@ namespace Server.Core.CommandPipeline
             }
 
             // Route & Execute
-            var handler = _cmdRouter.Route(context.Command);
+            ICommandHandler? handler = _cmdRouter.Route(parseResult.Command!);
             if (handler == null)
             {
                 TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
@@ -276,9 +276,18 @@ namespace Server.Core.CommandPipeline
             }
 
             var commandResult = await handler.ExecuteAsync(context);
-            _networkSupervisor.SendToClient(msg.ConnId, commandResult);
-        }
 
+            TransportEnvelope successResponse = new TransportEnvelope(
+                messageId: _messageIdGenerator.New(),
+                sessionId: null,
+                messageCorrelationId: msg.MessageId,
+                messageType: TransportMessageType.Response,
+                flags: Shared.Protocol.Types.MessageFlags.None,
+                payload: Encoding.UTF8.GetBytes(commandResult.Message),
+                connectionId: msg.ConnId
+            );
+            _networkSupervisor.SendToClient(msg.ConnId, successResponse);
+        }
 
         private TransportEnvelope CreateErrorResponse(TransportMessageType? errorType, string? message, ConnectionId connId, MessageId? msgId = null)
         {

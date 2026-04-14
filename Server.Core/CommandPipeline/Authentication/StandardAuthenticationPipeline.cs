@@ -14,7 +14,7 @@ namespace Server.Core.CommandPipeline.Authentication
     /// <summary>
     /// Handles login and register commands and creating sessions for authenticated players.
     /// </summary>
-    public class AuthenticationPipeline : IAuthenticationPipeline
+    public class StandardAuthenticationPipeline : IAuthenticationPipeline
     {
         private readonly IAuthenticationService _authService;
         private readonly IAccountService _accountService;
@@ -22,7 +22,7 @@ namespace Server.Core.CommandPipeline.Authentication
         private readonly IEventBus _eventBus;
         private readonly IMessageIdGenerator _messageIdGenerator;
 
-        public AuthenticationPipeline(
+        public StandardAuthenticationPipeline(
             IAuthenticationService authService,
             IAccountService accountService,
             INetworkSupervisor networkSupervisor,

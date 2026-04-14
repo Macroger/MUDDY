@@ -10,12 +10,13 @@ namespace Shared.Logging
         public EventBusLogger(IEventBus bus, LogLevel minimumLevel)
         {
             _minimumLogLevel = minimumLevel;
-            bus.Subscribe(EventMessageType.Log, HandleLog);
+            bus.SubscribeAll(HandleLog);
         }
 
-        private void HandleLog(EventEnvelope envelope)
+        private void HandleLog(object envelope)
         {
-            if (envelope.Payload is not LogRecord log) return;
+            if (envelope is not EventEnvelope evt) return;
+            if (evt.Payload is not LogRecord log) return;
             if (log.Level < _minimumLogLevel) return;
 
             Console.WriteLine(

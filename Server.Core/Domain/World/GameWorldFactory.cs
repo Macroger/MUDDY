@@ -25,6 +25,7 @@ namespace Server.Core.Domain.World
 
             // Add new rooms by creating a method and adding it to the list here.
             roomList.Add(CreateTavernRoom());
+            roomList.Add(CreateCityRoom());
             roomList.Add(CreateForestRoom());
 
             // Crete a dictionary to hold the rooms, using the room ID as the key for easy lookup.
@@ -49,11 +50,41 @@ namespace Server.Core.Domain.World
         private static RoomState CreateTavernRoom()
         {
             var roomId = new RoomId("tavern");
-            var description = "A cozy tavern filled with patrons and the smell of ale.";
-            var conditions = new HashSet<RoomCondition>();
+            var roomDescription = "A cozy tavern filled with patrons and the smell of ale.";
+            var roomConditions = new HashSet<RoomCondition>();
             var playersPresent = new HashSet<ConnectionId>();
+            var roomExits = new Dictionary<string, RoomId>
+            {
+                { "north", new RoomId("town") } // Exit to the north leading to the forest room.
+            };
 
-            return new RoomState(roomId, description, conditions, playersPresent);
+            return new RoomState(
+                id: roomId, 
+                description: roomDescription, 
+                roomConditions: roomConditions, 
+                playersInRoom: playersPresent, 
+                exits: roomExits);
+        }
+
+        /// <summary>Creates the city room.</summary>
+        private static RoomState CreateCityRoom()
+        {
+            var roomId = new RoomId("town");
+            var roomDescription = "A bustling city block with numerous merchants and potential employers.";
+            var roomConditions = new HashSet<RoomCondition>();
+            var playersPresent = new HashSet<ConnectionId>();
+            var roomExits = new Dictionary<string, RoomId>
+            {
+                { "north", new RoomId("forest") }, // Exit to the north leading to the forest room.
+                {  "south", new RoomId("tavern") } // Exit to the south leading back to the tavern room.
+            };
+
+            return new RoomState(
+                id: roomId,
+                description: roomDescription,
+                roomConditions: roomConditions,
+                playersInRoom: playersPresent,
+                exits: roomExits);
         }
 
         /// <summary>Creates the forest room.</summary>
@@ -63,8 +94,17 @@ namespace Server.Core.Domain.World
             var description = "A dense forest with towering trees.";
             var conditions = new HashSet<RoomCondition>();
             var playersPresent = new HashSet<ConnectionId>();
+            var roomExits = new Dictionary<string, RoomId>
+            {
+                { "south", new RoomId("town") } // Exit to the south leading back to the tavern room.
+            };
 
-            return new RoomState(roomId, description, conditions, playersPresent);
+            return new RoomState(
+                id: roomId,
+                description: description,
+                roomConditions: conditions,
+                playersInRoom: playersPresent,
+                exits: roomExits);
         }
     }
 }
