@@ -248,6 +248,7 @@ namespace Server.Core.Network.Worker
 
                             // Create a TransportEnvelope from the deserialized packet
                             var msg = new TransportEnvelope(
+                                sessionId: new SessionId(pktHeader.SessionId),
                                 messageId: new MessageId(pktHeader.MsgId),                                
                                 messageType: (TransportMessageType)pktHeader.MsgType,
                                 flags: (MessageFlags)pkt.Header.BitFlags,
