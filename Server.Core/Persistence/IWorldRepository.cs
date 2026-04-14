@@ -10,5 +10,8 @@ namespace Server.Core.Persistence
 
         /// <summary>Gets a specific room's state.</summary>
         Task<RoomState?> GetRoomAsync(RoomId roomId);
+
+        /// <summary> Updates the state of a specific room in the world.</summary>
+        Task UpdateRoomAsync(RoomState room);
     }
 }

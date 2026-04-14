@@ -1,4 +1,5 @@
 ﻿using Server.Core.Domain.Authentication;
+using Shared.Identity;
 using Shared.Protocol.Transport;
 
 namespace Server.Core.CommandPipeline.Policies
@@ -23,7 +24,7 @@ namespace Server.Core.CommandPipeline.Policies
         {
             // If unauthenticated (SessionId = 0), allow it to pass
             // The orchestrator will route to auth pipeline
-            if (msg.SessionToken.Value == 0)
+            if (msg.SessionToken == SessionId.Unauthenticated)
             {
                 return await Task.FromResult(PolicyResult.Success());
             }

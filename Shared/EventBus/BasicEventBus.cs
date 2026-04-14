@@ -4,9 +4,67 @@ using Shared.Protocol.Types;
 namespace Shared.EventBus
 {
     public sealed class BasicEventBus : IEventBus
-    {     
-        private readonly Dictionary<EventMessageType, Dictionary<Type, List<object>>> _Subscribers = new();
-        private readonly Dictionary<EventMessageType, List<object>> _globalSubscribers = new(); 
+    {
+        /// <summary>
+        /// An internal interface.
+        /// </summary>  
+        private interface IEventSubscriber
+        { 
+            /// Invokes the subscriber with the given event.
+            void Invoke(object newEvent);
+        }
+
+        private class EventSubscriber<T>: IEventSubscriber where T : class
+        {
+            /// <summary>
+            /// A reference to the action that will handle the event.
+            /// </summary>
+            private readonly Action<T> _handler;
+
+            /// Initializes a new instance of the EventSubscriber class with the specified handler.
+            public EventSubscriber(Action<T> handler)
+            {
+                _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+            }
+
+            /// <summary>
+            /// Invokes the event handler if the specified event is of the expected type.
+            /// </summary>            
+            /// <param name="newEvent">The event object to be processed. If the object is of the expected type, it will be passed to the
+            /// handler; otherwise, it will be ignored.</param>
+            public void Invoke(object newEvent)
+            {
+                if (newEvent is T typedEvent)
+                {
+                    _handler(typedEvent);
+                }
+            }
+
+            /// <summary>
+            /// Determines equality based on the underlying handler reference.
+            /// </summary>
+            public override bool Equals(object? obj) =>
+                obj is EventSubscriber<T> other && _handler == other._handler;
+
+            /// <summary>
+            /// Returns a hash code based on the underlying handler reference.
+            /// </summary>
+            public override int GetHashCode() => _handler.GetHashCode();
+
+            
+        }
+
+        /// <summary>
+        /// A collection holding the subscribers for each event category and type.
+        /// </summary>
+        private readonly Dictionary<EventMessageType, Dictionary<Type, HashSet<IEventSubscriber>>> _subscribers = new();
+
+
+        /// <summary>
+        /// Global subscribers - stores handlers for all events regardless of type or category.
+        /// Uses HashSet to automatically prevent duplicate registrations.
+        /// </summary>
+        private readonly HashSet<Action<object>> _globalSubscriptionsList = new();
 
 
         /// <summary>
@@ -14,78 +72,85 @@ namespace Shared.EventBus
         /// </summary>
         public void Publish<T>(EventMessageType category, T newEvent) where T : class
         {
+            // Validate the newEvent argument
             if (newEvent == null) throw new ArgumentNullException(nameof(newEvent));
 
+            // Get the type of the event being published
             var eventType = typeof(T);
 
             // Check if there are any typed subscribers for this category
-            if (_Subscribers.TryGetValue(category, out var typeBucket))
+            if (_subscribers.TryGetValue(category, out var typeBucket))
             {
-                // Check if there are handlers for this specific event type
-                
+                // Check if there are handlers for this specific event type                
                 if (typeBucket.TryGetValue(eventType, out var handlers))
                 {
-                    // Cast handlers back to Action<T> and invoke each one
-                    foreach (var handler in handlers.Cast<Action<T>>())
+                    // Iterate through the list of handlers - invoking each with event
+                    foreach (var handler in handlers)
                     {
-                        handler(newEvent);
+                        handler.Invoke(newEvent);
                     }
                 }
             }
 
             // Also invoke global typed subscribers (subscribe to ALL of type T)
-            if (_globalSubscribers.TryGetValue(eventType, out var globalHandlers))
+            foreach (var handler in _globalSubscriptionsList)
             {
-                foreach (var handler in globalHandlers.Cast<Action<T>>())
-                {
-                    handler(@event);
-                }
+                handler(newEvent);
             }
         }
 
-        public void Publish(EventEnvelope envelope)
+        /// <summary>
+        /// Subscribes a handler to a specific event type within a category.
+        /// </summary>
+        public ISubscriptionToken Subscribe<T>(EventMessageType eventCategory, Action<T> handler) where T : class
         {
-            // Deliver to global subscribers
-            foreach (var subscriber in _globalSubscribers)
+            if (handler == null) throw new ArgumentNullException(nameof(handler), $"Unable to subscribe - action handler is null. Category: {eventCategory} ");
+
+            // Get the type of the event being published.
+            var eventType = typeof(T);
+
+            // Create a new subscriber instance for the provided handler.
+            var subscriber = new EventSubscriber<T>(handler);
+
+            // Ensure the category bucket exists in the subscribers dictionary.
+            if (!_subscribers.ContainsKey(eventCategory))
             {
-                subscriber(envelope);
+                _subscribers[eventCategory] = new Dictionary<Type, HashSet<IEventSubscriber>>();
             }
 
-            // Deliver to subscribers of this message type
-            if (_subscribers.TryGetValue(envelope.MsgType, out var handlers))
+            // Get the type bucket for the specified category.
+            var typeBucket = _subscribers[eventCategory];
+
+            // Ensure the type list exists
+            if (!typeBucket.ContainsKey(eventType))
             {
-                foreach (var handler in handlers)
-                {
-                    handler(envelope);
-                }
+                typeBucket[eventType] = new HashSet<IEventSubscriber>();
             }
+
+            // Get the set of handlers for this event type within the category.
+            var handlers = typeBucket[eventType];
+
+            // Add the subscriber if not already present
+            handlers.Add(subscriber);
+
+            // Return a token that removes the subscription when disposed
+            return new BasicSubscriptionToken(() => handlers.Remove(subscriber));
+
         }
 
-        //public ISubscriptionToken Subscribe(EventMessageType messageType, Action<EventEnvelope> handler)
-        //{
-        //    //Check if there is a bucket for this type of eventMessage in the subscribers dict.
-        //    if (!_subscribers.TryGetValue(messageType, out var handlers))
-        //    {
-        //        handlers = new List<Action<EventEnvelope>>();
-        //        _subscribers[messageType] = handlers;
-        //    }
-
-        //    handlers.Add(handler);
-
-        //    // Generate a new subscription token and return it
-        //    return new BasicSubscriptionToken(() => handlers.Remove(handler));
-        //}
-
-        public ISubscriptionToken Subscribe<T>(EventMessageType category, Action<T> handler) where T : class
+        /// <summary>
+        /// Subscribes a handler to all events, regardless of type or category.
+        /// Useful for cross-cutting concerns like logging or monitoring.
+        /// </summary>
+        public ISubscriptionToken SubscribeAll(Action<object> handler)
         {
-            throw new NotImplementedException();
-        }
+            // Validate the handler argument
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
 
-        public ISubscriptionToken SubscribeAll(Action<EventEnvelope> handler)
-        {
-            _globalSubscribers.Add(handler);
+            // HashSet automatically rejects duplicate handlers
+            _globalSubscriptionsList.Add(handler);
 
-            return new BasicSubscriptionToken( () => _globalSubscribers.Remove(handler));
+            return new BasicSubscriptionToken(() => _globalSubscriptionsList.Remove(handler));
         }
     }
 }

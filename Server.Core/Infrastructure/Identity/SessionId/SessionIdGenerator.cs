@@ -5,7 +5,7 @@
         public Shared.Identity.SessionId New()
         {
             // Generate a new GUID and normalize it to a compact string form.
-            string value = Guid.NewGuid().ToString("N");
+            Guid value = Guid.NewGuid();
 
             return new Shared.Identity.SessionId(value);
 

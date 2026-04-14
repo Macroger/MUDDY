@@ -1,35 +1,116 @@
 ﻿using Server.Core.CommandPipeline;
+using Server.Core.CommandPipeline.Authentication;
+using Server.Core.CommandPipeline.CommandHandler;
+using Server.Core.CommandPipeline.CommandRouter;
+using Server.Core.CommandPipeline.ContextBuilder;
+using Server.Core.CommandPipeline.Parser;
+using Server.Core.CommandPipeline.Policies;
+using Server.Core.Domain.Authentication;
+using Server.Core.Domain.Services.ConcreteClasses;
+using Server.Core.Domain.Services.Interfaces;
+using Server.Core.Infrastructure.Identity.MessageId;
+using Server.Core.Infrastructure.Identity.SessionId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Listener;
 using Server.Core.Network.Supervisor;
+using Server.Core.Persistence;
 using Shared.EventBus;
 
 namespace Server.Core.Application
 {
     public class SystemInitializer
     {
-        private readonly IEventBus _eventBus;
-        private readonly INetworkSupervisor _networkSupervisor;
         private readonly CommandPipelineOrchestrator _commandPipelineOrchestrator;
         private readonly LifecycleCoordinator _lifecycleCoordinator;
 
-        public SystemInitializer(IEventBus eventBus)
+        private readonly IEventBus _eventBus;
+        private readonly INetworkSupervisor _networkSupervisor;
+
+        private readonly IMessageIdGenerator _messageIdGenerator;
+        private readonly ISessionIdGenerator _sessionIdGenerator;
+
+        private readonly IPlayerRepository _playerRepository;
+        private readonly IWorldRepository _worldRepository;
+
+        private readonly IChatService _chatService;
+        private readonly IWorldMovementService _movementService;
+        private readonly IWorldQueryService _worldQueryService;
+        private readonly IPlayerQueryService _playerQueryService;
+
+        public SystemInitializer()
         {
-            _eventBus = eventBus;
+            _eventBus = new BasicEventBus();
+
             _lifecycleCoordinator = new LifecycleCoordinator();
 
-            // Create the command pipeline orchestrator
-            _commandPipelineOrchestrator = new CommandPipelineOrchestrator();
-           
+            _messageIdGenerator = new MessageIdGenerator();
+            _sessionIdGenerator = new SessionIdGenerator();
+
+            _playerRepository = new InMemoryPlayerRepository();
+            _worldRepository = new InMemoryWorldRepository();
+            
+
             // Create the network supervisor
             _networkSupervisor = new StandardNetworkSupervisor(
-                _commandPipelineOrchestrator,   // Provide a reference to the command pipeline orchestrator.
                 _lifecycleCoordinator,          // Provide reference to the lifecycle coordinator for state-aware behavior.
-                _eventBus                       // Provide a reference to the eventBus.
+                _eventBus,                      // Provide a reference to the eventBus.
+                _messageIdGenerator             // Provide a reference to the messageIdGenerator
+            );
+
+            // Create domain services
+            _chatService = new ChatService(_eventBus, _messageIdGenerator);
+            _movementService = new WorldMovementService(_playerRepository, _worldRepository);
+            _playerQueryService = new PlayerQueryService();
+            _worldQueryService = new WorldQueryService();
+
+            // Create handlers and wrap services
+            var chatHandler = new ChatCommandHandler(_chatService);
+            var movementHandler = new MovementCommandHandler(_movementService, _worldQueryService);
+            var playerHandler = new PlayerCommandHandler(_playerQueryService);
+
+            // Register handlers in router
+            var cmdRouter = new StandardCommandRouter();
+            cmdRouter.RegisterHandler("say", chatHandler);
+            cmdRouter.RegisterHandler("move", movementHandler);
+            cmdRouter.RegisterHandler("player", playerHandler);
+
+            // Create a standard command parser.
+            ICommandParser cmdParser = new StandardCommandParser();
+
+            // Create a standard command context builder.
+            ICommandContextBuilder cmdContextBuilder = new StandardCommandContextBuilder(_playerRepository, _worldRepository);
+
+            // Create the auth pipeline dependencies
+            IAuthenticationService authService = new InMemoryAuthenticationService(_eventBus, _sessionIdGenerator);
+            IAccountService accountService = new InMemoryAccountService();
+
+            // Create the authentication pipeline
+            IAuthenticationPipeline authPipeline = new StandardAuthenticationPipeline(authService, accountService, _networkSupervisor, _eventBus, _messageIdGenerator);
+
+            // Create the fist pass policy list and add the authentication policy to it, so that authentication will be processed before any commands are routed.
+            List<IFirstPassPolicy> firstPassPolicies = new List<IFirstPassPolicy>();
+            firstPassPolicies.Add(new AuthenticationPolicy(authService));
+
+            // Create the second pass policy list and add the muted player policy to it
+            List<ISecondPassPolicy> secondPassPolicies = new List<ISecondPassPolicy>();
+            secondPassPolicies.Add(new MutedPlayerPolicy());   
+
+            // Create orchestrator with fully-wired router
+            _commandPipelineOrchestrator = new CommandPipelineOrchestrator(
+                _eventBus,
+                _networkSupervisor,
+                cmdRouter,
+                cmdParser,
+                _messageIdGenerator,
+                cmdContextBuilder,
+                authPipeline,
+                firstPassPolicies,
+                secondPassPolicies
             );
 
             // Register components for managed lifecycle
             RegisterLifecycleComponent(_networkSupervisor);
+            RegisterLifecycleComponent(_commandPipelineOrchestrator);
         }
 
         /// <summary>

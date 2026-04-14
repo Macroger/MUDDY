@@ -1,5 +1,6 @@
 ﻿using Server.Core.CommandPipeline;
 using Server.Core.Infrastructure.Identity.ConnectionId;
+using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Listener;
 using Server.Core.Network.Model;
@@ -14,7 +15,8 @@ using Shared.Protocol.Types;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using static Shared.EventBus.DomainEvents.ChatEvents;
+using Windows.Media.Protection.PlayReady;
+
 
 namespace Server.Core.Network.Supervisor
 {
@@ -28,7 +30,7 @@ namespace Server.Core.Network.Supervisor
         #region Dependencies
         private IConnectionIdGenerator _connectionIdGenerator;        
         private IEventBus _eventBus;
-        private CommandPipelineOrchestrator _commandPipeline;
+        private CommandPipelineOrchestrator? _commandPipeline;
         private TcpConnectionListener _tcpConnectionListener;
         private MuddyPacketFactory _packetFactory;
         private MuddyProtocolLimits _packetLimits;
@@ -36,12 +38,12 @@ namespace Server.Core.Network.Supervisor
         private CancellationTokenSource _serverCts;
         private IPEndPoint _listenerEndPoint;
         private readonly IServerLifecycle _lifecycle;
-        private ISubscriptionToken? _chatEventSubscription;
+        private ISubscriptionToken? _outboundMessageSubscription;
+        private IMessageIdGenerator _messageIdGenerator;
         #endregion
 
         // Add event for new connections
-        public event EventHandler<AcceptedConnection>? NewConnectionAccepted;
-       
+        //public event EventHandler<AcceptedConnection>? NewConnectionAccepted;
 
         private ConcurrentDictionary<ConnectionId, ConnectionContext> _activeConnections = new ConcurrentDictionary<ConnectionId, ConnectionContext>();
 
@@ -56,9 +58,9 @@ namespace Server.Core.Network.Supervisor
         /// <param name="port">The port number on which the supervisor should listen for incoming connections. Must be in the range 1..65535.</param>
         /// <exception cref="System.ArgumentOutOfRangeException">Thrown if the provided <paramref name="port"/> is outside the valid range.</exception>
         public StandardNetworkSupervisor( 
-            CommandPipelineOrchestrator commandPipeline,
             IServerLifecycle lifeCycle,
             IEventBus bus, 
+            IMessageIdGenerator messageIdGenerator,
             int port = 30333)
         {
             // Validate port number is acceptable.
@@ -66,6 +68,7 @@ namespace Server.Core.Network.Supervisor
 
             // Dependencies - Generate new instances for use internally
             _connectionIdGenerator = new ConnectionIdGenerator();
+            _messageIdGenerator = messageIdGenerator;
             _listenerEndPoint = new IPEndPoint(IPAddress.Any, port);
             _tcpConnectionListener = new TcpConnectionListener(
                localEndPoint: _listenerEndPoint,
@@ -79,7 +82,7 @@ namespace Server.Core.Network.Supervisor
             _packetSerializer = new MuddyPacketSerializer(_packetLimits);
 
             // Wire up DI items
-            _commandPipeline = commandPipeline;
+            _commandPipeline = null;
             _eventBus = bus;
             _lifecycle = lifeCycle;
 
@@ -294,15 +297,11 @@ namespace Server.Core.Network.Supervisor
         /// <remarks>If the listener is already running, this method returns true without taking further action. If starting the listener fails, the method returns false and does not throw an exception.</remarks>
         public bool StartAcceptingClients()
         {
-            // Check if the network is already running, if so return true.
-            if (IsListeningForConnections == true) return true;
+            
             try
             {
                 // Initiate the TCP listener on the configured endpoint.
                 _tcpConnectionListener.Start();
-
-                // Log success event to eventBus here.
-                IsListeningForConnections = true;
 
                 // Log the event
                 EventBusHelper.PublishEvent(
@@ -461,32 +460,74 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         public void Start()
         {
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.System,
-                new EventReason(
-                    "Network supervisor starting",
-                    new { endpoint = _listenerEndPoint }
-                )
-            );
+            // Check if the commandPipeline has been set
+            if(_commandPipeline == null )
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Error,
+                    new EventReason(
+                        "Cannot start network supervisor, command pipeline not set",
+                        new { }
+                    )
+                );
+                return;
+            }
+
+            // Check if the network is already running.
+            if (IsListeningForConnections == true)
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason(
+                        "Network supervisor already started",
+                        new { endpoint = _listenerEndPoint }
+                    )
+                );
+                return;
+            }            
+
+            IsListeningForConnections = StartAcceptingClients();
+
+            if(IsListeningForConnections == true)
+            {
+                EventBusHelper.PublishEvent
+                (
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason(
+                        "Network supervisor starting",
+                        new { endpoint = _listenerEndPoint }
+                    )
+                );
+            }
+            else
+            {
+                EventBusHelper.PublishEvent
+                (
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason
+                    (
+                        "Network supervisor failed to start"
+                    )
+                );
+            }
 
             // Subscribe and keep the token
-            _chatEventSubscription = _eventBus.Subscribe(
-                EventMessageType.Chat,
-                OnPlayerSaid
-                );
+            _outboundMessageSubscription = _eventBus.Subscribe<NetworkEvents.OutboundMessageEvent>
+            (
+                EventMessageType.Network,
+                OnOutboundMessageRequested
+            );
 
-            StartAcceptingClients();
+            return;
         }
 
         /// <summary>
         /// Stops the network supervisor and performs necessary cleanup operations.
         /// </summary>
-        /// <remarks>
-        /// This method publishes a system event indicating that the network supervisor is
-        /// stopping before shutting down internal resources. After calling this method, the supervisor will no longer
-        /// process network events.
-        /// </remarks>
         public void Stop()
         {
             EventBusHelper.PublishEvent(
@@ -497,13 +538,111 @@ namespace Server.Core.Network.Supervisor
                     new { endpoint = _listenerEndPoint }
                 )
             );
-            
-            _chatEventSubscription?.Dispose();
+
+            _outboundMessageSubscription?.Dispose();
 
             ShutdownSupervisor();
         }
 
+        /// <summary>
+        /// Sets the command pipeline orchestrator that the network supervisor will use to process incoming messages from clients.         /// </summary>
+        /// <param name="pipeline">A reference to the commandPipeline to be used.</param>
+        /// <returns> bool: True when command pipeline was successfully set.</returns>
+        public bool SetCommandPipeline(CommandPipelineOrchestrator pipeline)
+        {
+            // Validate that the incomming pipeline is not null
+            if (pipeline == null) return false;
+
+            // Validate that the pipeline has not yet been set.
+            // We do not want to allow changing the pipeline after it has been set.
+            if (_commandPipeline != null) return false;
+
+            // Set the pipeline
+            _commandPipeline = pipeline;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Sends a message to multiple client connections specified by their connection IDs.
+        /// </summary>
+        /// <param name="clients">A list of the clients to send to</param>
+        /// <param name="msg">The message to send to each client</param>
+        public void SendToMultipleClients(IEnumerable<ConnectionId> clients, TransportEnvelope msg)
+        {
+            if(clients == null || !clients.Any())
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Error,
+                    new EventReason(
+                        "No recipients specified for outbound message",
+                        new { messageId = msg.MessageId, messageType = msg.MessageType }
+                    )
+                );
+                return;
+            }
+
+
+            foreach (var client in clients)
+            {
+                try
+                {
+                    // Try to find the connection worker for the specified client connection ID in the active connections dictionary.
+                    bool result = _activeConnections.ContainsKey(client);
+
+                    if (result)
+                    {
+                        // Fire off log message to the eventBus
+                        ConnectionContext connection = _activeConnections[client];
+                        connection.Worker.SendMessage(msg);
+
+                        // Log the event
+                        EventBusHelper.PublishEvent(
+                            _eventBus,
+                            EventMessageType.Network,
+                            new EventReason(
+                                "Message sent to client",
+                                new { connectionId = client, messageId = msg.MessageId, messageType = msg.MessageType }
+                            )
+                        );
+                    }
+                }
+                catch
+                {
+                    // Log failure event to eventBus here.
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.Error,
+                        new EventReason(
+                            "Failed to send message to client",
+                            new { connectionId = client, messageId = msg.MessageId, messageType = msg.MessageType }
+                        )
+                    );
+                }
+            }
+
+        }
+
         #region Event Handlers
+
+        /// <summary>
+        /// Handles outbound message requests from any part of the system that needs to push
+        /// a message to clients without going through the inbound command pipeline.
+        /// </summary>
+        private void OnOutboundMessageRequested(NetworkEvents.OutboundMessageEvent evnt)
+        {
+            var envelope = new TransportEnvelope(
+                messageId: _messageIdGenerator.New(),
+                sessionId: null,
+                messageType: evnt.MessageType,
+                flags: MessageFlags.None,
+                payload: Encoding.UTF8.GetBytes(evnt.Message),
+                connectionId: default
+            );
+
+            SendToMultipleClients(evnt.Recipients, envelope);
+        }
 
         /// <summary>
         /// Handles errors that occur in a connection worker by terminating the associated connection and publishing an error event.
@@ -595,8 +734,52 @@ namespace Server.Core.Network.Supervisor
         /// <param name="e">The protocol envelope containing the message data received from the client.</param>
         private void OnWorkerMessageReceived(object? sender, TransportEnvelope e)
         {
-            // Forward into command / message pipeline
-            // or publish onto EventBus
+            // Check if we are in an acceptable state to receive messages.
+            ValidationResult result = ValidateSystemCanAcceptMessages();
+
+            if (result.IsValid == false)
+            {
+                if(result.RejectionResponse == null)
+                {
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.Error,
+                        new EventReason(
+                            "Message received from worker, but validation failed and no rejection response provided",
+                            new { messageId = e.MessageId, messageType = e.MessageType }
+                        )
+                    );
+                    return;
+                }
+
+                // If not, send rejection response back to client and return without processing message.
+                if (sender is IConnectionWorker worker)
+                {
+                    TransportEnvelope responseEnvelope = new TransportEnvelope(
+                        messageId: _messageIdGenerator.New(),
+                        sessionId: null,
+                        messageType: TransportMessageType.Error,
+                        flags: MessageFlags.None,
+                        payload: Encoding.UTF8.GetBytes(result.RejectionResponse!.Message),
+                        connectionId: worker.ConnId
+                    );
+                    worker.SendMessage(responseEnvelope);
+                }
+                else
+                {
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.Error,
+                        new EventReason(
+                            "Received message from worker, but sender is not a connection worker, cannot send rejection response",
+                            new { messageId = e.MessageId, messageType = e.MessageType }
+                        )
+                    );
+                }
+                return;
+            }
+
+            // Fire off an event for the logger
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.Network,
@@ -606,8 +789,8 @@ namespace Server.Core.Network.Supervisor
                 )
             );
 
-            TransportEnvelope response = _commandPipeline.ProcessMessage(e);
-
+            // Forward into command / message pipeline
+            _commandPipeline.ProcessMessage(e);
         }
 
         /// <summary>
@@ -678,32 +861,6 @@ namespace Server.Core.Network.Supervisor
             );
 
             ProcessNewConnection(connection);
-        }
-
-        /// <summary>
-        /// Handles PlayerSaidEvent from the event bus.
-        /// </summary>
-        private void OnPlayerSaid(EventEnvelope envelope)
-        {
-            envelope.Payload.GetType();
-            // Deserialize the typed event from the envelope
-            if (envelope.Reason.Data is not PlayerSaidEvent @event)
-                return;
-
-            // Now broadcast to the players
-            foreach (var connId in @event.PlayersInRoom)
-            {
-                var broadcastEnvelope = new TransportEnvelope(
-                    messageId: _messageIdGenerator.New(),
-                    sessionId: null,
-                    messageType: TransportMessageType.Notification,
-                    flags: MessageFlags.None,
-                    payload: Encoding.UTF8.GetBytes(@event.Message),
-                    connectionId: connId
-                );
-
-                SendToClient(connId, broadcastEnvelope);
-            }
         }
 
         #endregion

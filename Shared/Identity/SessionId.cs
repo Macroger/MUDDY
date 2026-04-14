@@ -6,9 +6,9 @@
     /// </summary>
     public readonly struct SessionId : IEquatable<SessionId>
     {
-        public ulong Value { get; }
+        public Guid Value { get; }
 
-        public SessionId(ulong value)
+        public SessionId(Guid value)
         {
             Value = value;
         }
@@ -16,7 +16,7 @@
         /// <summary>
         /// Returns a SessionId representing an unauthenticated session.
         /// </summary>
-        public static SessionId Unauthenticated => new SessionId(0);
+        public static SessionId Unauthenticated => new SessionId(Guid.Empty);
 
         /// <summary>Compares two SessionId values for equality.</summary>
         public bool Equals(SessionId other) => Value == other.Value;

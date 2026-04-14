@@ -1,4 +1,5 @@
-﻿using Server.Core.CommandPipeline.ContextBuilder;
+﻿using Server.Core.CommandPipeline.CommandHandler;
+using Server.Core.CommandPipeline.ContextBuilder;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -44,13 +45,13 @@ namespace Server.Core.CommandPipeline.CommandRouter
         /// </summary>
         /// <param name="context">The enriched command context.</param>
         /// <returns>The matching handler, or null if command is unknown.</returns>
-        public ICommandHandler? Route(CommandContext context)
+        public ICommandHandler? Route(Types.ParsedCommand command)
         {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context), "Context cannot be null");
+            if (command == null)
+                throw new ArgumentNullException(nameof(command), "Context cannot be null");
 
             // Try to find a handler for this verb.
-            _handlers.TryGetValue(context.Command.CommandType, out ICommandHandler? handler);
+            _handlers.TryGetValue(command.CommandType, out ICommandHandler? handler);
             return handler;
         }
     }

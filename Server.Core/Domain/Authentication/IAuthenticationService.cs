@@ -5,7 +5,7 @@ namespace Server.Core.Domain.Authentication
 {
     public interface IAuthenticationService
     {
-        Task<bool> ValidateSessionAsync(SessionId sessionId, ConnectionId connId);
+        Task<bool> ValidateSessionAsync(SessionId? sessionId, ConnectionId connId);
 
         Task<SessionId> CreateSessionAsync(ConnectionId connId, string playerName);
 

@@ -1,16 +1,15 @@
 ﻿using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Player;
+using Server.Core.Domain.Services.Interfaces;
 using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Shared.EventBus;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using static Shared.EventBus.DomainEvents.ChatEvents;
+using Shared.EventBus.DomainEvents;
+using Shared.Identity;
 
 namespace Server.Core.Domain.Services.ConcreteClasses
 {
-    public class ChatService
+    public class ChatService : IChatService
     {
         private readonly IEventBus _eventBus;
 
@@ -39,6 +38,11 @@ namespace Server.Core.Domain.Services.ConcreteClasses
             // Get current room
             var room = world.Rooms[sender.CurrentLocation];
 
+            // Get list of other connected players in the room
+            HashSet<ConnectionId> otherPlayersInRoom = room.PlayersPresent
+                .Where(pid => !pid.Equals(sender.ConnId))
+                .ToHashSet();
+
             // Build message
             string broadcastMsg = $"{sender.PlayerName} says: {message}";
             
@@ -48,7 +52,7 @@ namespace Server.Core.Domain.Services.ConcreteClasses
                 EventMessageType.Chat,
                 new EventReason(
                 "PlayerSaid",
-                new PlayerSaidEvent(
+                new ChatEvents.PlayerSaidEvent(
                     sender.PlayerName,
                     sender.CurrentLocation,
                     broadcastMsg,
@@ -60,7 +64,8 @@ namespace Server.Core.Domain.Services.ConcreteClasses
             return new CommandResult
             {
                 Success = true,
-                Message = $"You said: {message}"
+                Message = $"You said: {message}",
+                AdditionalRecipients = otherPlayersInRoom
             };
         }
     }

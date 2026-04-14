@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Server.Core.Domain.Authentication;
+using System;
 using System.Collections.Concurrent;
 
-namespace Server.Core.Domain.Authentication
+namespace Server.Core.Persistence
 {
     /// <summary>
     /// Simple in-memory account storage for v1.

@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 namespace Server.Core.Persistence
 {
-    public class InMemoryPlayerRepository
+    public class InMemoryPlayerRepository : IPlayerRepository
     {
         /// <summary>
         /// A list of the players that are currently connected to the server. 
