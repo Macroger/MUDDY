@@ -19,7 +19,7 @@ namespace Tests.Client
                 messageType: TransportMessageType.Chat,
                 flags: 0,
                 payload: System.Text.Encoding.UTF8.GetBytes("hello world"),
-                connectionId: null,
+                connectionId: new Shared.Identity.ConnectionId("test"),
                 sessionId: null
             );
             await handler.HandleAsync(envelope);
@@ -42,7 +42,7 @@ namespace Tests.Client
                 messageType: TransportMessageType.BinaryTransfer,
                 flags: 0,
                 payload: payload,
-                connectionId: null,
+                connectionId: new Shared.Identity.ConnectionId("test"),
                 sessionId: null
             );
             await handler.HandleAsync(envelope);
