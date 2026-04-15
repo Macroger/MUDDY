@@ -832,7 +832,7 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <param name="sender">The object that emitted the event.</param>
         /// <param name="e">ServerStateChangedEventData: An object containing info about the event.</param>
-        private void OnServerStateChanged(object? sender, ServerStateChangedEventData e)
+        private void OnServerStateChanged(object? sender, ServerStateChangedEvent e)
         {
             // Log the state change
             EventBusHelper.PublishEvent(

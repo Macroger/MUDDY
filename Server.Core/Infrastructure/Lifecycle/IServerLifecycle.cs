@@ -17,7 +17,7 @@ namespace Server.Core.Infrastructure.Lifecycle
         bool IsInMaintenance { get; }
 
         // Event for state changes
-        event EventHandler<ServerStateChangedEventData>? StateChanged;
+        event EventHandler<ServerStateChangedEvent>? StateChanged;
 
         bool StartServer();
         bool ShutdownServer();

@@ -42,10 +42,10 @@ namespace Server.Core.Application
             {
                 _eventBus = new BasicEventBus();
 
-                _lifecycleCoordinator = new LifecycleCoordinator();
-
                 _messageIdGenerator = new MessageIdGenerator();
                 _sessionIdGenerator = new SessionIdGenerator();
+
+                _lifecycleCoordinator = new LifecycleCoordinator(_eventBus);
 
                 _playerRepository = new InMemoryPlayerRepository(_eventBus);
                 _worldRepository = new InMemoryWorldRepository(_eventBus);
@@ -122,6 +122,8 @@ namespace Server.Core.Application
 
                 // Wire up the network supervisor to the commandPipeline
                 _networkSupervisor.SetCommandPipeline(_commandPipelineOrchestrator);
+
+                _eventBus.Subscribe<ServerStateChangeRequestedEvent>(EventMessageType.System, OnServerStateChangeRequested);
             }
             catch (ArgumentNullException ex)
             {
@@ -161,6 +163,22 @@ namespace Server.Core.Application
             _lifecycleCoordinator.ShutdownServer();
         }
 
+        public IEventBus GetEventBus()
+        {
+            return _eventBus;
+        }
 
+        private void OnServerStateChangeRequested(ServerStateChangeRequestedEvent evt)
+        {
+            bool ok = _lifecycleCoordinator.SetState(evt.RequestedState);
+            if (!ok)
+            {
+                // Publish an error event if the state change failed
+                _eventBus.Publish(EventMessageType.Error,
+                    new EventReason("Server state change failed", $"Could not change state to {evt.RequestedState} from current state."));
+            }
+        }
+
+        public IServerLifecycle LifecycleCoordinator => _lifecycleCoordinator;
     }
 }
