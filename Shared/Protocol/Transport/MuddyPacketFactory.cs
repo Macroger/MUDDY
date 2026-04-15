@@ -1,7 +1,6 @@
 ﻿using Shared.Identity;
-using Shared.Protocol.Transport;
 
-namespace Server.Core.Network.Packet
+namespace Shared.Protocol.Transport
 {
     public class MuddyPacketFactory : IPacketFactory
     {

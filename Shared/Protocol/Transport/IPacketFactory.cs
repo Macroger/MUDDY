@@ -1,6 +1,4 @@
-﻿using Shared.Protocol.Transport;
-
-namespace Server.Core.Network.Packet
+﻿namespace Shared.Protocol.Transport
 {
     /// <summary>
     /// Creates a MuddyPacket representing the given message.

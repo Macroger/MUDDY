@@ -6,7 +6,7 @@ using System.IO.Hashing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Server.Core.Network.Packet
+namespace Shared.Protocol.Transport
 {
     public class MuddyPacketSerializer : IPacketSerializer
     {
@@ -39,8 +39,8 @@ namespace Server.Core.Network.Packet
                 throw new InvalidDataException($"Packet truncated or malformed; expected at least {headerSize + tailSize} bytes, got {buffer.Length}.");
 
             // Validate that the serialized packet does not exceed the maximum allowed packet size.
-            if (buffer.Length > packetLimits.MaxPacketBytes)
-                throw new InvalidDataException($"Packet too large; exceeds body size limit of {packetLimits.MaxPacketBytes} bytes, got {buffer.Length}.");
+            if (buffer.Length > packetLimits.MaxBinaryPacketBytes)
+                throw new InvalidDataException($"Packet too large; exceeds body size limit of {packetLimits.MaxBinaryPacketBytes} bytes, got {buffer.Length}.");
             
             // Create a span targeting the header portion of the serialized packet.
             ReadOnlySpan<byte> headerSpan = buffer.Slice(0, headerSize);

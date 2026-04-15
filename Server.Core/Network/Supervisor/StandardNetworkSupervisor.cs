@@ -4,7 +4,6 @@ using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Listener;
 using Server.Core.Network.Model;
-using Server.Core.Network.Packet;
 using Server.Core.Network.Worker;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
@@ -793,7 +792,21 @@ namespace Server.Core.Network.Supervisor
             );
 
             // Forward into command / message pipeline
-            _commandPipeline.ProcessMessage(e);
+            if (_commandPipeline != null)
+            {
+                _commandPipeline.ProcessMessage(e);
+            }
+            else
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Error,
+                    new EventReason(
+                        "Cannot process message from worker, command pipeline not set",
+                        new { messageId = e.MessageId, messageType = e.MessageType }
+                    )
+                );
+            }
         }
 
         /// <summary>
