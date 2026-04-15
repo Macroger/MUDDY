@@ -4,11 +4,12 @@ using Server.Core.CommandPipeline.Types;
 namespace Server.Core.CommandPipeline.CommandHandler
 {
     /// <summary>
-    /// Handles the "sendimage" command. Reads a JPEG file from the path supplied as the
-    /// first argument and returns its bytes as a <see cref="CommandResult.BinaryPayload"/>,
-    /// which the pipeline orchestrator transmits as a <c>BinaryTransfer</c> packet.
+    /// Handles the "sendimage" command. Reads a JPEG file from the <c>Images</c> subfolder
+    /// next to the application executable and returns its bytes as a
+    /// <see cref="CommandResult.BinaryPayload"/>, which the pipeline orchestrator transmits
+    /// as a <c>BinaryTransfer</c> packet. The <c>.jpg</c> extension is appended automatically.
     /// <para>
-    /// Usage: <c>sendimage &lt;absolute-or-relative path to .jpg&gt;</c>
+    /// Usage: <c>sendimage &lt;filename without extension&gt;</c>
     /// </para>
     /// </summary>
     public sealed class ImageTransferCommandHandler : ICommandHandler
@@ -26,23 +27,26 @@ namespace Server.Core.CommandPipeline.CommandHandler
                 return Task.FromResult(new CommandResult
                 {
                     Success = false,
-                    Message = "Usage: sendimage <filepath>"
+                    Message = "Usage: sendimage <filename>"
                 });
             }
 
-            if (!File.Exists(path))
+            string imagesFolder = Path.Combine(AppContext.BaseDirectory, "Images");
+            string resolvedPath = Path.Combine(imagesFolder, path + ".jpg");
+
+            if (!File.Exists(resolvedPath))
             {
                 return Task.FromResult(new CommandResult
                 {
                     Success = false,
-                    Message = $"File not found: {path}"
+                    Message = $"Image not found: {resolvedPath}"
                 });
             }
 
             byte[] fileBytes;
             try
             {
-                fileBytes = File.ReadAllBytes(path);
+                fileBytes = File.ReadAllBytes(resolvedPath);
             }
             catch (Exception ex)
             {
@@ -66,7 +70,7 @@ namespace Server.Core.CommandPipeline.CommandHandler
             return Task.FromResult(new CommandResult
             {
                 Success = true,
-                Message = $"Sending {fileBytes.Length:N0}-byte JPEG.",
+                Message = $"Sending {fileBytes.Length:N0}-byte JPEG ({path}.jpg).",
                 BinaryPayload = fileBytes
             });
         }
