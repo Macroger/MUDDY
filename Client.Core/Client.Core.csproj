@@ -8,11 +8,13 @@
 </PropertyGroup>
 
 <ItemGroup>
-  <ProjectReference Include="..\Shared\Shared.csproj" />
+  <Compile Remove="Services\**" />
+  <EmbeddedResource Remove="Services\**" />
+  <None Remove="Services\**" />
 </ItemGroup>
 
 <ItemGroup>
-  <Folder Include="Services\" />
+  <ProjectReference Include="..\Shared\Shared.csproj" />
 </ItemGroup>
 
 </Project>

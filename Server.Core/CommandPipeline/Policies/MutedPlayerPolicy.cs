@@ -1,7 +1,5 @@
 ﻿using Server.Core.CommandPipeline.ContextBuilder;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Shared.Domain.Player;
 
 namespace Server.Core.CommandPipeline.Policies
 {
