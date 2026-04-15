@@ -1,31 +1,85 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using System.Collections.ObjectModel;
+using Windows.Graphics;
 
 namespace Server.GUI
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class MainWindow : Window
     {
+        private ObservableCollection<PlayerEntry> _players = new();
+        private ObservableCollection<EventEntry> _events = new();
+        private DispatcherTimer _timer = new();
+
         public MainWindow()
         {
             InitializeComponent();
+
+            // Set window size
+            this.AppWindow.Resize(new SizeInt32(1200, 750));
+
+            // Placeholder players
+            _players.Add(new PlayerEntry { Name = "Aria", Location = "Goblin Cave", Ping = "52 ms" });
+            _players.Add(new PlayerEntry { Name = "Thorn", Location = "Dark Forest", Ping = "38 ms" });
+            _players.Add(new PlayerEntry { Name = "Eldrin", Location = "Town Square", Ping = "47 ms" });
+            PlayersListView.ItemsSource = _players;
+            PlayerCountText.Text = $"PLAYERS: {_players.Count}";
+
+            // Placeholder events
+            _events.Add(new EventEntry { Time = "14:04:33", Source = "System", Message = "Player 'Aria' logged in.", Severity = "Info" });
+            _events.Add(new EventEntry { Time = "14:03:58", Source = "Network", Message = "Connection timeout warning.", Severity = "Warning" });
+            _events.Add(new EventEntry { Time = "14:03:22", Source = "World", Message = "NPC respawn event in Goblin Cave.", Severity = "Info" });
+            _events.Add(new EventEntry { Time = "14:02:45", Source = "System", Message = "Server started successfully.", Severity = "Info" });
+            EventLogListView.ItemsSource = _events;
+
+            // Clock timer
+            _timer.Interval = TimeSpan.FromSeconds(1);
+            _timer.Tick += (s, e) => ServerTimeText.Text = $"SERVER TIME: {DateTime.Now:HH:mm:ss}";
+            _timer.Start();
+
+            // Uptime timer
+            var startTime = DateTime.Now;
+            var uptimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            uptimeTimer.Tick += (s, e) =>
+            {
+                var uptime = DateTime.Now - startTime;
+                UptimeText.Text = uptime.ToString(@"hh\:mm\:ss");
+            };
+            uptimeTimer.Start();
         }
+    }
+
+    public class PlayerEntry
+    {
+        public string Name { get; set; }
+        public string Location { get; set; }
+        public string Ping { get; set; }
+    }
+
+    public class EventEntry
+    {
+        public string Time { get; set; }
+        public string Source { get; set; }
+        public string Message { get; set; }
+        public string Severity { get; set; }
+    }
+
+    public class SeverityColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return value?.ToString() switch
+            {
+                "Warning" => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 165, 0)),
+                "Error" => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 220, 50, 50)),
+                "Info" => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 76, 175, 80)),
+                _ => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 170, 170, 170))
+            };
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+            => throw new NotImplementedException();
     }
 }
