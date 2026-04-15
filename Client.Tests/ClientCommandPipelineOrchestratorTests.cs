@@ -20,7 +20,7 @@ namespace Tests.Client
                 messageType: TransportMessageType.Chat,
                 flags: 0,
                 payload: System.Text.Encoding.UTF8.GetBytes("hello"),
-                connectionId: null,
+                connectionId: new Shared.Identity.ConnectionId("test"),
                 sessionId: null
             );
             orchestrator.Start();

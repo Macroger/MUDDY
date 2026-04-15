@@ -6,7 +6,7 @@ using Shared.Protocol.Transport;
 using Client.Core.Network;
 using Client.Core.CommandPipeline;
 
-namespace Tests.Client
+namespace Client.Tests
 {
     public class ClientNetworkServiceTests
     {
