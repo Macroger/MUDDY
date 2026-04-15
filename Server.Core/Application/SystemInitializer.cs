@@ -65,11 +65,13 @@ namespace Server.Core.Application
                 _worldQueryService = new WorldQueryService();
 
                 // Create handlers and wrap services
+
                 var chatHandler = new ChatCommandHandler(_chatService);
                 var movementHandler = new MovementCommandHandler(_movementService, _worldQueryService);
                 var playerHandler = new PlayerCommandHandler(_playerQueryService);
                 var serverStateHandler = new ServerStateCommandHandler(_lifecycleCoordinator);
                 var imageHandler = new ImageTransferCommandHandler();
+                var logoutHandler = new LogoutCommandHandler(_playerRepository, _eventBus);
 
                 // Register handlers in router
                 var cmdRouter = new StandardCommandRouter();
@@ -78,6 +80,7 @@ namespace Server.Core.Application
                 cmdRouter.RegisterHandler("player", playerHandler);
                 cmdRouter.RegisterHandler("serverstate", serverStateHandler);
                 cmdRouter.RegisterHandler("sendimage", imageHandler);
+                cmdRouter.RegisterHandler("logout", logoutHandler);
 
                 // Create a standard command parser.
                 ICommandParser cmdParser = new StandardCommandParser();

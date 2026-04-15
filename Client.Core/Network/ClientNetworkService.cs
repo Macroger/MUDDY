@@ -227,11 +227,11 @@ namespace Client.Core.Network
                 var bytes = _packetSerializer.Serialize(packet);
                 await _networkStream.WriteAsync(bytes, 0, bytes.Length);
 
-                // Notify listeners that a packet was sent
+                // Only publish to PacketLog channel for specialized logging
                 EventBusHelper.PublishEvent(
                     _eventBus,
-                    EventMessageType.ClientNetwork,
-                    new EventReason("Packet sent", new { envelope.MessageId, envelope.MessageType })
+                    EventMessageType.PacketLog,
+                    new EventReason("Packet sent", new { envelope.MessageId, envelope.MessageType, Direction = "Outbound", Envelope = envelope })
                 );
             }
             catch (Exception ex)
@@ -292,11 +292,11 @@ namespace Client.Core.Network
                     // Convert to higher-level envelope
                     var envelope = ConvertPacketToEnvelope(packet);
 
-                    // Notify listeners that a packet was received
+                    // Only publish to PacketLog channel for specialized logging
                     EventBusHelper.PublishEvent(
                         _eventBus,
-                        EventMessageType.ClientNetwork,
-                        new EventReason("Packet received", envelope)
+                        EventMessageType.PacketLog,
+                        new EventReason("Packet received", new { envelope.MessageId, envelope.MessageType, Direction = "Inbound", Envelope = envelope })
                     );
                 }
             }

@@ -1,5 +1,5 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Server.Core.Domain.Player;
+using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Persistence;
 using Shared.Identity;

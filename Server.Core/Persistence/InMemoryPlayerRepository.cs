@@ -1,10 +1,11 @@
-﻿using Server.Core.Domain.Player;
+﻿using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System;
 using System.Collections.Concurrent;
+using static Shared.EventBus.DomainEvents.PlayerEvents;
 
 namespace Server.Core.Persistence
 {
@@ -109,6 +110,13 @@ namespace Server.Core.Persistence
                 // Remove the player from the dictionary using the connection ID as the key.
                 // The TryRemove method will return true if the player was successfully removed, or false if the player was not found.
                 bool result = _players.TryRemove(connId, out _);
+
+                // Emit a PlayerLeftWorldEvent to notify other parts of the system that the player has left the world. This event includes the player's connection ID and their current location in the world.
+                EventBusHelper.PublishEvent<PlayerLeftWorldEvent>(
+                    _eventBus,
+                    EventMessageType.Player,
+                    new PlayerLeftWorldEvent(connId, player.CurrentLocation)
+                    );
 
                 // Return a completed task to maintain the asynchronous method signature, even though the operation is synchronous.
                 return await Task.FromResult(result);

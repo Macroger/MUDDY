@@ -1,4 +1,4 @@
-﻿using Server.Core.Domain.Player;
+﻿using Shared.Domain.Player;
 using Shared.Identity;
 using System;
 using System.Collections.Generic;

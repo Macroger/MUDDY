@@ -30,10 +30,6 @@ namespace Server.GUI
             PlayerCountText.Text = $"PLAYERS: {_players.Count}";
 
             // Placeholder events
-            _events.Add(new EventEntry { Time = "14:04:33", Source = "System", Message = "Player 'Aria' logged in.", Severity = "Info" });
-            _events.Add(new EventEntry { Time = "14:03:58", Source = "Network", Message = "Connection timeout warning.", Severity = "Warning" });
-            _events.Add(new EventEntry { Time = "14:03:22", Source = "World", Message = "NPC respawn event in Goblin Cave.", Severity = "Info" });
-            _events.Add(new EventEntry { Time = "14:02:45", Source = "System", Message = "Server started successfully.", Severity = "Info" });
             EventLogListView.ItemsSource = _events;
 
             // Clock timer
@@ -50,6 +46,31 @@ namespace Server.GUI
                 UptimeText.Text = uptime.ToString(@"hh\:mm\:ss");
             };
             uptimeTimer.Start();
+
+            // --- EventBus wiring example: subscribe to Log events ---
+            _eventBus = new BasicEventBus();
+            _eventBus.Subscribe<EventEnvelope>(EventMessageType.Log, envelope =>
+            {
+                // Assume the payload is an EventReason (see EventBusHelper)
+                if (envelope.Payload is EventReason reason)
+                {
+                    // UI updates must be on the UI thread
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        _events.Insert(0, new EventEntry
+                        {
+                            Time = DateTime.Now.ToString("HH:mm:ss"),
+                            Source = "Server",
+                            Message = reason.Message,
+                            Severity = "Info"
+                        });
+
+                        // Optionally trim log size
+                        if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
+                    });
+                }
+            });
+            // --- End EventBus wiring example ---
         }
     }
 
