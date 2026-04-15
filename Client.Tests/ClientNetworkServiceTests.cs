@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shared.EventBus;
 using Shared.Protocol.Transport;
@@ -8,9 +8,10 @@ using Client.Core.CommandPipeline;
 
 namespace Client.Tests
 {
+    [TestClass]
     public class ClientNetworkServiceTests
     {
-        [Fact]
+        [TestMethod]
         public async Task ConnectAsync_SetsIsConnectedTrue()
         {
             var eventBus = new Mock<IEventBus>();
@@ -21,11 +22,11 @@ namespace Client.Tests
             // Use a non-routable address to avoid real connection
             service.UpdateEndpoint("127.0.0.1", 65500);
             // Should not throw
-            await Assert.ThrowsAnyAsync<System.Exception>(() => service.ConnectAsync());
-            Assert.False(service.IsConnected); // Should remain false on failure
+            await Assert.ThrowsAsync<Exception>(() => service.ConnectAsync());
+            Assert.IsFalse(service.IsConnected); // Should remain false on failure
         }
 
-        [Fact]
+        [TestMethod]
         public async Task DisconnectAsync_SetsIsConnectedFalse()
         {
             var eventBus = new Mock<IEventBus>();
@@ -34,10 +35,9 @@ namespace Client.Tests
             var protocolLimits = new MuddyProtocolLimits();
             var service = new ClientNetworkService(eventBus.Object, packetSerializer.Object, packetFactory.Object, protocolLimits);
             service.UpdateEndpoint("127.0.0.1", 65500);
-            await Assert.ThrowsAnyAsync<System.Exception>(() => service.ConnectAsync());
+            await Assert.ThrowsAsync<Exception>(() => service.ConnectAsync());
             await service.DisconnectAsync();
-            Assert.False(service.IsConnected);
+            Assert.IsFalse(service.IsConnected);
         }
     }
-
 }

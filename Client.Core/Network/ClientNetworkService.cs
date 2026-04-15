@@ -99,6 +99,17 @@ namespace Client.Core.Network
         }
 
         /// <summary>
+        /// Updates the server address and port. Throws if called while connected.
+        /// </summary>
+        public void UpdateEndpoint(string address, int port)
+        {
+            if (IsConnected)
+                throw new InvalidOperationException("Cannot update endpoint while connected. Please disconnect first.");
+            ServerAddress = address;
+            ServerPort = port;
+        }
+
+        /// <summary>
         /// Handles connect requests from the event bus.
         /// </summary>
         private async Task OnConnectRequestedAsync(ConnectRequestedEvent evt)

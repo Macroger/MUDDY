@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Server.GUI"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -13,262 +14,269 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Background="#141414">
+    <Grid>
+        <Grid.Resources>
+            <!-- Backgrounds -->
+            <LinearGradientBrush x:Key="StoneBackground" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#4B5566" Offset="0"/>
+                <GradientStop Color="#2C3240" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="PanelBackground" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#5A6373" Offset="0"/>
+                <GradientStop Color="#3A4251" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PanelBorder" Color="#23262E"/>
+            <!-- Orange header gradient -->
+            <LinearGradientBrush x:Key="HeaderOrange" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#FFB347" Offset="0"/>
+                <GradientStop Color="#B8610A" Offset="1"/>
+            </LinearGradientBrush>
+            <!-- Tab styles -->
+            <SolidColorBrush x:Key="TabSelected" Color="#22262E"/>
+            <SolidColorBrush x:Key="TabUnselected" Color="#181A1F"/>
+            <SolidColorBrush x:Key="TabBorder" Color="#444B5A"/>
+            <!-- Button styles -->
+            <LinearGradientBrush x:Key="ButtonBackground" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#6C7686" Offset="0"/>
+                <GradientStop Color="#3A4251" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="ButtonBorder" Color="#23262E"/>
+            <!-- DataGrid styles -->
+            <SolidColorBrush x:Key="DataGridHeader" Color="#23262E"/>
+            <SolidColorBrush x:Key="DataGridRow" Color="#23262E"/>
+            <SolidColorBrush x:Key="DataGridAltRow" Color="#2C3240"/>
+            <!-- Severity colors -->
+            <SolidColorBrush x:Key="SeverityInfo" Color="#E8A040"/>
+            <SolidColorBrush x:Key="SeverityWarning" Color="#FFD700"/>
+            <SolidColorBrush x:Key="SeverityError" Color="#FF4C4C"/>
+        </Grid.Resources>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#4B5566" Offset="0"/>
+                <GradientStop Color="#2C3240" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         <Grid.RowDefinitions>
-            <RowDefinition Height="56"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="230"/>
+            <RowDefinition Height="2*"/>
         </Grid.RowDefinitions>
 
         <!-- ===== ROW 0: TOP STATUS BAR ===== -->
-        <Border Grid.Row="0" Background="#1A1A1A"
-                BorderBrush="#B8610A" BorderThickness="0,0,0,2">
+        <Border Grid.Row="0" Background="{StaticResource HeaderOrange}"
+                BorderBrush="#B8610A" BorderThickness="0,0,0,2" CornerRadius="4,4,0,0" Padding="0,0,0,2">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal"
-                            VerticalAlignment="Center" Margin="16,0,0,0" Spacing="8">
-                    <Border Width="3" Height="20" Background="#B8610A"/>
-                    <TextBlock x:Name="ServerTimeText"
-                               Text="SERVER TIME: 00:00:00"
-                               Foreground="#E8A040" FontWeight="Bold" FontSize="13"
-                               FontFamily="Consolas" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0" Spacing="8">
+                    <TextBlock x:Name="ServerTimeText" Text="Server Time: 00:00:00"
+                               Foreground="White" FontWeight="Bold" FontSize="14" FontFamily="Consolas" VerticalAlignment="Center"/>
                 </StackPanel>
-
-                <Border Grid.Column="1" Background="#1E3A1E"
-                        BorderBrush="#4CAF50" BorderThickness="1"
-                        Padding="24,6" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Ellipse Width="8" Height="8" Fill="#4CAF50" VerticalAlignment="Center"/>
-                        <TextBlock Text="STATUS: ONLINE"
-                                   Foreground="#4CAF50" FontWeight="Bold" FontSize="13"
-                                   FontFamily="Consolas"/>
-                    </StackPanel>
-                </Border>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal"
-                            VerticalAlignment="Center" HorizontalAlignment="Right"
-                            Margin="0,0,16,0" Spacing="8">
-                    <TextBlock x:Name="PlayerCountText"
-                               Text="PLAYERS: 0"
-                               Foreground="#E8A040" FontWeight="Bold" FontSize="13"
-                               FontFamily="Consolas" VerticalAlignment="Center"/>
-                    <Border Width="3" Height="20" Background="#B8610A"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Border Background="#4CAF50" CornerRadius="3" Padding="24,6" Margin="0,0,0,0">
+                        <TextBlock x:Name="StatusTextBlock" Text="Status: ONLINE"
+                                   Foreground="White" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,16,0" Spacing="8">
+                    <TextBlock x:Name="PlayerCountText" Text="Players: 0"
+                               Foreground="White" FontWeight="Bold" FontSize="14" FontFamily="Consolas" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ===== ROW 1: TABS ===== -->
-        <Border Grid.Row="1" Background="#1A1A1A"
-                BorderBrush="#333" BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Horizontal" Spacing="2" Padding="12,6">
-                <Border Background="#B8610A" Padding="16,6">
-                    <TextBlock Text="DASHBOARD" Foreground="White"
-                               FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+        <Border Grid.Row="1" Background="{StaticResource TabBorder}" BorderBrush="{StaticResource TabBorder}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="0" Padding="12,0">
+                <Border Background="{StaticResource TabSelected}" Padding="18,8" CornerRadius="4,4,0,0" BorderBrush="#888" BorderThickness="1,1,1,0">
+                    <TextBlock Text="Dashboard" Foreground="#FFF" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
                 </Border>
-                <Border Background="Transparent" Padding="16,6"
-                        BorderBrush="#333" BorderThickness="1">
-                    <TextBlock Text="LOGS" Foreground="#666"
-                               FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                <Border Background="{StaticResource TabUnselected}" Padding="18,8" CornerRadius="4,4,0,0" BorderBrush="#444" BorderThickness="1,1,1,0" Margin="2,0,0,0">
+                    <TextBlock Text="Logs" Foreground="#AAA" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
+                </Border>
+                <Border Background="{StaticResource TabUnselected}" Padding="18,8" CornerRadius="4,4,0,0" BorderBrush="#444" BorderThickness="1,1,1,0" Margin="2,0,0,0">
+                    <TextBlock Text="Chat Monitor" Foreground="#AAA" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
+                </Border>
+                <Border Background="{StaticResource TabUnselected}" Padding="18,8" CornerRadius="4,4,0,0" BorderBrush="#444" BorderThickness="1,1,1,0" Margin="2,0,0,0">
+                    <TextBlock Text="Admin Console" Foreground="#AAA" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
+                </Border>
+                <Border Background="{StaticResource TabUnselected}" Padding="18,8" CornerRadius="4,4,0,0" BorderBrush="#444" BorderThickness="1,1,1,0" Margin="2,0,0,0">
+                    <TextBlock Text="Settings" Foreground="#AAA" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
                 </Border>
             </StackPanel>
         </Border>
 
         <!-- ===== ROW 2: MAIN CONTENT ===== -->
-        <Grid Grid.Row="2" Margin="12,12,12,6">
+        <Grid Grid.Row="2" Margin="18,18,18,8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="260"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="260"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
             <!-- Server Status Panel -->
-            <Border Grid.Column="0" Background="#1A1A1A"
-                    BorderBrush="#B8610A" BorderThickness="1"
-                    Margin="0,0,8,0">
+            <Border Grid.Column="0" Background="{StaticResource PanelBackground}" BorderBrush="{StaticResource PanelBorder}" BorderThickness="2" CornerRadius="8" Margin="0,0,12,0">
                 <StackPanel>
-                    <Border Background="#B8610A" Padding="10,7">
-                        <TextBlock Text="SERVER STATUS" Foreground="White"
-                                   FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                    <Border Background="{StaticResource HeaderOrange}" Padding="12,8" CornerRadius="6,6,0,0">
+                        <TextBlock Text="Server Status" Foreground="White" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
                     </Border>
-                    <StackPanel Padding="12,12" Spacing="12">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="UPTIME" Foreground="#666"
-                                       FontSize="10" FontFamily="Consolas"/>
-                            <TextBlock x:Name="UptimeText" Text="00:00:00"
-                                       Foreground="#E8A040" FontWeight="Bold"
-                                       FontSize="16" FontFamily="Consolas"/>
+                    <StackPanel Padding="16,16" Spacing="14">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Uptime:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock x:Name="UptimeText" Text="00:00:00" Foreground="#FFB347" FontWeight="Bold" FontSize="16" FontFamily="Consolas"/>
                         </StackPanel>
-                        <Border Height="1" Background="#2A2A2A"/>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="STATE" Foreground="#666"
-                                       FontSize="10" FontFamily="Consolas"/>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Ellipse Width="7" Height="7" Fill="#4CAF50" VerticalAlignment="Center"/>
-                                <TextBlock Text="RUNNING" Foreground="#4CAF50"
-                                           FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="State:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Ellipse Width="10" Height="10" Fill="#4CAF50" VerticalAlignment="Center"/>
+                                <TextBlock Text="Running" Foreground="#4CAF50" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
                             </StackPanel>
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="CPU Usage:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock Text="15%" Foreground="#FFB347" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Memory Usage:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock Text="180 MB" Foreground="#FFB347" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
-            <!-- Active Players Panel -->
-            <Border Grid.Column="1" Background="#1A1A1A"
-                    BorderBrush="#333" BorderThickness="1">
+            <!-- Active Players Panel with Stone Floor Texture Placeholder -->
+            <Border Grid.Column="1" Background="{StaticResource PanelBackground}" BorderBrush="{StaticResource PanelBorder}" BorderThickness="2" CornerRadius="8" Margin="0,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Background="{StaticResource HeaderOrange}" Padding="12,8" CornerRadius="6,6,0,0" Grid.Row="0">
+                        <TextBlock Text="Active Players" Foreground="White" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
+                    </Border>
+                    <Grid Grid.Row="1" Margin="0,8,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <!-- Player List -->
+                        <Border Background="#23262E" BorderBrush="#444B5A" BorderThickness="0,0,0,1" Padding="8,4" Grid.Row="0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Name" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                                <TextBlock Grid.Column="1" Text="Location" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                                <TextBlock Grid.Column="2" Text="Ping" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                            </Grid>
+                        </Border>
+                        <ListView x:Name="PlayersListView" Grid.Row="1" Background="Transparent" BorderThickness="0" SelectionMode="None" Margin="0,0,0,0">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="Padding" Value="10,6"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderBrush" Value="#2A2A2A"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="100"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="#FFF" FontFamily="Consolas"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Location}" Foreground="#FFF" FontFamily="Consolas"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Ping}" Foreground="#FFB347" FontFamily="Consolas"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <!-- Stone Floor Texture Placeholder -->
+                        <Border Grid.Row="1" Margin="0,120,0,0" Height="120" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Background="#3A2F23" CornerRadius="8">
+                            <TextBlock Text="[Stone Floor Texture Here]" Foreground="#B8610A" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Server Metrics Panel -->
+            <Border Grid.Column="2" Background="{StaticResource PanelBackground}" BorderBrush="{StaticResource PanelBorder}" BorderThickness="2" CornerRadius="8" Margin="12,0,0,0">
                 <StackPanel>
-                    <Border Background="#222" Padding="10,7"
-                            BorderBrush="#333" BorderThickness="0,0,0,1">
-                        <TextBlock Text="ACTIVE PLAYERS" Foreground="White"
-                                   FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                    <Border Background="{StaticResource HeaderOrange}" Padding="12,8" CornerRadius="6,6,0,0">
+                        <TextBlock Text="Server Metrics" Foreground="White" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
                     </Border>
-
-                    <!-- Column Headers -->
-                    <Border Background="#1E1E1E" Padding="12,6"
-                            BorderBrush="#2A2A2A" BorderThickness="0,0,0,1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="NAME"
-                                       Foreground="#B8610A" FontWeight="Bold"
-                                       FontSize="11" FontFamily="Consolas"/>
-                            <TextBlock Grid.Column="1" Text="LOCATION"
-                                       Foreground="#B8610A" FontWeight="Bold"
-                                       FontSize="11" FontFamily="Consolas"/>
-                            <TextBlock Grid.Column="2" Text="PING"
-                                       Foreground="#B8610A" FontWeight="Bold"
-                                       FontSize="11" FontFamily="Consolas"/>
-                        </Grid>
-                    </Border>
-
-                    <ListView x:Name="PlayersListView" Background="Transparent"
-                              SelectionMode="None">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="Padding" Value="12,6"/>
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderBrush" Value="#2A2A2A"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            </Style>
-                        </ListView.ItemContainerStyle>
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="200"/>
-                                        <ColumnDefinition Width="120"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Name}"
-                                               Foreground="#E0E0E0" FontFamily="Consolas"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Location}"
-                                               Foreground="#E0E0E0" FontFamily="Consolas"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding Ping}"
-                                               Foreground="#E8A040" FontFamily="Consolas"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                    <StackPanel Padding="16,16" Spacing="14">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Packets/sec:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock Text="324" Foreground="#FFB347" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Rooms Loaded:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock Text="48" Foreground="#FFB347" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="NPCs Active:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock Text="18" Foreground="#FFB347" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Database Status:" Foreground="#DDD" FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock Text="Connected" Foreground="#4CAF50" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- ===== ROW 3: EVENT LOG ===== -->
-        <Border Grid.Row="3" Background="#1A1A1A"
-                BorderBrush="#333" BorderThickness="1"
-                Margin="12,0,12,12">
-            <StackPanel>
-                <Border Background="#222" Padding="10,7"
-                        BorderBrush="#333" BorderThickness="0,0,0,1">
-                    <TextBlock Text="EVENT LOG" Foreground="White"
-                               FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+        <Border Grid.Row="3" Background="{StaticResource PanelBackground}" BorderBrush="{StaticResource PanelBorder}" BorderThickness="2" CornerRadius="8" Margin="18,0,18,18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="{StaticResource HeaderOrange}" Padding="12,8" CornerRadius="6,6,0,0">
+                    <TextBlock Text="Event Log" Foreground="White" FontWeight="Bold" FontSize="13" FontFamily="Consolas"/>
                 </Border>
-
-                <!-- Log Column Headers -->
-                <Border Background="#1E1E1E" Padding="12,5"
-                        BorderBrush="#2A2A2A" BorderThickness="0,0,0,1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="90"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="TIME"
-                                   Foreground="#B8610A" FontWeight="Bold"
-                                   FontSize="11" FontFamily="Consolas"/>
-                        <TextBlock Grid.Column="1" Text="SOURCE"
-                                   Foreground="#B8610A" FontWeight="Bold"
-                                   FontSize="11" FontFamily="Consolas"/>
-                        <TextBlock Grid.Column="2" Text="MESSAGE"
-                                   Foreground="#B8610A" FontWeight="Bold"
-                                   FontSize="11" FontFamily="Consolas"/>
-                        <TextBlock Grid.Column="3" Text="SEVERITY"
-                                   Foreground="#B8610A" FontWeight="Bold"
-                                   FontSize="11" FontFamily="Consolas"/>
-                    </Grid>
-                </Border>
-
-                <ListView x:Name="EventLogListView" Height="110"
-                          Background="Transparent" SelectionMode="None">
-                    <ListView.Resources>
-                        <local:SeverityColorConverter x:Key="SeverityColorConverter"/>
-                    </ListView.Resources>
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="Padding" Value="12,4"/>
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="BorderBrush" Value="#222"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="90"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="100"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Time}"
-                                           Foreground="#666" FontFamily="Consolas" FontSize="12"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Source}"
-                                           Foreground="#888" FontFamily="Consolas" FontSize="12"/>
-                                <TextBlock Grid.Column="2" Text="{Binding Message}"
-                                           Foreground="#C0C0C0" FontFamily="Consolas" FontSize="12"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Column="3" Text="{Binding Severity}"
-                                           FontFamily="Consolas" FontSize="12"
-                                           Foreground="{Binding Severity, Converter={StaticResource SeverityColorConverter}}"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-
-                <!-- Buttons -->
-                <StackPanel Orientation="Horizontal" Spacing="6" Padding="12,6"
-                            HorizontalAlignment="Right">
-                    <Border Background="#2A2A2A" BorderBrush="#444" BorderThickness="1"
-                            Padding="14,5">
-                        <TextBlock Text="CLEAR" Foreground="#AAA"
-                                   FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
-                    </Border>
-                    <Border Background="#2A2A2A" BorderBrush="#444" BorderThickness="1"
-                            Padding="14,5">
-                        <TextBlock Text="PAUSE" Foreground="#AAA"
-                                   FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
-                    </Border>
+                <controls:DataGrid x:Name="EventLogDataGrid"
+                          Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          CanUserSortColumns="True"
+                          CanUserResizeColumns="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="None"
+                          Background="{StaticResource DataGridRow}"
+                          RowBackground="{StaticResource DataGridRow}"
+                          AlternatingRowBackground="{StaticResource DataGridAltRow}"
+                          BorderThickness="0"
+                          IsReadOnly="True"
+                          Margin="0,0,0,0">
+                    <controls:DataGrid.Columns>
+                        <controls:DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="80"/>
+                        <controls:DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="90"/>
+                        <controls:DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*"/>
+                        <controls:DataGridTextColumn Header="Severity" Binding="{Binding Severity}" Width="90"/>
+                    </controls:DataGrid.Columns>
+                </controls:DataGrid>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,8,8">
+                    <Button Content="Clear"/>
+                    <Button Content="Pause"/>
+                    <Button Content="Filters..."/>
+                    <Button Content="Alerts On"/>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
         </Border>
-
     </Grid>
 </Window>

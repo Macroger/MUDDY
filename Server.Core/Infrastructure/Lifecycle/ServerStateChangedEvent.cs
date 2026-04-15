@@ -5,7 +5,7 @@
     /// </summary>
     /// <remarks>This event data includes both the previous and new states of the server, allowing event
     /// handlers to determine the nature of the state transition.</remarks>
-    public class ServerStateChangedEventData : EventArgs
+    public class ServerStateChangedEvent : EventArgs
     {
         /// <summary>
         /// Gets the previous state of the server before the most recent state change.
@@ -23,7 +23,7 @@
         /// </summary>
         /// <param name="previousState">The server state before the change occurred.</param>
         /// <param name="newState">The server state after the change occurred.</param>
-        public ServerStateChangedEventData(ServerStateEnum previousState, ServerStateEnum newState)
+        public ServerStateChangedEvent(ServerStateEnum previousState, ServerStateEnum newState)
         {
             PreviousState = previousState;
             NewState = newState;
