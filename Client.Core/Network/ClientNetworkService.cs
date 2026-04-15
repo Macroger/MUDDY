@@ -18,6 +18,17 @@ namespace Client.Core.Network
     /// </summary>
     public class ClientNetworkService
     {
+
+        /// <summary>
+        /// The server address to connect to. Can be set by the GUI.
+        /// </summary>
+        public string ServerAddress { get; private set; } = "127.0.0.1";
+
+        /// <summary>
+        /// The server port to connect to. Can be set by the GUI.
+        /// </summary>
+        public int ServerPort { get; private set; } = 30333;
+
         // Used to publish network events (e.g., connection, errors, packets)
         private readonly IEventBus _eventBus;
         
@@ -81,6 +92,42 @@ namespace Client.Core.Network
             _packetSerializer = packetSerializer;
             _packetFactory = packetFactory;
             _protocolLimits = protocolLimits;
+
+            // Subscribe to connect/disconnect requests from the event bus
+            _eventBus.Subscribe<ConnectRequestedEvent>(EventMessageType.Gui, OnConnectRequested);
+            _eventBus.Subscribe<DisconnectRequestedEvent>(EventMessageType.Gui, OnDisconnectRequested);
+        }
+
+        /// <summary>
+        /// Handles connect requests from the event bus.
+        /// </summary>
+        private async Task OnConnectRequestedAsync(ConnectRequestedEvent evt)
+        {
+            await ConnectAsync();
+        }
+
+        /// <summary>
+        /// Handles disconnect requests from the event bus.
+        /// </summary>
+        private async Task OnDisconnectRequestedAsync(DisconnectRequestedEvent evt)
+        {
+            await DisconnectAsync();
+        }
+
+        /// <summary>
+        /// Handles connect requests from the event bus.
+        /// </summary>
+        private void OnConnectRequested(ConnectRequestedEvent evt)
+        {
+            _ = ConnectAsync();
+        }
+
+        /// <summary>
+        /// Handles disconnect requests from the event bus.
+        /// </summary>
+        private void OnDisconnectRequested(DisconnectRequestedEvent evt)
+        {
+            _ = DisconnectAsync();
         }
 
 
@@ -93,12 +140,16 @@ namespace Client.Core.Network
         /// Connects to the server at the given host and port.
         /// Starts the receive loop and publishes a connected event.
         /// </summary>
-        public async Task ConnectAsync(string host, int port)
+        /// <summary>
+        /// Connects to the server using the current ServerAddress and ServerPort.
+        /// Starts the receive loop and publishes a connected event.
+        /// </summary>
+        public async Task ConnectAsync()
         {
             try
             {
                 _tcpClient = new TcpClient();
-                await _tcpClient.ConnectAsync(host, port);
+                await _tcpClient.ConnectAsync(ServerAddress, ServerPort);
                 _networkStream = _tcpClient.GetStream();
                 _cts = new CancellationTokenSource();
 
@@ -108,7 +159,7 @@ namespace Client.Core.Network
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.ClientNetwork,
-                    new EventReason($"Connected to server {host}:{port}")
+                    new EventReason($"Connected to server {ServerAddress}:{ServerPort}")
                 );
 
                 // Start listening for incoming packets
@@ -121,7 +172,7 @@ namespace Client.Core.Network
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason($"Failed to connect to server {host}:{port}", ex.Message)
+                    new EventReason($"Failed to connect to server {ServerAddress}:{ServerPort}", ex.Message)
                 );
                 throw;
             }
