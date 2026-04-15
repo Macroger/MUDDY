@@ -108,6 +108,17 @@ namespace Server.Core.Infrastructure.Lifecycle
         }
 
         /// <summary>
+        /// Attempts to transition the server to the specified state from the current state.
+        /// Uses the same allowed-transitions table as all other state changes.
+        /// </summary>
+        /// <param name="newState">The desired target state.</param>
+        /// <returns>True if the transition was valid and applied; false otherwise.</returns>
+        public bool SetState(ServerStateEnum newState)
+        {
+            return TryTransition(_currentState, newState);
+        }
+
+        /// <summary>
         /// Attempts to transition the server's state from an expected value to a new value.
         /// </summary>
         /// <param name="expected">The current expected state.</param>

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Shared.EventBus
+namespace Shared.EventBus.DomainEvents
 {
     /// <summary>
     /// Contains events used to request sending a message to one or more clients.
@@ -22,5 +22,10 @@ namespace Shared.EventBus
             TransportMessageType MessageType,
             string Message
         );
+        /// <summary>
+        /// Represents an event that occurs when a client disconnects from the server.
+        /// </summary>
+        /// <param name="ConnId">The identifier of the connection that was disconnected.</param>
+        public sealed record ClientDisconnectedEvent(ConnectionId ConnId);
     }
 }

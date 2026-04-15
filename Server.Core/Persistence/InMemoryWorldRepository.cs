@@ -1,5 +1,8 @@
 ﻿using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.World;
+using Shared.EventBus;
+using Shared.EventBus.DomainEvents;
+using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System;
 using System.Collections.Concurrent;
@@ -11,16 +14,33 @@ namespace Server.Core.Persistence
     public class InMemoryWorldRepository : IWorldRepository
     {
 
+        private readonly IEventBus _eventBus;
+        private readonly ISubscriptionToken _playerLeftSubscription;
+
         // Each room is stored by its RoomId. ConcurrentDictionary keeps this thread-safe.
+        // This is the single authoritative source for all room state — snapshots are built from this.
         private readonly ConcurrentDictionary<RoomId, RoomState> _rooms = new();
 
         // Global conditions that apply to the whole world (e.g. "night", "raining").
         private IReadOnlySet<ActiveWorldConditions> _globalConditions = new HashSet<ActiveWorldConditions>();
 
-        private WorldState _worldState;
-        public InMemoryWorldRepository()
+        public InMemoryWorldRepository(IEventBus eventBus)
         {
-            _worldState = GameWorldFactory.CreateDefaultWorld();
+            _eventBus = eventBus;
+            // Pre-populate the authoritative rooms dictionary with the default world layout.
+            Seed(GameWorldFactory.CreateDefaultWorld());
+            _playerLeftSubscription = _eventBus.Subscribe<PlayerEvents.PlayerLeftWorldEvent>(
+                EventMessageType.Domain, HandlePlayerLeft);
+        }
+
+        private async void HandlePlayerLeft(PlayerEvents.PlayerLeftWorldEvent evt)
+        {
+            var room = await GetRoomAsync(evt.LastRoom);
+            if (room is null) return;
+
+            var updated = new HashSet<ConnectionId>(room.PlayersPresent);
+            updated.Remove(evt.ConnId);
+            await UpdateRoomAsync(new RoomState(room.Id, room.Description, room.Conditions, updated, room.Exits));
         }
 
         /// <summary>
@@ -40,10 +60,8 @@ namespace Server.Core.Persistence
 
         public async Task<RoomState?> GetRoomAsync(RoomId roomId)
         {
-            // Try to get the room state from the world state using the provided room ID.
-            _worldState.Rooms.TryGetValue(roomId, out var room);
-
-            // If the room was found, return it.
+            // Read from the authoritative rooms dictionary, not a frozen snapshot.
+            _rooms.TryGetValue(roomId, out var room);
             return await Task.FromResult(room);
         }
 

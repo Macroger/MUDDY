@@ -7,6 +7,7 @@ using Server.Core.Network.Model;
 using Server.Core.Network.Packet;
 using Server.Core.Network.Worker;
 using Shared.EventBus;
+using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using Shared.Protocol.System;
@@ -713,6 +714,8 @@ namespace Server.Core.Network.Supervisor
                         new { connectionId = worker.ConnId }
                     )
                 );
+
+                _eventBus.Publish(EventMessageType.Network, new NetworkEvents.ClientDisconnectedEvent(worker.ConnId));
             }
             else
             {

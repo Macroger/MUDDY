@@ -10,11 +10,13 @@ namespace Server.Tests.Network.Packet;
 public class PacketFactoryTests
 {
     private MuddyPacketFactory _packetFactory;
+    private ConnectionId _connectionId;
 
     [TestInitialize]
     public void TestInitialize()
     {
         _packetFactory = new MuddyPacketFactory();
+        _connectionId = new ConnectionId();
     }
 
     [TestMethod]
@@ -23,12 +25,14 @@ public class PacketFactoryTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(123),
-            (TransportMessageType)1,
-            (MessageFlags)0,
-            body
-            );
+        var message = new TransportEnvelope(
+             connectionId: _connectionId,
+             messageId: new MessageId(123),
+             messageType: TransportMessageType.Error,
+             flags: MessageFlags.None,
+             payload: body,
+             sessionId: SessionId.Unauthenticated
+         );
 
         // Act
         var newPacket = _packetFactory.CreateMuddyPacket(message);

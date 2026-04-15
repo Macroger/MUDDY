@@ -11,6 +11,7 @@ public class PacketSerializerTests
     private MuddyProtocolLimits _limits;
     private MuddyPacketSerializer _serializer;
     private MuddyPacketFactory _packetFactory;
+    private readonly ConnectionId _connectionId = new ConnectionId(Guid.NewGuid().ToString());
     public TestContext? TestContext { get; set; }
 
     [TestInitialize]
@@ -26,14 +27,16 @@ public class PacketSerializerTests
     public void PacketSerializer_SerializesDeserializesCorrectly()
     {
         // Arrange
-        var body = new byte[] { 0x01, 0x02, 0x03 };        
-        
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(123),
-            (TransportMessageType)1,
-            (MessageFlags)0,
-            body
-            );
+        var body = new byte[] { 0x01, 0x02, 0x03 };
+
+        var message = new TransportEnvelope(
+             messageId: new MessageId(123),
+             messageType: TransportMessageType.Error,
+             flags: MessageFlags.None,
+             payload: body,
+             connectionId: _connectionId,
+             sessionId: SessionId.Unauthenticated
+         );
 
         // Calculate the expected size of the serialized packet
         int expectedSize = _limits.headerSize + _limits.tailSize + body.Length;
@@ -46,11 +49,13 @@ public class PacketSerializerTests
         // Act
         var packet = _serializer.Serialize(newPacket);
 
+        // Assert
         Assert.IsNotNull(packet);
-        Assert.IsNotEmpty(packet);
         Assert.HasCount(expectedSize, packet);
 
         MuddyPacket deserializedPacket = _serializer.Deserialize(packet);
+        Assert.IsNotNull(deserializedPacket);
+        Assert.AreEqual((uint)body.Length, deserializedPacket.Header.BodyLength);
     }
 
     [TestMethod]
@@ -59,11 +64,13 @@ public class PacketSerializerTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(123),
-            (TransportMessageType)1,
-            (MessageFlags)0,
-            body
+        var message = new TransportEnvelope(
+            messageId: new MessageId(123),
+            messageType: TransportMessageType.Chat,
+            flags: MessageFlags.None,
+            payload: body,
+            connectionId: _connectionId,
+            sessionId: SessionId.Unauthenticated
             );
 
         // Calculate the expected size of the serialized packet
@@ -75,8 +82,8 @@ public class PacketSerializerTests
         // Act
         var packet = _serializer.Serialize(newPacket);
 
+        // Assert
         Assert.IsNotNull(packet);
-        Assert.IsNotEmpty(packet);
         Assert.HasCount(expectedSize, packet);
     }
 
@@ -87,11 +94,13 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = Array.Empty<byte>();
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(1),
-            TransportMessageType.Ping,
-            MessageFlags.None,
-            body);
+        var message = new TransportEnvelope(
+            messageId: new MessageId(1),
+            messageType: TransportMessageType.Ping,
+            flags: MessageFlags.None,
+            payload: body,
+            connectionId: _connectionId,
+            sessionId: SessionId.Unauthenticated);
 
         var packet = _packetFactory.CreateMuddyPacket(message);
 
@@ -104,7 +113,6 @@ public class PacketSerializerTests
         CollectionAssert.AreEqual(Array.Empty<byte>(), deserialized.Body);
 
         int expectedSize = _limits.headerSize + _limits.tailSize;
-
         Assert.HasCount(expectedSize, serialized);
     }
 
@@ -115,6 +123,7 @@ public class PacketSerializerTests
         var body = new byte[] { 0x01, 0x02 };
         var header = new MuddyPacketHeader
         {
+            SessionId = SessionId.Unauthenticated.Value,
             BodyLength = 10, // incorrect on purpose
             MsgId = 1,
             MsgType = (ushort)TransportMessageType.Chat,
@@ -142,17 +151,20 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02 };
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(1),
-            TransportMessageType.Chat,
-            MessageFlags.None,
-            body);
+        var message = new TransportEnvelope(
+            messageId: new MessageId(1),
+            messageType: TransportMessageType.Chat,
+            flags: MessageFlags.None,
+            payload: body,
+            connectionId: _connectionId,
+            sessionId: SessionId.Unauthenticated);
 
         var packet = _packetFactory.CreateMuddyPacket(message);
         byte[] serialized = _serializer.Serialize(packet);
 
-        // Corrupt the BodyLength field in header
-        serialized[0] = 0x10; // BODY length becomes 16 arbitrarily
+        // Corrupt the BodyLength field in header (bytes 16-20 contain the BodyLength as UInt32)
+        // Change the first byte of BodyLength to an arbitrary value
+        serialized[16] = 0x10;
 
         // Act + Assert
         Assert.Throws<InvalidDataException>(() => _serializer.Deserialize(serialized));
@@ -163,11 +175,13 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(1),
-            TransportMessageType.Chat,
-            MessageFlags.None,
-            body);
+        var message = new TransportEnvelope(
+            messageId: new MessageId(1),
+            messageType: TransportMessageType.Chat,
+            flags: MessageFlags.None,
+            payload: body,
+            connectionId: _connectionId,
+            sessionId: SessionId.Unauthenticated);
 
         var packet = _packetFactory.CreateMuddyPacket(message);
         byte[] serialized = _serializer.Serialize(packet);
@@ -185,11 +199,13 @@ public class PacketSerializerTests
         // Arrange
         byte[] body = new byte[_limits.MaxJsonBodyBytes + 1];
 
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(1),
-            TransportMessageType.Chat,
-            MessageFlags.None,
-            body);
+        var message = new TransportEnvelope(
+            messageId: new MessageId(1),
+            messageType: TransportMessageType.Chat,
+            flags: MessageFlags.None,
+            payload: body,
+            connectionId: _connectionId,
+            sessionId: SessionId.Unauthenticated);
 
         var packet = _packetFactory.CreateMuddyPacket(message);
         byte[] serialized = _serializer.Serialize(packet);
@@ -203,11 +219,13 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02 };
-        var message = new Shared.Protocol.Types.TransportEnvelope(
-            new MessageId(42),
-            TransportMessageType.Chat,
-            MessageFlags.None,
-            body);
+        var message = new TransportEnvelope(
+            messageId: new MessageId(42),
+            messageType: TransportMessageType.Chat,
+            flags: MessageFlags.None,
+            payload: body,
+            connectionId: _connectionId,
+            sessionId: SessionId.Unauthenticated);
 
         var packet = _packetFactory.CreateMuddyPacket(message);
         byte[] serialized = _serializer.Serialize(packet);
