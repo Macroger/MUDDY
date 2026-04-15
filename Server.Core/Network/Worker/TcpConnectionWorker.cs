@@ -204,8 +204,7 @@ namespace Server.Core.Network.Worker
             {
                 try
                 {
-                    // A buffer used for accumulating incoming bytes from the socket.
-                    // We will read from the socket into a temporary buffer and then append those bytes to this accumulator buffer.
+                    // Small buffer — appropriate for JSON traffic.
                     byte[] tempBuffer = new byte[4096];
 
                     while (!ct.IsCancellationRequested)
@@ -237,7 +236,7 @@ namespace Server.Core.Network.Worker
                             int sizeLimit = isBinary ? _packetLimits.MaxPacketBytes : _packetLimits.MaxJsonPacketBytes;
                             if (totalPacketSize > sizeLimit) throw new InvalidDataException($"Packet too large. Size: {totalPacketSize}, limit: {sizeLimit}");
 
-                            // Validate that we have enough bytes in the accumulator buffer to read the full packet, if not, break.
+                            // Wait until the full packet has accumulated, then extract it.
                             if (_byteAccumulatorBuffer.Count < totalPacketSize) break;
 
                             // We have a complete packet, so we can deserialize it

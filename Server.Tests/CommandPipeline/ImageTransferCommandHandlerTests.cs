@@ -14,21 +14,26 @@ namespace Server.Tests.CommandPipeline;
 public class ImageTransferCommandHandlerTests
 {
     private ImageTransferCommandHandler _handler = null!;
-    private string _tempDir = null!;
+    private string _imagesDir = null!;
+    private List<string> _createdFiles = null!;
 
     [TestInitialize]
     public void TestInitialize()
     {
         _handler = new ImageTransferCommandHandler();
-        _tempDir = Path.Combine(Path.GetTempPath(), $"ImgHandlerTests_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(_tempDir);
+        _imagesDir = Path.Combine(AppContext.BaseDirectory, "Images");
+        Directory.CreateDirectory(_imagesDir);
+        _createdFiles = [];
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        if (Directory.Exists(_tempDir))
-            Directory.Delete(_tempDir, recursive: true);
+        foreach (string file in _createdFiles)
+        {
+            if (File.Exists(file))
+                File.Delete(file);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -43,23 +48,27 @@ public class ImageTransferCommandHandlerTests
             success: true,
             errorMessage: null);
 
-    /// <summary>Creates a JPEG file with the correct magic bytes and the specified total size.</summary>
+    /// <summary>Creates a JPEG file in the Images folder with the correct magic bytes.
+    /// Returns the bare filename without extension — pass this directly to the handler.</summary>
     private string CreateFakeJpeg(int sizeBytes)
     {
-        string path = Path.Combine(_tempDir, $"{Guid.NewGuid():N}.jpg");
+        string name = Guid.NewGuid().ToString("N");
+        string path = Path.Combine(_imagesDir, name + ".jpg");
         byte[] data = new byte[sizeBytes];
-        // Write JPEG magic: FF D8 FF
         data[0] = 0xFF;
         data[1] = 0xD8;
         data[2] = 0xFF;
         File.WriteAllBytes(path, data);
-        return path;
+        _createdFiles.Add(path);
+        return name;
     }
 
-    /// <summary>Creates a non-JPEG file (PNG magic bytes) at the specified size.</summary>
+    /// <summary>Creates a file with non-JPEG content (PNG magic bytes) but a .jpg extension
+    /// in the Images folder. Returns the bare filename without extension.</summary>
     private string CreateNonJpegFile(int sizeBytes)
     {
-        string path = Path.Combine(_tempDir, $"{Guid.NewGuid():N}.png");
+        string name = Guid.NewGuid().ToString("N");
+        string path = Path.Combine(_imagesDir, name + ".jpg");
         byte[] data = new byte[sizeBytes];
         // PNG magic: 89 50 4E 47
         data[0] = 0x89;
@@ -67,7 +76,8 @@ public class ImageTransferCommandHandlerTests
         data[2] = 0x4E;
         data[3] = 0x47;
         File.WriteAllBytes(path, data);
-        return path;
+        _createdFiles.Add(path);
+        return name;
     }
 
     // -------------------------------------------------------------------------
@@ -87,7 +97,7 @@ public class ImageTransferCommandHandlerTests
     [TestMethod]
     public async Task Execute_FileDoesNotExist_ReturnsError()
     {
-        var result = await _handler.ExecuteAsync(BuildContext(@"C:\definitely\not\real.jpg"));
+        var result = await _handler.ExecuteAsync(BuildContext("nonexistent_image_xyz"));
 
         Assert.IsFalse(result.Success);
         StringAssert.Contains(result.Message, "not found");
@@ -101,9 +111,9 @@ public class ImageTransferCommandHandlerTests
     [TestMethod]
     public async Task Execute_NonJpegFile_ReturnsError()
     {
-        string path = CreateNonJpegFile(sizeBytes: 1024);
+        string name = CreateNonJpegFile(sizeBytes: 1024);
 
-        var result = await _handler.ExecuteAsync(BuildContext(path));
+        var result = await _handler.ExecuteAsync(BuildContext(name));
 
         Assert.IsFalse(result.Success);
         StringAssert.Contains(result.Message, "FF D8 FF");
@@ -113,9 +123,9 @@ public class ImageTransferCommandHandlerTests
     [TestMethod]
     public async Task Execute_ValidJpeg_ReturnsBinaryPayload()
     {
-        string path = CreateFakeJpeg(sizeBytes: 1024);
+        string name = CreateFakeJpeg(sizeBytes: 1024);
 
-        var result = await _handler.ExecuteAsync(BuildContext(path));
+        var result = await _handler.ExecuteAsync(BuildContext(name));
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
@@ -130,9 +140,9 @@ public class ImageTransferCommandHandlerTests
     public async Task Execute_LargeJpeg_ReturnsBinaryPayloadOverOneMB()
     {
         const int oneMB = 1024 * 1024;
-        string path = CreateFakeJpeg(sizeBytes: oneMB + 512);
+        string name = CreateFakeJpeg(sizeBytes: oneMB + 512);
 
-        var result = await _handler.ExecuteAsync(BuildContext(path));
+        var result = await _handler.ExecuteAsync(BuildContext(name));
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
