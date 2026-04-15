@@ -232,8 +232,10 @@ namespace Server.Core.Network.Worker
                             // Determine the total packet size based on the header information (header + body + tail)
                             int totalPacketSize = _packetLimits.headerSize + (int)pktHeader.BodyLength + _packetLimits.tailSize;
 
-                            // Validate the packet size against the maximum allowed size for JSON packets
-                            if ( totalPacketSize > _packetLimits.MaxJsonPacketBytes) throw new InvalidDataException($"Packet too large for a JSON packet. Size: {totalPacketSize}");
+                            // Validate the packet size — binary-flagged packets use the larger binary cap.
+                            bool isBinary = (pktHeader.BitFlags & (ushort)MessageFlags.BinaryPayload) != 0;
+                            int sizeLimit = isBinary ? _packetLimits.MaxPacketBytes : _packetLimits.MaxJsonPacketBytes;
+                            if (totalPacketSize > sizeLimit) throw new InvalidDataException($"Packet too large. Size: {totalPacketSize}, limit: {sizeLimit}");
 
                             // Validate that we have enough bytes in the accumulator buffer to read the full packet, if not, break.
                             if (_byteAccumulatorBuffer.Count < totalPacketSize) break;

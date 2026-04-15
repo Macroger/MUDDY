@@ -1,4 +1,5 @@
 ﻿using Shared.Protocol.Transport;
+using Shared.Protocol.Types;
 using System.Buffers.Binary;
 using System.Collections.Specialized;
 using System.IO.Hashing;
@@ -57,9 +58,11 @@ namespace Server.Core.Network.Packet
             if (buffer.Length < (headerSize + newHeader.BodyLength + tailSize))
                 throw new InvalidDataException("Packet truncated or malformed. Packet body is smaller then expected.");
 
-            // Check if the body size exceeds the maximum allowed JSON body size, which is calculated by subtracting the header and tail sizes from the total packet size.
-            if (newHeader.BodyLength > packetLimits.MaxJsonBodyBytes)
-                throw new InvalidDataException($"Packet malformed; exceeds JSON body size limit of {packetLimits.MaxJsonBodyBytes} bytes, got {newHeader.BodyLength} bytes.");
+            // Binary-flagged packets use the larger binary cap; all others are held to the JSON cap.
+            bool isBinary = (newHeader.BitFlags & (ushort)MessageFlags.BinaryPayload) != 0;
+            int bodyLimit = isBinary ? packetLimits.MaxBinaryBodyBytes : packetLimits.MaxJsonBodyBytes;
+            if (newHeader.BodyLength > bodyLimit)
+                throw new InvalidDataException($"Packet malformed; exceeds body size limit of {bodyLimit:N0} bytes, got {newHeader.BodyLength:N0} bytes.");
 
             // Create a span targeting the body.
             ReadOnlySpan<byte> bodySpan = buffer.Slice(headerSize, (int)newHeader.BodyLength);

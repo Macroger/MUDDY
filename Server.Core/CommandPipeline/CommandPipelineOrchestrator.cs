@@ -10,6 +10,7 @@ using Server.Core.Network.Supervisor;
 using Shared.EventBus;
 using Shared.Identity;
 using Shared.Protocol.Transport;
+using Shared.Protocol.Types;
 using System.Collections.Concurrent;
 using System.Text;
 
@@ -278,13 +279,30 @@ namespace Server.Core.CommandPipeline
 
             var commandResult = await handler.ExecuteAsync(context);
 
+            byte[] responsePayload;
+            TransportMessageType responseType;
+            MessageFlags responseFlags;
+
+            if (commandResult.BinaryPayload is { Length: > 0 } binaryData)
+            {
+                responsePayload = binaryData;
+                responseType = TransportMessageType.BinaryTransfer;
+                responseFlags = MessageFlags.BinaryPayload;
+            }
+            else
+            {
+                responsePayload = Encoding.UTF8.GetBytes(commandResult.Message);
+                responseType = TransportMessageType.Response;
+                responseFlags = MessageFlags.None;
+            }
+
             TransportEnvelope successResponse = new TransportEnvelope(
                 messageId: _messageIdGenerator.New(),
                 sessionId: null,
                 messageCorrelationId: msg.MessageId,
-                messageType: TransportMessageType.Response,
-                flags: Shared.Protocol.Types.MessageFlags.None,
-                payload: Encoding.UTF8.GetBytes(commandResult.Message),
+                messageType: responseType,
+                flags: responseFlags,
+                payload: responsePayload,
                 connectionId: msg.ConnId
             );
             _networkSupervisor.SendToClient(msg.ConnId, successResponse);

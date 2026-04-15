@@ -69,6 +69,7 @@ namespace Server.Core.Application
                 var movementHandler = new MovementCommandHandler(_movementService, _worldQueryService);
                 var playerHandler = new PlayerCommandHandler(_playerQueryService);
                 var serverStateHandler = new ServerStateCommandHandler(_lifecycleCoordinator);
+                var imageHandler = new ImageTransferCommandHandler();
 
                 // Register handlers in router
                 var cmdRouter = new StandardCommandRouter();
@@ -76,6 +77,7 @@ namespace Server.Core.Application
                 cmdRouter.RegisterHandler("move", movementHandler);
                 cmdRouter.RegisterHandler("player", playerHandler);
                 cmdRouter.RegisterHandler("serverstate", serverStateHandler);
+                cmdRouter.RegisterHandler("sendimage", imageHandler);
 
                 // Create a standard command parser.
                 ICommandParser cmdParser = new StandardCommandParser();
