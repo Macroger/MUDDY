@@ -17,6 +17,9 @@
         Compressed = 1 << 2,
 
         /// <summary>Message is a system-level message rather than an application-level message.</summary>
-        SystemMessage = 1 << 3
+        SystemMessage = 1 << 3,
+
+        /// <summary>Message payload is raw binary data (e.g. a JPEG image). Relaxes the JSON body size cap.</summary>
+        BinaryPayload = 1 << 4
     }
 }

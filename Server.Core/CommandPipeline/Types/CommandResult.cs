@@ -1,4 +1,6 @@
 ﻿using Shared.Identity;
+using Shared.Protocol.Transport;
+using Shared.Protocol.Types;
 
 namespace Server.Core.CommandPipeline.Types
 {
@@ -19,5 +21,12 @@ namespace Server.Core.CommandPipeline.Types
         /// Used for broadcast commands such as chat, emotes, or room notifications.
         /// </summary>
         public IReadOnlySet<ConnectionId>? AdditionalRecipients { get; init; }
+
+        /// <summary>
+        /// When non-null, the orchestrator sends this raw binary buffer instead of <see cref="Message"/>.
+        /// The packet is transmitted with <see cref="MessageFlags.BinaryPayload"/> and
+        /// <see cref="TransportMessageType.BinaryTransfer"/>, bypassing the JSON size cap.
+        /// </summary>
+        public byte[]? BinaryPayload { get; init; }
     }
 }
