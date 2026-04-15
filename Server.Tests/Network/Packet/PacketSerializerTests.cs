@@ -1,4 +1,3 @@
-using Server.Core.Network.Packet;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;

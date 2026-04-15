@@ -1,8 +1,6 @@
-using Server.Core.Network.Packet;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
-using System.Net.Sockets;
 
 namespace Server.Tests.Network.Packet;
 

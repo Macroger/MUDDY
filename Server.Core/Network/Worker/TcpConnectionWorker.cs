@@ -232,7 +232,7 @@ namespace Server.Core.Network.Worker
 
                             // Validate the packet size — binary-flagged packets use the larger binary cap.
                             bool isBinary = (pktHeader.BitFlags & (ushort)MessageFlags.BinaryPayload) != 0;
-                            int sizeLimit = isBinary ? _packetLimits.MaxPacketBytes : _packetLimits.MaxJsonPacketBytes;
+                            int sizeLimit = isBinary ? _packetLimits.MaxBinaryPacketBytes : _packetLimits.MaxJsonPacketBytes;
                             if (totalPacketSize > sizeLimit) throw new InvalidDataException($"Packet too large. Size: {totalPacketSize}, limit: {sizeLimit}");
 
                             // Wait until the full packet has accumulated, then extract it.
