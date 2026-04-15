@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Shared.EventBus;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using System;
@@ -9,6 +10,7 @@ namespace Server.GUI
 {
     public sealed partial class MainWindow : Window
     {
+        private readonly IEventBus _eventBus;
         private ObservableCollection<PlayerEntry> _players = new();
         private ObservableCollection<EventEntry> _events = new();
         private DispatcherTimer _timer = new();
