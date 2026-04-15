@@ -21,7 +21,7 @@ namespace Server.Core.Infrastructure.Lifecycle
 
         bool StartServer();
         bool ShutdownServer();
-        
+        bool SetState(ServerStateEnum newState);
     }
 
 }

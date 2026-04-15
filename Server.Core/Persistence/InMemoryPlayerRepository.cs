@@ -1,5 +1,7 @@
 ﻿using Server.Core.Domain.Player;
 using Shared.EventBus;
+using Shared.EventBus.DomainEvents;
+using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System;
 using System.Collections.Concurrent;
@@ -8,15 +10,32 @@ namespace Server.Core.Persistence
 {
     public class InMemoryPlayerRepository : IPlayerRepository
     {
+        private readonly IEventBus _eventBus;
+        private readonly ISubscriptionToken _disconnectSubscription;
+
         /// <summary>
         /// A list of the players that are currently connected to the server. 
         /// This is used to track player state and manage player data during a session.
         /// </summary>
         private ConcurrentDictionary<ConnectionId, PlayerState> _players;
 
-        public InMemoryPlayerRepository()
+        public InMemoryPlayerRepository(IEventBus eventBus)
         {
+            _eventBus = eventBus;
             _players = new ConcurrentDictionary<ConnectionId, PlayerState>();
+            _disconnectSubscription = _eventBus.Subscribe<NetworkEvents.ClientDisconnectedEvent>(
+                EventMessageType.Network, HandleDisconnect);
+        }
+
+        private async void HandleDisconnect(NetworkEvents.ClientDisconnectedEvent evt)
+        {
+            var player = await GetPlayerByConnectionIdAsync(evt.ConnId);
+            if (player is not null)
+            {
+                _eventBus.Publish(EventMessageType.Domain,
+                    new PlayerEvents.PlayerLeftWorldEvent(evt.ConnId, player.CurrentLocation));
+                await RemovePlayerAsync(evt.ConnId);
+            }
         }
 
         /// <summary>

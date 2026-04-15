@@ -1,7 +1,11 @@
-﻿using Server.Core.CommandPipeline.Types;
+﻿using Server.Core.CommandPipeline.ContextBuilder;
+using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Authentication;
+using Server.Core.Domain.Player;
+using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Network.Supervisor;
+using Server.Core.Persistence;
 using Shared.EventBus;
 using Shared.Identity;
 using Shared.Protocol.Transport;
@@ -21,20 +25,25 @@ namespace Server.Core.CommandPipeline.Authentication
         private readonly INetworkSupervisor _networkSupervisor;
         private readonly IEventBus _eventBus;
         private readonly IMessageIdGenerator _messageIdGenerator;
+        private readonly IPlayerRepository _playerRepository;
+        private readonly IWorldRepository _worldRepository;
 
         public StandardAuthenticationPipeline(
             IAuthenticationService authService,
             IAccountService accountService,
             INetworkSupervisor networkSupervisor,
             IEventBus eventBus,
-            IMessageIdGenerator messageIdGenerator)
+            IMessageIdGenerator messageIdGenerator,
+            IPlayerRepository playerRepository,
+            IWorldRepository worldRepository)
         {
             _authService = authService;
             _accountService = accountService;
             _networkSupervisor = networkSupervisor;
             _eventBus = eventBus;
             _messageIdGenerator = messageIdGenerator;
-
+            _playerRepository = playerRepository;
+            _worldRepository = worldRepository;
         }
 
         /// <summary>
@@ -104,6 +113,9 @@ namespace Server.Core.CommandPipeline.Authentication
             // Credentials are valid - create a session for this player
             SessionId sessionId = await _authService.CreateSessionAsync(connId, username);
 
+            // Spawn the player into the world so the command pipeline can find them
+            await SpawnPlayerAsync(connId, username);
+
             // Send success response with the new SessionToken
             SendAuthSuccess(connId, sessionId, $"Welcome back, {username}!");
         }
@@ -135,8 +147,44 @@ namespace Server.Core.CommandPipeline.Authentication
             // Account created successfully - create a session for the new player
             SessionId sessionId = await _authService.CreateSessionAsync(connId, username);
 
+            // Spawn the player into the world so the command pipeline can find them
+            await SpawnPlayerAsync(connId, username);
+
             // Send success response with the new SessionToken
             SendAuthSuccess(connId, sessionId, $"Account created! Welcome, {username}!");
+        }
+
+        /// <summary>
+        /// Creates a <see cref="PlayerState"/> for the authenticated player and places them
+        /// in the starting room so the command pipeline can find them immediately after login.
+        /// </summary>
+        private async Task SpawnPlayerAsync(ConnectionId connId, string username)
+        {
+            RoomId startingRoom = GameWorldFactory.StartingRoomId;
+
+            PlayerState newPlayer = new PlayerState
+            {
+                ConnId = connId,
+                PlayerName = username,
+                CurrentLocation = startingRoom,
+                ActiveConditions = new HashSet<PlayerCondition>()
+            };
+
+            await _playerRepository.UpsertPlayerAsync(newPlayer);
+
+            // Add the player to the starting room's presence list
+            RoomState? room = await _worldRepository.GetRoomAsync(startingRoom);
+            if (room != null)
+            {
+                HashSet<ConnectionId> updatedPlayers = new HashSet<ConnectionId>(room.PlayersPresent) { connId };
+                RoomState updatedRoom = new RoomState(
+                    room.Id,
+                    room.Description,
+                    room.Conditions,
+                    updatedPlayers,
+                    room.Exits);
+                await _worldRepository.UpdateRoomAsync(updatedRoom);
+            }
         }
 
         /// <summary>

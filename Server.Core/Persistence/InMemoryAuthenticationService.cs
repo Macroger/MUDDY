@@ -1,6 +1,8 @@
 ﻿using Server.Core.Domain.Authentication;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Shared.EventBus;
+using Shared.EventBus.DomainEvents;
+using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System;
 using System.Collections.Concurrent;
@@ -17,6 +19,7 @@ namespace Server.Core.Persistence
 
         private readonly IEventBus _eventBus;
         private readonly ISessionIdGenerator _sessionIdGenerator;
+        private readonly ISubscriptionToken _playerLeftSubscription;
 
         /// <summary>
         /// Represents a stored session record with connection and player information.
@@ -42,6 +45,8 @@ namespace Server.Core.Persistence
         {
             _eventBus = eventBus;
             _sessionIdGenerator = sessionIdGenerator;
+            _playerLeftSubscription = _eventBus.Subscribe<PlayerEvents.PlayerLeftWorldEvent>(
+                EventMessageType.Domain, async evt => await RemoveSessionByConnectionIdAsync(evt.ConnId));
         }
 
         /// <summary>
@@ -126,5 +131,28 @@ namespace Server.Core.Persistence
 
             return Task.FromResult(false);
         }
+
+        public Task RemoveSessionByConnectionIdAsync(ConnectionId connId)
+        {
+            var match = _sessions.FirstOrDefault(kv => kv.Value.ConnId == connId);
+
+            // Check if the session was found before attempting to remove, and log appropriately
+            if (match.Key != default) _sessions.TryRemove(match.Key, out _);
+
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                match.Key != default ? EventMessageType.Authentication : EventMessageType.Error,
+                new EventReason
+                (
+                    Message: match.Key != default
+                        ? $"Session with ID {match.Key} removed successfully for connection ID {connId}."
+                        : $"Failed to remove session for connection ID {connId}. No matching session found.",
+                    Data: new { ConnectionId = connId, SessionId = match.Key }
+                )
+            );
+
+            return Task.CompletedTask;
+        }
+
     }
 }

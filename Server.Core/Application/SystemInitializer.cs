@@ -47,8 +47,8 @@ namespace Server.Core.Application
                 _messageIdGenerator = new MessageIdGenerator();
                 _sessionIdGenerator = new SessionIdGenerator();
 
-                _playerRepository = new InMemoryPlayerRepository();
-                _worldRepository = new InMemoryWorldRepository();
+                _playerRepository = new InMemoryPlayerRepository(_eventBus);
+                _worldRepository = new InMemoryWorldRepository(_eventBus);
 
 
                 // Create the network supervisor
@@ -68,12 +68,14 @@ namespace Server.Core.Application
                 var chatHandler = new ChatCommandHandler(_chatService);
                 var movementHandler = new MovementCommandHandler(_movementService, _worldQueryService);
                 var playerHandler = new PlayerCommandHandler(_playerQueryService);
+                var serverStateHandler = new ServerStateCommandHandler(_lifecycleCoordinator);
 
                 // Register handlers in router
                 var cmdRouter = new StandardCommandRouter();
                 cmdRouter.RegisterHandler("say", chatHandler);
                 cmdRouter.RegisterHandler("move", movementHandler);
                 cmdRouter.RegisterHandler("player", playerHandler);
+                cmdRouter.RegisterHandler("serverstate", serverStateHandler);
 
                 // Create a standard command parser.
                 ICommandParser cmdParser = new StandardCommandParser();
@@ -86,7 +88,7 @@ namespace Server.Core.Application
                 IAccountService accountService = new InMemoryAccountService();
 
                 // Create the authentication pipeline
-                IAuthenticationPipeline authPipeline = new StandardAuthenticationPipeline(authService, accountService, _networkSupervisor, _eventBus, _messageIdGenerator);
+                IAuthenticationPipeline authPipeline = new StandardAuthenticationPipeline(authService, accountService, _networkSupervisor, _eventBus, _messageIdGenerator, _playerRepository, _worldRepository);
 
                 // Create the fist pass policy list and add the authentication policy to it, so that authentication will be processed before any commands are routed.
                 List<IFirstPassPolicy> firstPassPolicies = new List<IFirstPassPolicy>();

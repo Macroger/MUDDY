@@ -10,5 +10,7 @@ namespace Server.Core.Domain.Authentication
         Task<SessionId> CreateSessionAsync(ConnectionId connId, string playerName);
 
         Task RemoveSession(SessionId sessionId);
+
+        Task RemoveSessionByConnectionIdAsync(ConnectionId connId);
     }
 }

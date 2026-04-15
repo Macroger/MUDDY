@@ -83,7 +83,13 @@ namespace Server.Core.Domain.Services.ConcreteClasses
             );
 
             // Update the player's stored location.
-            PlayerState movedPlayer = new PlayerState(livePlayer.ConnId, livePlayer.PlayerName, destinationRoomId);
+            PlayerState movedPlayer = new PlayerState
+            {
+                ConnId = livePlayer.ConnId,
+                PlayerName = livePlayer.PlayerName,
+                CurrentLocation = destinationRoomId,
+                ActiveConditions = livePlayer.ActiveConditions
+            };
 
             // Persist all three changes.
             await _worldRepository.UpdateRoomAsync(updatedOldRoom);
