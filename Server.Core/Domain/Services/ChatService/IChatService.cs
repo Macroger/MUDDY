@@ -2,7 +2,7 @@
 using Shared.Domain.Player;
 using Server.Core.Domain.World;
 
-namespace Server.Core.Domain.Services.Interfaces
+namespace Server.Core.Domain.Services.ChatService
 {
     /// <summary>
     /// Handles chat-related operations in the game world.

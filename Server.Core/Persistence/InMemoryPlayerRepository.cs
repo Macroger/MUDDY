@@ -5,14 +5,15 @@ using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System;
 using System.Collections.Concurrent;
+using static Shared.EventBus.DomainEvents.ChatEvents;
 using static Shared.EventBus.DomainEvents.PlayerEvents;
 
 namespace Server.Core.Persistence
 {
-    public class InMemoryPlayerRepository : IPlayerRepository
+    public class InMemoryPlayerRepository : IPlayerRepository, IDisposable
     {
         private readonly IEventBus _eventBus;
-        private readonly ISubscriptionToken _disconnectSubscription;
+        private List<ISubscriptionToken> _subscriptions;
 
         /// <summary>
         /// A list of the players that are currently connected to the server. 
@@ -24,8 +25,72 @@ namespace Server.Core.Persistence
         {
             _eventBus = eventBus;
             _players = new ConcurrentDictionary<ConnectionId, PlayerState>();
-            _disconnectSubscription = _eventBus.Subscribe<NetworkEvents.ClientDisconnectedEvent>(
-                EventMessageType.Network, HandleDisconnect);
+            _subscriptions = new List<ISubscriptionToken>();
+            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.ClientDisconnectedEvent>
+                (EventMessageType.Network, HandleDisconnect));
+            _subscriptions.Add(_eventBus.Subscribe<MutePlayerRequestEvent>
+                (EventMessageType.Player, HandleMutePlayer ));
+        }
+
+        /// <summary>
+        /// Handles a request to mute a player.
+        /// </summary>
+        /// <param name="evnt"></param>
+        private async void HandleMutePlayer(MutePlayerRequestEvent evnt)
+        {
+            if(string.IsNullOrEmpty(evnt.targetPlayerName))
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason($"Invalid player name provided for mute request: '{evnt.targetPlayerName}'")
+                    );
+                return;
+            }
+
+            PlayerState? targetPlayer = await GetPlayerByNameAsync(evnt.targetPlayerName);
+
+            // Check if player was found.
+            if(targetPlayer == null )
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason($"Player '{evnt.targetPlayerName}' not found for mute request.")
+                    );
+                return;
+            }
+
+            // Check if player is already muted.
+            if(targetPlayer.ActiveConditions.Contains(PlayerCondition.Muted))
+            {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason($"Player '{evnt.targetPlayerName}' is already muted.")
+                    );
+                return;
+            }
+
+            // All checks are good, perform the mute to the player's state and update the repository.
+            var updatedConditions = new HashSet<PlayerCondition>(targetPlayer.ActiveConditions) { PlayerCondition.Muted };
+
+            var updatedPlayer = new PlayerState
+            {
+                ConnId = targetPlayer.ConnId,
+                PlayerName = targetPlayer.PlayerName,
+                CurrentLocation = targetPlayer.CurrentLocation,
+                ActiveConditions = updatedConditions
+            };
+
+            await UpsertPlayerAsync(updatedPlayer);
+
+            // Publish an event to report that the mute was successfully applied to the target player.
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.System,
+                new EventReason($"Player '{evnt.targetPlayerName}' has been muted successfully.")
+                );
         }
 
         private async void HandleDisconnect(NetworkEvents.ClientDisconnectedEvent evt)
@@ -121,6 +186,15 @@ namespace Server.Core.Persistence
                 // Return a completed task to maintain the asynchronous method signature, even though the operation is synchronous.
                 return await Task.FromResult(result);
             }
+        }
+
+        public void Dispose()
+        {
+            foreach (var subscription in _subscriptions)
+            {
+                subscription.Dispose();
+            }
+            _subscriptions.Clear();
         }
     }
 }

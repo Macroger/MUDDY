@@ -1,6 +1,7 @@
 ﻿using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
-using Server.Core.Domain.Services.Interfaces;
+using Server.Core.Domain.Services.WorldMovementService;
+using Server.Core.Domain.Services.WorldQueryService;
 
 namespace Server.Core.CommandPipeline.CommandHandler
 {
