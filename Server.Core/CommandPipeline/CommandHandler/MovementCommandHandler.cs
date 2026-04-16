@@ -36,7 +36,14 @@ namespace Server.Core.CommandPipeline.CommandHandler
 
             string verb = context.Command.CommandType.ToLowerInvariant();
 
-            if (verb == "move" || verb == "go")
+            // Check if the verb itself is a direction (north, south, etc.)
+            string[] validDirections = { "north", "south", "east", "west", "northeast", "northwest", "southeast", "southwest", "up", "down" };
+            if (validDirections.Contains(verb))
+            {
+                // The verb IS the direction, so move the player in that direction
+                return await _movementService.MovePlayerAsync(context.PlayerState, context.WorldState, verb);
+            }
+            else if (verb == "move" || verb == "go")
             {
                 // First argument is the direction the player wants to move (e.g. "north").
                 // We take the first argument, if it doesn't exist or is empty, we return an error message.

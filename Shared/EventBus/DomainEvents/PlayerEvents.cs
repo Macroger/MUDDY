@@ -10,8 +10,9 @@ namespace Shared.EventBus.DomainEvents
         /// removed. Subscribers use the <see cref="LastRoom"/> to clean up their own state.
         /// </summary>
         /// <param name="ConnId">The connection that disconnected.</param>
+        /// <param name="PlayerName">The name of the player who left.</param>
         /// <param name="LastRoom">The room the player was in when they left.</param>
-        public sealed record PlayerLeftWorldEvent(ConnectionId ConnId, RoomId LastRoom);
+        public sealed record PlayerLeftWorldEvent(ConnectionId ConnId, string PlayerName, RoomId LastRoom);
 
         /// <summary>
         /// Represents an event that occurs when a player enters the world, including connection and starting location

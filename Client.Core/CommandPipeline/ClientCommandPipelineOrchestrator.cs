@@ -55,6 +55,54 @@ namespace Client.Core.CommandPipeline
         }
     }
 
+    /// <summary>
+    /// Handles error messages from the server. Publishes OnErrorReceived for GUI.
+    /// </summary>
+    public class ErrorMessageHandler : IClientCommandHandler
+    {
+        public static event Action<string>? OnErrorReceived;
+
+        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        {
+            // Assume error message is UTF-8 encoded text in payload
+            var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
+            OnErrorReceived?.Invoke(message);
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// Handles response messages from the server. Publishes OnResponseReceived for GUI.
+    /// </summary>
+    public class ResponseMessageHandler : IClientCommandHandler
+    {
+        public static event Action<string>? OnResponseReceived;
+
+        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        {
+            // Assume response message is UTF-8 encoded text in payload
+            var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
+            OnResponseReceived?.Invoke(message);
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// Handles authentication success messages from the server. Publishes OnAuthSuccessReceived for GUI.
+    /// </summary>
+    public class AuthSuccessMessageHandler : IClientCommandHandler
+    {
+        public static event Action<string>? OnAuthSuccessReceived;
+
+        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        {
+            // Assume auth success message is UTF-8 encoded text in payload
+            var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
+            OnAuthSuccessReceived?.Invoke(message);
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+    }
+
     public class ClientCommandPipelineOrchestrator
     {
         private readonly System.Collections.Concurrent.BlockingCollection<Shared.Protocol.Transport.TransportEnvelope> _msgQueue = new();
@@ -135,14 +183,10 @@ namespace Client.Core.CommandPipeline
         {
             // Route by message type (or use a key from payload if needed)
             var key = envelope.MessageType.ToString();
+
             if (_handlers.TryGetValue(key, out var handler))
             {
                 await handler.HandleAsync(envelope);
-            }
-            else
-            {
-                // Optionally log or handle unknown message types
-                System.Diagnostics.Debug.WriteLine($"No handler registered for message type: {key}");
             }
         }
     }

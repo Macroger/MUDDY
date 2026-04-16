@@ -20,6 +20,8 @@ namespace Server.Core.Infrastructure.Lifecycle
 
         public bool IsInMaintenance => (_currentState == ServerStateEnum.MAINTENANCE);
 
+        public ServerStateEnum CurrentState => _currentState;
+
         public LifecycleCoordinator(IEventBus eventBus)
         {
             _eventBus = eventBus;
