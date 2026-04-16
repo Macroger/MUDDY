@@ -27,7 +27,7 @@ namespace Server.GUI
         private string _serverStateText = "Running";
         private Brush _serverStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Green);
 
-        private string _listenerStateText = "Stopped";
+        private string _listenerStateText = "OFFLINE";
         private Brush _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -283,22 +283,18 @@ namespace Server.GUI
                 {
                     _listenerStateText = "ONLINE";
                     ListenerStateText = _listenerStateText;
-                    _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Green);
+                    ListenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Green);
                 }
                 else
                 {
                     _listenerStateText = "OFFLINE";
                     ListenerStateText = _listenerStateText;
-                    _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
+                    ListenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
                 }
-                
-            });
-        }
 
-        private void OnConnectionStatusButtonClick(object sender, RoutedEventArgs e)
-        {
-            var newState = StatusTextBlock.Text.Contains("ONLINE") ? ServerStateEnum.MAINTENANCE : ServerStateEnum.ACTIVE;
-            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(newState));
+                ToggleListenerButton.IsEnabled = true; // Re-enable the button after state update
+
+            });
         }
 
         private void MutePlayer_Click(object sender, RoutedEventArgs e)
@@ -306,8 +302,7 @@ namespace Server.GUI
             var selectedPlayer = PlayersListView.SelectedItem as PlayerDisplay;
             if (selectedPlayer != null)
             {
-                // Mute logic here
-                // Example: _eventBus.Publish(...);
+                // Fire a request to have the player muted/unmuted
             }
         }
 
@@ -330,7 +325,19 @@ namespace Server.GUI
 
         private void ToggleListenerButton_Click(object sender, RoutedEventArgs e)
         {
+            // Check current state and publish appropriate event to toggle listener
+            if(ListenerStateText == "ONLINE")
+            {
+                // Publish event to stop listener
+                _eventBus.Publish(EventMessageType.Network, new StopListenerRequestEvent());
+            }
+            else
+            {
+                // Publish event to start listener
+                _eventBus.Publish(EventMessageType.Network, new StartListnerRequestEvent());
+            }
 
+            ToggleListenerButton.IsEnabled = false; // Disable button until we get confirmation of state change
         }
     }
 

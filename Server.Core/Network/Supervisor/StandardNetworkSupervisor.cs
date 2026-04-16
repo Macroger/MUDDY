@@ -21,7 +21,8 @@ using static Shared.EventBus.DomainEvents.NetworkEvents;
 
 namespace Server.Core.Network.Supervisor
 {
-    public class StandardNetworkSupervisor : IDisposable
+    public class StandardNetworkSupervisor : 
+        IDisposable,
         INetworkSupervisor,
         IListenerErrorHandler,
         IConnectionAcceptedHandler,

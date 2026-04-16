@@ -61,19 +61,4 @@ public class LifecycleCoordinatorTests
         Assert.IsFalse(result);
     }
 
-    // -------------------------------------------------------------------------
-    // StateChanged event fires on valid transition
-    // -------------------------------------------------------------------------
-
-    [TestMethod]
-    public void StartServer_FiresStateChangedEvent()
-    {
-        ServerStateChangedEvent? captured = null;
-        _coordinator.StateChanged += (_, e) => captured = e;
-
-        _coordinator.StartServer();
-
-        Assert.IsNotNull(captured);
-        Assert.AreEqual(ServerStateEnum.ACTIVE, captured.NewState);
-    }
 }

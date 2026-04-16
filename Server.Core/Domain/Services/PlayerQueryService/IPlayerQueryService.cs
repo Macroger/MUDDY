@@ -2,7 +2,7 @@
 using Shared.Domain.Player;
 using Server.Core.Domain.World;
 
-namespace Server.Core.Domain.Services.Interfaces
+namespace Server.Core.Domain.Services.PlayerQueryService
 {
     /// <summary>
     /// Queries player state and information.

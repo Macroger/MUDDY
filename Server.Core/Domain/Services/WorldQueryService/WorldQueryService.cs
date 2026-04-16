@@ -1,9 +1,8 @@
 ﻿using Server.Core.CommandPipeline.Types;
 using Shared.Domain.Player;
-using Server.Core.Domain.Services.Interfaces;
 using Server.Core.Domain.World;
 
-namespace Server.Core.Domain.Services.ConcreteClasses
+namespace Server.Core.Domain.Services.WorldQueryService
 {
     public class WorldQueryService : IWorldQueryService
     {

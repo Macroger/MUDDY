@@ -1,11 +1,11 @@
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Shared.Domain.Player;
-using Server.Core.Domain.Services.ConcreteClasses;
 using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Shared.EventBus;
 using Shared.Identity;
+using Server.Core.Domain.Services.ChatService;
 
 namespace Server.Tests.Domain;
 
