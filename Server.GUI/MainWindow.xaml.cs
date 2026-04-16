@@ -1,27 +1,66 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using Server.Core.Infrastructure.Lifecycle;
 using Shared.Domain.Player;
 using Shared.EventBus;
+using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Windows.Graphics;
+using static Shared.EventBus.DomainEvents.NetworkEvents;
 
 namespace Server.GUI
 {
-    public sealed partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private readonly IEventBus _eventBus;
         private ObservableCollection<PlayerDisplay> _activePlayers = new();
         private ObservableCollection<EventEntry> _events = new();
         private DispatcherTimer _timer = new();
 
+        private string _serverStateText = "Running";
+        private Brush _serverStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Green);
+
+        private string _listenerStateText = "Stopped";
+        private Brush _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        private readonly List<ISubscriptionToken> _eventSubscriptions = new();
+
         // Public property for XAML binding
         public ObservableCollection<EventEntry> Events => _events;
+
+        public string ServerStateText
+        {
+            get => _serverStateText;
+            set { _serverStateText = value; OnPropertyChanged(nameof(ServerStateText)); }
+        }
+
+        public Brush ServerStateBrush
+        {
+            get => _serverStateBrush;
+            set { _serverStateBrush = value; OnPropertyChanged(nameof(ServerStateBrush)); }
+        }
+
+        public string ListenerStateText
+        {
+            get => _listenerStateText;
+            set { _listenerStateText = value; OnPropertyChanged(nameof(ListenerStateText)); }
+        }
+
+        public Brush ListenerStateBrush
+        {
+            get => _listenerStateBrush;
+            set { _listenerStateBrush = value; OnPropertyChanged(nameof(ListenerStateBrush)); }
+        }
 
 
         public MainWindow(IEventBus eventBus)
@@ -29,37 +68,34 @@ namespace Server.GUI
             try
             {
                 InitializeComponent();
-                System.Diagnostics.Debug.WriteLine("✓ InitializeComponent completed");
+
+                MuteButton.IsEnabled = false;
+                KickButton.IsEnabled = false;
 
                 _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
-                System.Diagnostics.Debug.WriteLine("✓ EventBus validated");
 
                 // Minimal setup - just set data sources and don't subscribe yet
                 PlayersListView.ItemsSource = _activePlayers;
                 EventLogDataGrid.ItemsSource = _events;
-                System.Diagnostics.Debug.WriteLine("✓ ItemSources set");
 
                 // Window sizing
                 if (AppWindow.Presenter is OverlappedPresenter presenter)
                 {
                     presenter.PreferredMinimumWidth = 1080;
-                    presenter.PreferredMinimumHeight = 940;
+                    presenter.PreferredMinimumHeight = 1040;
                     presenter.IsResizable = true;
                     presenter.IsMaximizable = true;
                     presenter.IsMinimizable = true;
                 }
-                this.AppWindow.Resize(new SizeInt32(1280, 1000));
-                System.Diagnostics.Debug.WriteLine("✓ Window sizing applied");
+                this.AppWindow.Resize(new SizeInt32(1280, 1200));
 
                 // Simple UI updates
                 PlayerCountText.Text = $"PLAYERS CONNECTED: {_activePlayers.Count}";
-                System.Diagnostics.Debug.WriteLine("✓ PlayerCountText updated");
 
                 // Timer for server time
                 _timer.Interval = TimeSpan.FromSeconds(1);
-                _timer.Tick += (s, e) => ServerTimeText.Text = $"SERVER TIME: {DateTime.Now:HH:mm:ss}";
+                _timer.Tick += (s, e) => ServerTimeText.Text = $"CURRENT TIME: {DateTime.Now:HH:mm:ss tt}";
                 _timer.Start();
-                System.Diagnostics.Debug.WriteLine("✓ Clock timer started");
 
                 // Uptime timer
                 var startTime = DateTime.Now;
@@ -70,46 +106,30 @@ namespace Server.GUI
                     UptimeText.Text = uptime.ToString(@"hh\:mm\:ss");
                 };
                 uptimeTimer.Start();
-                System.Diagnostics.Debug.WriteLine("✓ Uptime timer started");
 
-                // Now try the event bus subscriptions
-                System.Diagnostics.Debug.WriteLine("Attempting event bus subscriptions...");
-
+                // Subscribe to server state changes
                 try
                 {
-                    _eventBus.Subscribe<ServerStateChangedEvent>(EventMessageType.System, OnServerStateChanged);
-                    System.Diagnostics.Debug.WriteLine("✓ ServerStateChangedEvent subscription succeeded");
+                    // Subscribe to ServerStateChangeEvent
+                    _eventSubscriptions.Add(_eventBus.Subscribe<ServerStateChangedEvent>(EventMessageType.System, OnServerStateChanged));
+
+                    // Subscribe to all events for logging purposes (could be filtered or categorized in a real app)
+                    _eventSubscriptions.Add(_eventBus.SubscribeAll(OnAnyEventReceived));
+
+                    // Subscribe to log events specifically for structured logging
+                    _eventSubscriptions.Add(_eventBus.Subscribe<EventEnvelope>(EventMessageType.Log, OnLogEventReceived));
+
+                    // Subscribe to ListenerStateChangedEvent 
+                    _eventSubscriptions.Add(_eventBus.Subscribe<ListenerStateChangedEvent>(EventMessageType.Network, OnListenerStateChanged));
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"✗ ServerStateChangedEvent subscription failed: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Subscription failed: {ex.Message}");
                 }
-
-                try
-                {
-                    _eventBus.Subscribe<EventEnvelope>(EventMessageType.Log, OnLogEventReceived);
-                    System.Diagnostics.Debug.WriteLine("✓ EventEnvelope subscription succeeded");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"✗ EventEnvelope subscription failed: {ex.Message}");
-                }
-
-                try
-                {
-                    _eventBus.SubscribeAll(OnAnyEventReceived);
-                    System.Diagnostics.Debug.WriteLine("✓ SubscribeAll succeeded");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"✗ SubscribeAll failed: {ex.Message}");
-                }
-
-                System.Diagnostics.Debug.WriteLine("✓✓✓ MainWindow initialization COMPLETE ✓✓✓");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"✗✗✗ CRITICAL ERROR in MainWindow initialization: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"CRITICAL ERROR in MainWindow initialization: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 throw;
             }
@@ -128,6 +148,14 @@ namespace Server.GUI
                     // Optionally trim log size
                     if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
                 });
+            }
+        }
+
+        private void ClearEventLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (EventLogDataGrid.ItemsSource is ObservableCollection<EventEntry> eventLog)
+            {
+                eventLog.Clear();
             }
         }
 
@@ -219,7 +247,7 @@ namespace Server.GUI
                 switch (args.NewState)
                 {
                     case ServerStateEnum.ACTIVE:
-                        StatusTextBlock.Text = "STATUS: ONLINE";
+                        StatusTextBlock.Text = "STATUS: ACTIVE";
                         StatusTextBlock.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 76, 175, 80));
                         break;
                     case ServerStateEnum.MAINTENANCE:
@@ -227,7 +255,7 @@ namespace Server.GUI
                         StatusTextBlock.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 165, 0));
                         break;
                     case ServerStateEnum.SHUTTING_DOWN:
-                        StatusTextBlock.Text = "STATUS: OFFLINE";
+                        StatusTextBlock.Text = "STATUS: SHUTTING_DOWN";
                         StatusTextBlock.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 220, 50, 50));
                         break;
                     case ServerStateEnum.LOADING:
@@ -235,14 +263,74 @@ namespace Server.GUI
                         StatusTextBlock.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 170, 170, 170));
                         break;
                 }
+
+                ServerStateText = args.NewState.ToString();
+                ServerStateBrush = args.NewState switch
+                {
+                    ServerStateEnum.ACTIVE => new SolidColorBrush(Microsoft.UI.Colors.Green),
+                    ServerStateEnum.SHUTTING_DOWN => new SolidColorBrush(Microsoft.UI.Colors.Red),
+                    ServerStateEnum.MAINTENANCE => new SolidColorBrush(Microsoft.UI.Colors.Orange),
+                    _ => new SolidColorBrush(Microsoft.UI.Colors.Gray)
+                };
+            });
+        }
+
+        private void OnListenerStateChanged(ListenerStateChangedEvent evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if(evnt.IsListenerStarted == true)
+                {
+                    _listenerStateText = "ONLINE";
+                    ListenerStateText = _listenerStateText;
+                    _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Green);
+                }
+                else
+                {
+                    _listenerStateText = "OFFLINE";
+                    ListenerStateText = _listenerStateText;
+                    _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
+                }
+                
             });
         }
 
         private void OnConnectionStatusButtonClick(object sender, RoutedEventArgs e)
         {
-            // Example: Toggle between online and maintenance for testing
             var newState = StatusTextBlock.Text.Contains("ONLINE") ? ServerStateEnum.MAINTENANCE : ServerStateEnum.ACTIVE;
             _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(newState));
+        }
+
+        private void MutePlayer_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedPlayer = PlayersListView.SelectedItem as PlayerDisplay;
+            if (selectedPlayer != null)
+            {
+                // Mute logic here
+                // Example: _eventBus.Publish(...);
+            }
+        }
+
+        private void KickPlayer_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedPlayer = PlayersListView.SelectedItem as PlayerDisplay;
+            if (selectedPlayer != null)
+            {
+                // Kick logic here
+                // Example: _eventBus.Publish(...);
+            }
+        }
+
+        private void PlayersListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool hasSelection = PlayersListView.SelectedItem != null;
+            MuteButton.IsEnabled = hasSelection;
+            KickButton.IsEnabled = hasSelection;
+        }
+
+        private void ToggleListenerButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 
@@ -251,6 +339,8 @@ namespace Server.GUI
         public string Name { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
         public string Ping { get; set; } = "0ms";
+
+        public bool IsMuted { get; set; }
     }
 
     public class EventEntry
@@ -277,4 +367,8 @@ namespace Server.GUI
         public object ConvertBack(object value, Type targetType, object parameter, string language)
             => throw new NotImplementedException();
     }
+
+
+
+
 }

@@ -23,5 +23,6 @@ namespace Shared.EventBus.DomainEvents
         public sealed record PlayerEnteredWorldEvent(ConnectionId ConnId, string PlayerName, RoomId StartingRoom);
 
         //public sealed record PlayerStateUpdatedEvent(ConnectionId ConnId, PlayerState );
+
     }
 }

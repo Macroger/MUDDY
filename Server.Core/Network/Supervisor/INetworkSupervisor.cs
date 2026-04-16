@@ -18,13 +18,13 @@ namespace Server.Core.Network.Supervisor
         /// Start accepting new client connections. 
         /// </summary>
         /// <returns></returns>
-        bool StartAcceptingClients();
+        bool StartListener();
 
         /// <summary>
         /// Stops the server from accepting new client connections.
         /// </summary>
         /// <returns>true if the server successfully stops accepting new clients; otherwise, false.</returns>
-        bool StopAcceptingClients();
+        bool StopListener();
 
         /// <summary>
         /// Closes the specified connection and releases any associated resources.
