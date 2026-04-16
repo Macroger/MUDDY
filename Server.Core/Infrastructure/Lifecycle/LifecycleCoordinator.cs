@@ -12,9 +12,6 @@ namespace Server.Core.Infrastructure.Lifecycle
         private volatile ServerStateEnum _currentState = ServerStateEnum.LOADING;
 
         private IEventBus _eventBus;
-
-        public event EventHandler<ServerStateChangedEvent>? StateChanged;
-
         public bool IsLoading => (_currentState == ServerStateEnum.LOADING);
 
         public bool IsActive => (_currentState == ServerStateEnum.ACTIVE);

@@ -24,5 +24,11 @@ namespace Shared.EventBus.DomainEvents
             RoomId RoomId,
             string EmoteText,
             IReadOnlySet<ConnectionId> PlayersInRoom);
+
+        public sealed record PlayerMutedEvent(
+            string MutedPlayerName,
+            string MutingEntityName,
+            TimeSpan Duration,
+            IReadOnlySet<ConnectionId> MutedPlayerConnections);
     }
 }

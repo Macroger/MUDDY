@@ -16,11 +16,12 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
 using Windows.Media.Protection.PlayReady;
+using static Shared.EventBus.DomainEvents.NetworkEvents;
 
 
 namespace Server.Core.Network.Supervisor
 {
-    public class StandardNetworkSupervisor : 
+    public class StandardNetworkSupervisor : IDisposable
         INetworkSupervisor,
         IListenerErrorHandler,
         IConnectionAcceptedHandler,
@@ -38,12 +39,9 @@ namespace Server.Core.Network.Supervisor
         private CancellationTokenSource _serverCts;
         private IPEndPoint _listenerEndPoint;
         private readonly IServerLifecycle _lifecycle;
-        private ISubscriptionToken? _outboundMessageSubscription;
+        private List<ISubscriptionToken> _subscriptions = new List<ISubscriptionToken>();
         private IMessageIdGenerator _messageIdGenerator;
         #endregion
-
-        // Add event for new connections
-        //public event EventHandler<AcceptedConnection>? NewConnectionAccepted;
 
         private ConcurrentDictionary<ConnectionId, ConnectionContext> _activeConnections = new ConcurrentDictionary<ConnectionId, ConnectionContext>();
 
@@ -85,9 +83,6 @@ namespace Server.Core.Network.Supervisor
             _commandPipeline = null;
             _eventBus = bus;
             _lifecycle = lifeCycle;
-
-            // Subscribe to the server lifecycle's state change event
-            _lifecycle.StateChanged += OnServerStateChanged;
         }
 
         /// <summary>
@@ -295,26 +290,30 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <returns>True if the listener is successfully started or is already running; otherwise, false.</returns>
         /// <remarks>If the listener is already running, this method returns true without taking further action. If starting the listener fails, the method returns false and does not throw an exception.</remarks>
-        public bool StartAcceptingClients()
+        public bool StartListener()
         {
-            
+            // Check if the listener is already off, if so return true.
+            if (IsListeningForConnections == true) return true;
+
             try
             {
                 // Initiate the TCP listener on the configured endpoint.
                 _tcpConnectionListener.Start();
 
+                IsListeningForConnections = true;
+
                 // Log the event
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Network,
-                    new EventReason(
-                        "TCP listener started successfully",
-                        new { endpoint = _listenerEndPoint }
-                    )
+                    new ListenerStateChangedEvent(IsListeningForConnections)
                 );
+                
             }
             catch
             {
+                IsListeningForConnections = false;
+
                 // Log failure event to eventBus here.
                 EventBusHelper.PublishEvent(
                     _eventBus,
@@ -335,10 +334,11 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <returns>True if the server successfully stops accepting new clients or was already stopped; otherwise, false.</returns>
         /// <remarks>If the server is already in the stopped state, this method returns true immediately. If the stopping process encounters any errors, they are logged as error events, and the method returns false.</remarks>
-        public bool StopAcceptingClients()
+        public bool StopListener()
         {
             // Check if the listener is already off, if so return true.
             if (IsListeningForConnections == false) return true;
+
             try
             {
                 // Initiate the TCP listener on the configured endpoint.
@@ -350,10 +350,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Network,
-                    new EventReason(
-                        "TCP listener stopped successfully",
-                        new { endpoint = _listenerEndPoint }
-                    )
+                    new ListenerStateChangedEvent(IsListeningForConnections)
                 );
             }
             catch
@@ -380,8 +377,17 @@ namespace Server.Core.Network.Supervisor
         {
             try
             {
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.System,
+                    new EventReason(
+                        "Server shutdown initiated, all client connections have been issued terminatation signals",
+                        new { }
+                    )
+                );
+
                 // First, stop accepting new client connections to prevent new clients from connecting while the shutdown process is underway.
-                StopAcceptingClients();
+                StopListener();
 
                 // Issue cancellation request on servers cancellation token source to signal all connection workers to stop processing
                 // messages and terminate client connections gracefully.
@@ -393,14 +399,7 @@ namespace Server.Core.Network.Supervisor
                 {
                     context.Worker.Stop();
                 }
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.System,
-                    new EventReason(
-                        "Server shutdown initiated, all client connections have been issued terminatation signals",
-                        new { }
-                    )
-                );
+                
             }
             catch
             {
@@ -486,13 +485,9 @@ namespace Server.Core.Network.Supervisor
                     )
                 );
                 return;
-            }            
+            }
 
-            IsListeningForConnections = StartAcceptingClients();
-
-            if(IsListeningForConnections == true)
-            {
-                EventBusHelper.PublishEvent
+            EventBusHelper.PublishEvent
                 (
                     _eventBus,
                     EventMessageType.System,
@@ -501,26 +496,30 @@ namespace Server.Core.Network.Supervisor
                         new { endpoint = _listenerEndPoint }
                     )
                 );
-            }
-            else
-            {
-                EventBusHelper.PublishEvent
-                (
-                    _eventBus,
-                    EventMessageType.System,
-                    new EventReason
-                    (
-                        "Network supervisor failed to start"
-                    )
-                );
-            }
 
-            // Subscribe and keep the token
-            _outboundMessageSubscription = _eventBus.Subscribe<NetworkEvents.OutboundMessageEvent>
-            (
-                EventMessageType.Network,
-                OnOutboundMessageRequested
-            );
+            // Subscribe to and listen for outbound message events
+            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.OutboundMessageEvent>(
+                eventType: EventMessageType.Network,
+                handler: OnOutboundMessageRequested
+            ));
+
+            // Subscribe to server lifecycle events to react to state changes
+            _subscriptions.Add(_eventBus.Subscribe<ServerStateChangedEvent>(
+                eventType: EventMessageType.System,
+                handler: OnServerStateChanged
+            ));
+
+            // Subscribe to start listener requests from other parts of the system
+            _subscriptions.Add(_eventBus.Subscribe<StartListnerRequestEvent>(
+                eventType: EventMessageType.Network,
+                handler: OnStartListenerRequested
+            ));
+
+            // Subscribe to stop listener requests from other parts of the system
+            _subscriptions.Add(_eventBus.Subscribe<StopListenerRequestEvent>(
+                eventType: EventMessageType.Network,
+                handler: OnStopListenerRequested
+            ));
 
             return;
         }
@@ -539,7 +538,12 @@ namespace Server.Core.Network.Supervisor
                 )
             );
 
-            _outboundMessageSubscription?.Dispose();
+            foreach(var subscription in _subscriptions)
+            {
+                subscription.Dispose();
+            }
+
+            _subscriptions.Clear();
 
             ShutdownSupervisor();
         }
@@ -832,7 +836,7 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <param name="sender">The object that emitted the event.</param>
         /// <param name="e">ServerStateChangedEventData: An object containing info about the event.</param>
-        private void OnServerStateChanged(object? sender, ServerStateChangedEvent e)
+        private void OnServerStateChanged(ServerStateChangedEvent e)
         {
             // Log the state change
             EventBusHelper.PublishEvent(
@@ -850,11 +854,11 @@ namespace Server.Core.Network.Supervisor
 
             if (e.NewState == ServerStateEnum.SHUTTING_DOWN || e.NewState == ServerStateEnum.MAINTENANCE)
             {                
-                StopAcceptingClients(); // Proactively stop accepting connections
+                StopListener(); // Proactively stop accepting connections
             }
             else if(e.NewState == ServerStateEnum.ACTIVE)
             {
-                StartAcceptingClients(); // Start accepting clients if the server becomes active
+                StartListener(); // Start accepting clients if the server becomes active
             }
         }
 
@@ -877,6 +881,28 @@ namespace Server.Core.Network.Supervisor
             );
 
             ProcessNewConnection(connection);
+        }
+
+        public void OnStartListenerRequested(StartListnerRequestEvent e)
+        {
+            StartListener();
+        }
+
+        public void OnStopListenerRequested(StopListenerRequestEvent e)
+        {
+            StopListener();
+        }
+
+        public void Dispose()
+        {
+            foreach (var subscription in _subscriptions)
+            {
+                subscription.Dispose();
+            }
+            _subscriptions.Clear();
+
+            // Dispose other resources if needed
+            _serverCts?.Dispose();
         }
 
         #endregion
