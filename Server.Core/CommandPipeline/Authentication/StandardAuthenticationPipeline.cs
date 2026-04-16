@@ -1,7 +1,7 @@
 ﻿using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Authentication;
-using Server.Core.Domain.Player;
+using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Network.Supervisor;
@@ -11,6 +11,7 @@ using Shared.Identity;
 using Shared.Protocol.Transport;
 using System.Text;
 using System.Text.Json;
+using static Shared.EventBus.DomainEvents.PlayerEvents;
 
 namespace Server.Core.CommandPipeline.Authentication
 {
@@ -184,7 +185,13 @@ namespace Server.Core.CommandPipeline.Authentication
                     updatedPlayers,
                     room.Exits);
                 await _worldRepository.UpdateRoomAsync(updatedRoom);
-            }
+
+                EventBusHelper.PublishEvent<PlayerEnteredWorldEvent>(
+                _eventBus,
+                EventMessageType.World,
+                new PlayerEnteredWorldEvent(connId, username, updatedRoom.Id)                
+                );
+            }            
         }
 
         /// <summary>

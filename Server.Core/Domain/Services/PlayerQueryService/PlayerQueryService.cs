@@ -1,9 +1,8 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Server.Core.Domain.Player;
-using Server.Core.Domain.Services.Interfaces;
+using Shared.Domain.Player;
 using Server.Core.Domain.World;
 
-namespace Server.Core.Domain.Services.ConcreteClasses
+namespace Server.Core.Domain.Services.PlayerQueryService
 {
     public class PlayerQueryService : IPlayerQueryService
     {

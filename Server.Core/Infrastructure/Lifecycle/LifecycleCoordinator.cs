@@ -1,29 +1,9 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
+﻿using Shared.EventBus;
 
 namespace Server.Core.Infrastructure.Lifecycle
 {
     public sealed class LifecycleCoordinator : IServerLifecycle
     {
-        /// <summary>
-        /// This hash set defines the allowed states for the server, and provides a way to map valid transitions between them.
-        /// </summary>
-        private static readonly HashSet<(ServerStateEnum from, ServerStateEnum to)> AllowedTransitions = new()
-        {
-            // From LOADING - this state change is allowed.
-            (ServerStateEnum.LOADING, ServerStateEnum.ACTIVE),
-    
-            // From ACTIVE - these states are allowed.
-            (ServerStateEnum.ACTIVE, ServerStateEnum.MAINTENANCE),
-            (ServerStateEnum.ACTIVE, ServerStateEnum.SHUTTING_DOWN),
-    
-            // From MAINTENANCE - these states are allowed.
-            (ServerStateEnum.MAINTENANCE, ServerStateEnum.ACTIVE),
-            (ServerStateEnum.MAINTENANCE, ServerStateEnum.SHUTTING_DOWN),
-    
-            // From SHUTTING_DOWN - no state changes allowed.
-        };
-
         private readonly List<IStartable> _startableItems = new();
         private readonly List<IStoppable> _stoppableItems = new();
         private readonly List<IShutdownAware> _shutdownAwareItems = new();
@@ -31,8 +11,7 @@ namespace Server.Core.Infrastructure.Lifecycle
         private volatile ServerStateEnum _previousState = ServerStateEnum.LOADING;
         private volatile ServerStateEnum _currentState = ServerStateEnum.LOADING;
 
-        public event EventHandler<ServerStateChangedEventData>? StateChanged;
-
+        private IEventBus _eventBus;
         public bool IsLoading => (_currentState == ServerStateEnum.LOADING);
 
         public bool IsActive => (_currentState == ServerStateEnum.ACTIVE);
@@ -40,6 +19,11 @@ namespace Server.Core.Infrastructure.Lifecycle
         public bool IsShuttingDown => (_currentState == ServerStateEnum.SHUTTING_DOWN);
 
         public bool IsInMaintenance => (_currentState == ServerStateEnum.MAINTENANCE);
+
+        public LifecycleCoordinator(IEventBus eventBus)
+        {
+            _eventBus = eventBus;
+        }
 
         /// <summary>
         /// Start all items in the list of startables.
@@ -56,6 +40,7 @@ namespace Server.Core.Infrastructure.Lifecycle
 
             return true;
         }
+
 
         /// <summary>
         /// Stop all the items in the list of stoppables, then send a signal to all the shutdownAware items.
@@ -137,10 +122,29 @@ namespace Server.Core.Infrastructure.Lifecycle
             _currentState = next;
 
             // Fire off the state changed event to notify any listeners of the new state.
-            StateChanged?.Invoke(this, new ServerStateChangedEventData(_previousState, next));
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangedEvent(_previousState, next));
 
             return true;
         }
+
+        /// <summary>
+        /// This hash set defines the allowed states for the server, and provides a way to map valid transitions between them.
+        /// </summary>
+        private static readonly HashSet<(ServerStateEnum from, ServerStateEnum to)> AllowedTransitions = new()
+        {
+            // From LOADING - this state change is allowed.
+            (ServerStateEnum.LOADING, ServerStateEnum.ACTIVE),
+    
+            // From ACTIVE - these states are allowed.
+            (ServerStateEnum.ACTIVE, ServerStateEnum.MAINTENANCE),
+            (ServerStateEnum.ACTIVE, ServerStateEnum.SHUTTING_DOWN),
+    
+            // From MAINTENANCE - these states are allowed.
+            (ServerStateEnum.MAINTENANCE, ServerStateEnum.ACTIVE),
+            (ServerStateEnum.MAINTENANCE, ServerStateEnum.SHUTTING_DOWN),
+    
+            // From SHUTTING_DOWN - no state changes allowed.
+        };
 
     }
 }

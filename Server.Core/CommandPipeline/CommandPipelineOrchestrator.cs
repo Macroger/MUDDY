@@ -200,7 +200,7 @@ namespace Server.Core.CommandPipeline
             // Check if unauthenticated - route to auth pipeline instead of main pipeline
             if (msg.SessionToken == SessionId.Unauthenticated)
             {
-                await _authenticationPipeline.ProcessAuthCommandAsync(msg);
+                await _authenticationPipeline.ProcessAuthCommandAsync(msg); // Sends error responses if auth fails directly within the auth pipeline
                 return;  // Don't continue to main pipeline
             }
             // Player is authenticated - continue with main pipeline
@@ -214,7 +214,7 @@ namespace Server.Core.CommandPipeline
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
                     messageType: TransportMessageType.Error,
-                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(parseResult.ErrorMessage ?? "Unknown authentication error."),
                     connectionId: msg.ConnId
                 );
@@ -232,7 +232,7 @@ namespace Server.Core.CommandPipeline
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
                     messageType: TransportMessageType.Error,
-                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown parsing error."),
                     connectionId: msg.ConnId
                 );
@@ -251,7 +251,7 @@ namespace Server.Core.CommandPipeline
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
                     messageType: TransportMessageType.Error,
-                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(result.ErrorMessage ?? "Unknown policy error."),
                     connectionId: msg.ConnId
                     );
@@ -269,7 +269,7 @@ namespace Server.Core.CommandPipeline
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
                     messageType: TransportMessageType.Error,
-                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes($"Unknown command: {parseResult.Command?.CommandType}"),
                     connectionId: msg.ConnId
                     );

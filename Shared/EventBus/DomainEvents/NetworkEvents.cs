@@ -27,5 +27,20 @@ namespace Shared.EventBus.DomainEvents
         /// </summary>
         /// <param name="ConnId">The identifier of the connection that was disconnected.</param>
         public sealed record ClientDisconnectedEvent(ConnectionId ConnId);
+
+        /// <summary>
+        /// Represents an event that is raised when the state of a listener changes.
+        /// </summary>
+        public sealed record ListenerStateChangedEvent(bool IsListenerStarted);
+
+        /// <summary>
+        /// Represents an event that signals the start of a listener operation.
+        /// </summary>
+        public sealed record StartListnerRequestEvent();
+
+        /// <summary>
+        /// Represents an event that signals the stop of a listener operation.
+        /// </summary>
+        public sealed record StopListenerRequestEvent();
     }
 }

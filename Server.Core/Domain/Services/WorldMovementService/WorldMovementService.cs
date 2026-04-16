@@ -1,11 +1,10 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Server.Core.Domain.Player;
-using Server.Core.Domain.Services.Interfaces;
+using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Persistence;
 using Shared.Identity;
 
-namespace Server.Core.Domain.Services.ConcreteClasses
+namespace Server.Core.Domain.Services.WorldMovementService
 {
     /// <summary>
     /// Handles player movement between rooms.

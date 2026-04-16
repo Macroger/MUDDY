@@ -1,13 +1,13 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Server.Core.Domain.Player;
-using Server.Core.Domain.Services.Interfaces;
+using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.Identity;
+using Shared.EventBus.SubscriptionToken;
 
-namespace Server.Core.Domain.Services.ConcreteClasses
+namespace Server.Core.Domain.Services.ChatService
 {
     public class ChatService : IChatService
     {
@@ -34,7 +34,18 @@ namespace Server.Core.Domain.Services.ConcreteClasses
 
                 return errorResponse;
             }
-            
+
+            // Ensure player is not muted.
+            if (sender.ActiveConditions.Contains(PlayerCondition.Muted))
+            {
+                var errorResponse = new CommandResult
+                {
+                    Success = false,
+                    Message = "You are muted and cannot send messages."
+                };
+                return errorResponse;
+            }
+
             // Get current room
             var room = world.Rooms[sender.CurrentLocation];
 

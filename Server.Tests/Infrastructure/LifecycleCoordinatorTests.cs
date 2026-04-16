@@ -1,5 +1,6 @@
 using Moq;
 using Server.Core.Infrastructure.Lifecycle;
+using Shared.EventBus;
 
 namespace Server.Tests.Infrastructure;
 
@@ -15,7 +16,8 @@ public class LifecycleCoordinatorTests
     [TestInitialize]
     public void TestInitialize()
     {
-        _coordinator = new LifecycleCoordinator();
+        IEventBus mockEventBus = new Mock<IEventBus>().Object;
+        _coordinator = new LifecycleCoordinator(mockEventBus);
     }
 
     // -------------------------------------------------------------------------
@@ -59,19 +61,4 @@ public class LifecycleCoordinatorTests
         Assert.IsFalse(result);
     }
 
-    // -------------------------------------------------------------------------
-    // StateChanged event fires on valid transition
-    // -------------------------------------------------------------------------
-
-    [TestMethod]
-    public void StartServer_FiresStateChangedEvent()
-    {
-        ServerStateChangedEventData? captured = null;
-        _coordinator.StateChanged += (_, e) => captured = e;
-
-        _coordinator.StartServer();
-
-        Assert.IsNotNull(captured);
-        Assert.AreEqual(ServerStateEnum.ACTIVE, captured.NewState);
-    }
 }

@@ -1,7 +1,6 @@
-﻿using Server.Core.CommandPipeline.ContextBuilder;
-using Shared.Identity;
+﻿using Shared.Identity;
 
-namespace Server.Core.Domain.Player
+namespace Shared.Domain.Player
 {
     /// <summary>
     /// Represents the current state of a player, including connection information, name, location, and active conditions.

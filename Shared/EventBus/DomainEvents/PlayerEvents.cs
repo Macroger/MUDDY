@@ -1,7 +1,5 @@
 ﻿using Shared.Identity;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Shared.Domain.Player;
 
 namespace Shared.EventBus.DomainEvents
 {
@@ -14,5 +12,17 @@ namespace Shared.EventBus.DomainEvents
         /// <param name="ConnId">The connection that disconnected.</param>
         /// <param name="LastRoom">The room the player was in when they left.</param>
         public sealed record PlayerLeftWorldEvent(ConnectionId ConnId, RoomId LastRoom);
+
+        /// <summary>
+        /// Represents an event that occurs when a player enters the world, including connection and starting location
+        /// details.
+        /// </summary>
+        /// <param name="ConnId">The unique identifier for the player's connection associated with this event.</param>
+        /// <param name="PlayerName">The name of the player who has entered the world. Cannot be null or empty.</param>
+        /// <param name="StartingRoom">The identifier of the room where the player starts upon entering the world.</param>
+        public sealed record PlayerEnteredWorldEvent(ConnectionId ConnId, string PlayerName, RoomId StartingRoom);
+
+        //public sealed record PlayerStateUpdatedEvent(ConnectionId ConnId, PlayerState );
+
     }
 }
