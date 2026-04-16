@@ -18,6 +18,10 @@
 
     <Grid>
         <Grid.Resources>
+            <!-- Value Converters -->
+            <local:SeverityColorConverter x:Key="SeverityColorConverter"/>
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
             <!-- Backgrounds -->
             <LinearGradientBrush x:Key="StoneBackground" StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Color="#4B5566" Offset="0"/>
@@ -284,6 +288,7 @@
 
                 <controls:DataGrid x:Name="EventLogDataGrid"
                           Grid.Row="1"
+                          HorizontalScrollBarVisibility="Visible"
                           AutoGenerateColumns="False"
                           CanUserSortColumns="True"
                           CanUserResizeColumns="True"

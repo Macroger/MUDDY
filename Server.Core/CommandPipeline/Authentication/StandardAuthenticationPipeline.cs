@@ -55,9 +55,17 @@ namespace Server.Core.CommandPipeline.Authentication
         {
             try
             {
+                
+
                 // Parse the JSON payload to extract command and arguments
                 string json = Encoding.UTF8.GetString(envelope.Payload);
                 var cmdJson = JsonSerializer.Deserialize<JsonCommand>(json);
+
+                EventBusHelper.PublishEvent(
+                    _eventBus,
+                    EventMessageType.Authentication,
+                    new EventReason($"Received authentication command: {cmdJson?.Verb}")
+                );
 
                 if (cmdJson == null)
                 {

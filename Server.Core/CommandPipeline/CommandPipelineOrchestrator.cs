@@ -127,10 +127,7 @@ namespace Server.Core.CommandPipeline
                         EventBusHelper.PublishEvent(
                             _eventBus,
                             EventMessageType.Error,
-                            new EventReason(
-                                "Exception during message handling",
-                                new { exception = ex.Message, envelope.MessageId }
-                            )
+                            new EventReason($"Exception during message handling: {ex.Message}, MessageID: {envelope.MessageId}")
                         );
                     }
                 }
@@ -145,10 +142,7 @@ namespace Server.Core.CommandPipeline
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Unexpected exception in message processing loop",
-                        new { exception = ex.Message }
-                    )
+                    new EventReason($"Unexpected exception in message processing loop: {ex.Message}")
                 );
             }
         }
@@ -179,10 +173,7 @@ namespace Server.Core.CommandPipeline
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Error,
-                        new EventReason(
-                            result.ErrorMessage ?? "Authentication failed",
-                            new { policy = policy.GetType().Name, messageId = msg.MessageId }
-                        )
+                        new EventReason($"{result.ErrorMessage ?? "Authentication failed"} (Policy: {policy.GetType().Name}, MessageID: {msg.MessageId})")
                     );
 
                     TransportEnvelope response = CreateErrorResponse(

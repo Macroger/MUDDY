@@ -12,7 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using Windows.Graphics;
+using Shared.EventBus.DomainEvents;
 using static Shared.EventBus.DomainEvents.NetworkEvents;
 
 namespace Server.GUI
@@ -110,17 +112,20 @@ namespace Server.GUI
                 // Subscribe to server state changes
                 try
                 {
-                    // Subscribe to ServerStateChangeEvent
+                    // Subscribe to specific event types for WinUI safety
                     _eventSubscriptions.Add(_eventBus.Subscribe<ServerStateChangedEvent>(EventMessageType.System, OnServerStateChanged));
-
-                    // Subscribe to all events for logging purposes (could be filtered or categorized in a real app)
-                    _eventSubscriptions.Add(_eventBus.SubscribeAll(OnAnyEventReceived));
-
-                    // Subscribe to log events specifically for structured logging
-                    _eventSubscriptions.Add(_eventBus.Subscribe<EventEnvelope>(EventMessageType.Log, OnLogEventReceived));
-
-                    // Subscribe to ListenerStateChangedEvent 
+                    _eventSubscriptions.Add(_eventBus.Subscribe<ServerStateChangeRequestedEvent>(EventMessageType.System, OnServerStateChangeRequested));
                     _eventSubscriptions.Add(_eventBus.Subscribe<ListenerStateChangedEvent>(EventMessageType.Network, OnListenerStateChanged));
+
+                    // Subscribe to player events
+                    _eventSubscriptions.Add(_eventBus.Subscribe<PlayerEvents.PlayerEnteredWorldEvent>(EventMessageType.World, OnPlayerEnteredWorld));
+                    _eventSubscriptions.Add(_eventBus.Subscribe<PlayerEvents.PlayerLeftWorldEvent>(EventMessageType.Domain, OnPlayerLeftWorld));
+
+                    // Subscribe to EventEnvelope for different categories - these are safe because we control the payload
+                    _eventSubscriptions.Add(_eventBus.Subscribe<EventEnvelope>(EventMessageType.System, OnSystemEventReceived));
+                    _eventSubscriptions.Add(_eventBus.Subscribe<EventEnvelope>(EventMessageType.Network, OnNetworkEventReceived));
+                    _eventSubscriptions.Add(_eventBus.Subscribe<EventEnvelope>(EventMessageType.Authentication, OnAuthEventReceived));
+                    _eventSubscriptions.Add(_eventBus.Subscribe<EventEnvelope>(EventMessageType.Error, OnErrorEventReceived));
                 }
                 catch (Exception ex)
                 {
@@ -135,19 +140,92 @@ namespace Server.GUI
             }
         }
 
-        private void OnLogEventReceived(EventEnvelope envelope)
+        private void OnServerStateChangeRequested(ServerStateChangeRequestedEvent evt)
         {
-            // Assume the payload is an EventReason (see EventBusHelper)
-            if (envelope.Payload is EventReason reason)
+            DispatcherQueue.TryEnqueue(() =>
             {
-                // UI updates must be on the UI thread
+                _events.Insert(0, ToEventEntry(DateTime.Now, "System", $"State change requested: {evt.RequestedState}"));
+                if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
+            });
+        }
+
+        private void OnSystemEventReceived(EventEnvelope envelope)
+        {
+            // Avoid pattern matching - it can trigger reflection in WinUI
+            if (envelope.Payload == null) return;
+
+            try
+            {
+                var reason = (EventReason)envelope.Payload;
                 DispatcherQueue.TryEnqueue(() =>
                 {
-                    _events.Insert(0, ToEventEntry(DateTime.Now, "Server", reason.Message));
-
-                    // Optionally trim log size
+                    _events.Insert(0, ToEventEntry(DateTime.Now, "System", reason.Message));
                     if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
                 });
+            }
+            catch (InvalidCastException)
+            {
+                // Not an EventReason, ignore
+            }
+        }
+
+        private void OnNetworkEventReceived(EventEnvelope envelope)
+        {
+            // Avoid pattern matching - it can trigger reflection in WinUI
+            if (envelope.Payload == null) return;
+
+            try
+            {
+                var reason = (EventReason)envelope.Payload;
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    _events.Insert(0, ToEventEntry(DateTime.Now, "Network", reason.Message));
+                    if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
+                });
+            }
+            catch (InvalidCastException)
+            {
+                // Not an EventReason, ignore
+            }
+        }
+
+        private void OnAuthEventReceived(EventEnvelope envelope)
+        {
+            // Avoid pattern matching - it can trigger reflection in WinUI
+            if (envelope.Payload == null) return;
+
+            try
+            {
+                var reason = (EventReason)envelope.Payload;
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    _events.Insert(0, ToEventEntry(DateTime.Now, "Auth", reason.Message));
+                    if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
+                });
+            }
+            catch (InvalidCastException)
+            {
+                // Not an EventReason, ignore
+            }
+        }
+
+        private void OnErrorEventReceived(EventEnvelope envelope)
+        {
+            // Avoid pattern matching - it can trigger reflection in WinUI
+            if (envelope.Payload == null) return;
+
+            try
+            {
+                var reason = (EventReason)envelope.Payload;
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    _events.Insert(0, ToEventEntry(DateTime.Now, "Error", reason.Message));
+                    if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
+                });
+            }
+            catch (InvalidCastException)
+            {
+                // Not an EventReason, ignore
             }
         }
 
@@ -170,64 +248,98 @@ namespace Server.GUI
 
         private void OnAnyEventReceived(object evt)
         {
-            string type = evt.GetType().Name;
-            string message = string.Empty;
-
-            switch (evt)
+            try
             {
-                case EventReason reason:
-                    string detailsString = "";
-                    if (reason.Data is null)
+                // Skip EventEnvelope entirely - they're handled by dedicated typed subscribers and cause WinUI reflection crashes
+                if (evt is EventEnvelope)
+                {
+                    return;
+                }
+
+                // Skip Player/World events - they're handled by dedicated typed handlers and cause WinUI reflection issues
+                if (evt is PlayerEvents.PlayerEnteredWorldEvent or PlayerEvents.PlayerLeftWorldEvent)
+                {
+                    return;
+                }
+
+                string type = evt.GetType().Name;
+                string message = string.Empty;
+
+                switch (evt)
+                {
+                    case EventReason reason:
+                        message = FormatEventReason(reason);
+                        break;
+                    case ServerStateChangedEvent stateChanged:
+                        message = $"State changed from {stateChanged.PreviousState} to {stateChanged.NewState}";
+                        break;
+                    case ServerStateChangeRequestedEvent stateRequest:
+                        message = $"State change requested: {stateRequest.RequestedState}";
+                        break;
+                    case EventEnvelope envelopeEvent:
+                        if (envelopeEvent.Payload is EventReason envelopeReason)
+                        {
+                            message = FormatEventReason(envelopeReason);
+                        }
+                        else
+                        {
+                            message = $"Envelope: {envelopeEvent.Payload?.GetType().Name ?? "null"}";
+                        }
+                        break;
+                    default:
+                        try
+                        {
+                            message = evt.ToString() ?? "(null event)";
+                        }
+                        catch
+                        {
+                            message = $"Event of type {type} (ToString failed)";
+                        }
+                        break;
+                }
+
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    try
                     {
-                        detailsString = "(none)";
+                        _events.Insert(0, ToEventEntry(DateTime.Now, type, message));
+                        if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
                     }
-                    else if (reason.Data is string s)
+                    catch (Exception ex)
                     {
-                        detailsString = s;
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] ERROR in event log update: {ex.Message}");
                     }
-                    else if (reason.Data is Exception ex)
-                    {
-                        detailsString = $"{ex.Message}\n{ex.StackTrace}";
-                    }
-                    else if (reason.Data is System.Collections.IDictionary dict)
-                    {
-                        var items = new List<string>();
-                        foreach (var key in dict.Keys)
-                            items.Add($"{key}: {dict[key]}");
-                        detailsString = string.Join(", ", items);
-                    }
-                    else if (reason.Data is System.Collections.IEnumerable enumerable && !(reason.Data is string))
-                    {
-                        var items = new List<string>();
-                        foreach (var item in enumerable)
-                            items.Add(item?.ToString());
-                        detailsString = "[" + string.Join(", ", items) + "]";
-                    }
-                    else
-                    {
-                        detailsString = reason.Data.ToString();
-                    }
-                    message = $"Reason: {reason.Message} | Details: {detailsString}";
-                    break;
-                case ServerStateChangedEvent stateChanged:
-                    message = $"State changed from {stateChanged.PreviousState} to {stateChanged.NewState}";
-                    break;
-                case ServerStateChangeRequestedEvent stateRequest:
-                    message = $"State change requested: {stateRequest.RequestedState}";
-                    break;
-                case EventEnvelope envelope:
-                    message = $"Envelope: {envelope.Payload?.GetType().Name ?? "null"} | {envelope.Payload}";
-                    break;
-                default:
-                    message = evt.ToString() ?? "(null event)";
-                    break;
+                });
             }
-
-            DispatcherQueue.TryEnqueue(() =>
+            catch (Exception ex)
             {
-                _events.Insert(0, ToEventEntry(DateTime.Now, type, message));
-                if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
-            });
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] ERROR in OnAnyEventReceived: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        private string FormatEventReason(EventReason reason)
+        {
+            // TEMPORARY: Ultra-simple version - no reflection, no fancy formatting
+            // Just return the message. We'll add back the Data formatting later once stable.
+            return reason.Message;
+        }
+
+        private string GetIdentityValue(object identityObject)
+        {
+            // Try to get the Value property from identity types
+            try
+            {
+                var prop = identityObject.GetType().GetProperty("Value");
+                if (prop != null)
+                {
+                    var value = prop.GetValue(identityObject);
+                    return value?.ToString() ?? "null";
+                }
+            }
+            catch { }
+
+            return identityObject.ToString();
         }
 
         public static EventEntry ToEventEntry(DateTime time, string source, string message)
@@ -294,6 +406,71 @@ namespace Server.GUI
 
                 ToggleListenerButton.IsEnabled = true; // Re-enable the button after state update
 
+            });
+        }
+
+        private void OnPlayerEnteredWorld(PlayerEvents.PlayerEnteredWorldEvent evt)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] OnPlayerEnteredWorld called: Player={evt.PlayerName}, Room={evt.StartingRoom.Value}");
+
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Inside dispatcher queue for player {evt.PlayerName}");
+
+                        // Add player to the active players list
+                        var playerDisplay = new PlayerDisplay
+                        {
+                            Name = evt.PlayerName,
+                            Location = evt.StartingRoom.Value
+                        };
+                        _activePlayers.Add(playerDisplay);
+
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Player added to list. Count: {_activePlayers.Count}");
+
+                        // Update player count
+                        PlayerCountText.Text = $"PLAYERS CONNECTED: {_activePlayers.Count}";
+
+                        // Log to event display
+                        _events.Insert(0, ToEventEntry(DateTime.Now, "PlayerEvents", $"Player {evt.PlayerName} entered at {evt.StartingRoom.Value}"));
+                        if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
+
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] PlayerCountText updated successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] ERROR in dispatcher queue: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Stack trace: {ex.StackTrace}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] ERROR in OnPlayerEnteredWorld: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        private void OnPlayerLeftWorld(PlayerEvents.PlayerLeftWorldEvent evt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                // Find and remove the player by name
+                var playerToRemove = _activePlayers.FirstOrDefault(p => p.Name == evt.PlayerName);
+                if (playerToRemove != null)
+                {
+                    _activePlayers.Remove(playerToRemove);
+                }
+
+                // Update player count
+                PlayerCountText.Text = $"PLAYERS CONNECTED: {_activePlayers.Count}";
+
+                // Log to event display
+                _events.Insert(0, ToEventEntry(DateTime.Now, "PlayerEvents", $"Player {evt.PlayerName} left from {evt.LastRoom.Value}"));
+                if (_events.Count > 100) _events.RemoveAt(_events.Count - 1);
             });
         }
 
@@ -375,7 +552,18 @@ namespace Server.GUI
             => throw new NotImplementedException();
     }
 
+    public class BoolToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is bool boolValue)
+            {
+                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
 
-
-
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+            => throw new NotImplementedException();
+    }
 }
