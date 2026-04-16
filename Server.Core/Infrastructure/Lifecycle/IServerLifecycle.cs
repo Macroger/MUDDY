@@ -15,6 +15,7 @@ namespace Server.Core.Infrastructure.Lifecycle
         bool IsActive { get; }
         bool IsShuttingDown { get; }
         bool IsInMaintenance { get; }
+        ServerStateEnum CurrentState { get; }
 
         bool StartServer();
         bool ShutdownServer();

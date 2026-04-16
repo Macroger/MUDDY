@@ -96,10 +96,7 @@ namespace Server.Core.Network.Supervisor
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.Network,
-                new EventReason(
-                    "Broadcasting message to all active connections",
-                    new { messageId = msg.MessageId, messageType = msg.MessageType, activeConnectionCount = _activeConnections.Count }
-                )
+                new EventReason($"Broadcasting message to all active connections: {msg.MessageType} (ID: {msg.MessageId}, {_activeConnections.Count} connections)")
             );
 
             // Loop through the active connections and send the message to each client using the connection worker.
@@ -114,10 +111,7 @@ namespace Server.Core.Network.Supervisor
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Error,
-                        new EventReason(
-                            "Failed to send broadcast message to client",
-                            new { connectionId = connection.ClientConnection.connId, messageId = msg.MessageId, messageType = msg.MessageType }
-                        )
+                        new EventReason($"Failed to send broadcast message to client {connection.ClientConnection.connId}: {msg.MessageType} (ID: {msg.MessageId})")
                     );
                     continue;
                 }
@@ -142,20 +136,14 @@ namespace Server.Core.Network.Supervisor
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Network,
-                        new EventReason(
-                        "Connection marked for closure",
-                        new { connectionId, reason }
-                    ));
+                        new EventReason($"Connection marked for closure: {connectionId} (Reason: {reason})"));
                 }
                 else
                 {
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Network,
-                        new EventReason(
-                        "Connection not found, cannot close connection",
-                        new { connectionId, reason }
-                    ));
+                        new EventReason($"Connection not found, cannot close connection: {connectionId} (Reason: {reason})"));
                 }
             }
             catch (Exception ex)
@@ -163,10 +151,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                    "Exception while closing connection",
-                    new { connectionId, reason, ex.Message }
-                ));
+                    new EventReason($"Exception while closing connection {connectionId} (Reason: {reason}): {ex.Message}"));
             }
         }
         
@@ -219,10 +204,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Network,
-                    new EventReason(
-                        "New connection registered",
-                        new { acceptedConnection.connId }
-                    )
+                    new EventReason($"New connection registered: {acceptedConnection.connId}")
                 );
 
             }
@@ -232,10 +214,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Exception while processing new connection",
-                        new { acceptedConnection.connId, ex.Message }
-                    )
+                    new EventReason($"Exception while processing new connection {acceptedConnection.connId}: {ex.Message}")
                 );
 
                 // Rethrow here if higher-level code should react to this event, otherwise swallow to prevent crashing the server
@@ -265,10 +244,7 @@ namespace Server.Core.Network.Supervisor
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Network,
-                        new EventReason(
-                            "Message sent to client",
-                            new { connectionId = client, messageId = msg.MessageId, messageType = msg.MessageType }
-                        )
+                        new EventReason($"Message sent to client: {client}, MessageID: {msg.MessageId}, Type: {msg.MessageType}")
                     );
                 }
             }
@@ -278,10 +254,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Failed to send message to client",
-                        new { connectionId = client, messageId = msg.MessageId, messageType = msg.MessageType }
-                    )
+                    new EventReason($"Failed to send message to client {client}: {msg.MessageType} (ID: {msg.MessageId})")
                 );
             }
         }       
@@ -319,10 +292,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Failed to start TCP listener",
-                        new { endpoint = _listenerEndPoint }
-                    )
+                    new EventReason($"Failed to start TCP listener on {_listenerEndPoint}")
                 );
                 return false;
             }
@@ -360,10 +330,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Failed to stop TCP listener",
-                        new { endpoint = _listenerEndPoint }
-                    )
+                    new EventReason($"Failed to stop TCP listener on {_listenerEndPoint}")
                 );
                 return false;
             }
@@ -381,10 +348,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.System,
-                    new EventReason(
-                        "Server shutdown initiated, all client connections have been issued terminatation signals",
-                        new { }
-                    )
+                    new EventReason("Server shutdown initiated, all client connections have been issued terminatation signals")
                 );
 
                 // First, stop accepting new client connections to prevent new clients from connecting while the shutdown process is underway.
@@ -408,10 +372,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Exception occurred during server shutdown",
-                        new { }
-                    )
+                    new EventReason("Exception occurred during server shutdown")
                 );
             }
         }
@@ -466,10 +427,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Cannot start network supervisor, command pipeline not set",
-                        new { }
-                    )
+                    new EventReason("Cannot start network supervisor, command pipeline not set")
                 );
                 return;
             }
@@ -480,10 +438,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.System,
-                    new EventReason(
-                        "Network supervisor already started",
-                        new { endpoint = _listenerEndPoint }
-                    )
+                    new EventReason($"Network supervisor already started on {_listenerEndPoint}")
                 );
                 return;
             }
@@ -492,10 +447,7 @@ namespace Server.Core.Network.Supervisor
                 (
                     _eventBus,
                     EventMessageType.System,
-                    new EventReason(
-                        "Network supervisor starting",
-                        new { endpoint = _listenerEndPoint }
-                    )
+                    new EventReason($"Network supervisor starting on {_listenerEndPoint}")
                 );
 
             // Subscribe to and listen for outbound message events
@@ -533,10 +485,7 @@ namespace Server.Core.Network.Supervisor
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.System,
-                new EventReason(
-                    "Network supervisor stopping",
-                    new { endpoint = _listenerEndPoint }
-                )
+                new EventReason($"Network supervisor stopping on {_listenerEndPoint}")
             );
 
             foreach(var subscription in _subscriptions)
@@ -580,10 +529,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "No recipients specified for outbound message",
-                        new { messageId = msg.MessageId, messageType = msg.MessageType }
-                    )
+                    new EventReason($"No recipients specified for outbound message: {msg.MessageType} (ID: {msg.MessageId})")
                 );
                 return;
             }
@@ -606,10 +552,7 @@ namespace Server.Core.Network.Supervisor
                         EventBusHelper.PublishEvent(
                             _eventBus,
                             EventMessageType.Network,
-                            new EventReason(
-                                "Message sent to client",
-                                new { connectionId = client, messageId = msg.MessageId, messageType = msg.MessageType }
-                            )
+                            new EventReason($"Message sent to client {client}: {msg.MessageType} (ID: {msg.MessageId})")
                         );
                     }
                 }
@@ -619,10 +562,7 @@ namespace Server.Core.Network.Supervisor
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Error,
-                        new EventReason(
-                            "Failed to send message to client",
-                            new { connectionId = client, messageId = msg.MessageId, messageType = msg.MessageType }
-                        )
+                        new EventReason($"Failed to send message to client {client}: {msg.MessageType} (ID: {msg.MessageId})")
                     );
                 }
             }
@@ -672,10 +612,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Error occurred in connection worker, connection marked for closure",
-                        new { connectionId = worker.ConnId, errorMessage = e.Message }
-                    )
+                    new EventReason($"Error occurred in connection worker {worker.ConnId}, connection marked for closure: {e.Message}")
                 );
             }
             else
@@ -683,10 +620,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Error occurred in connection worker, but connection not found in active connections",
-                        new { connectionId = worker.ConnId, errorMessage = e.Message }
-                    )
+                    new EventReason($"Error occurred in connection worker {worker.ConnId}, but connection not found in active connections: {e.Message}")
                 );
             }
         }
@@ -713,10 +647,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Network,
-                    new EventReason(
-                        "Connection closed and removed from active connections",
-                        new { connectionId = worker.ConnId }
-                    )
+                    new EventReason($"Connection {worker.ConnId} closed and removed from active connections")
                 );
 
                 _eventBus.Publish(EventMessageType.Network, new NetworkEvents.ClientDisconnectedEvent(worker.ConnId));
@@ -726,10 +657,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Connection closed, but connection not found in active connections",
-                        new { connectionId = worker.ConnId }
-                    )
+                    new EventReason($"Connection {worker.ConnId} closed, but connection not found in active connections")
                 );
             }
         }
@@ -751,10 +679,7 @@ namespace Server.Core.Network.Supervisor
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Error,
-                        new EventReason(
-                            "Message received from worker, but validation failed and no rejection response provided",
-                            new { messageId = e.MessageId, messageType = e.MessageType }
-                        )
+                        new EventReason($"Message received from worker but validation failed and no rejection response provided: {e.MessageType} (ID: {e.MessageId})")
                     );
                     return;
                 }
@@ -777,10 +702,7 @@ namespace Server.Core.Network.Supervisor
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Error,
-                        new EventReason(
-                            "Received message from worker, but sender is not a connection worker, cannot send rejection response",
-                            new { messageId = e.MessageId, messageType = e.MessageType }
-                        )
+                        new EventReason($"Received message from worker, but sender is not a connection worker, cannot send rejection response: {e.MessageType} (ID: {e.MessageId})")
                     );
                 }
                 return;
@@ -790,10 +712,7 @@ namespace Server.Core.Network.Supervisor
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.Network,
-                new EventReason(
-                    "Message received from client",
-                    new { messageId = e.MessageId, messageType = e.MessageType, payload = e.Payload }
-                )
+                new EventReason($"Message received from client: {e.MessageType} (ID: {e.MessageId}, {e.Payload.Length} bytes)")
             );
 
             // Forward into command / message pipeline
@@ -806,10 +725,7 @@ namespace Server.Core.Network.Supervisor
                 EventBusHelper.PublishEvent(
                     _eventBus,
                     EventMessageType.Error,
-                    new EventReason(
-                        "Cannot process message from worker, command pipeline not set",
-                        new { messageId = e.MessageId, messageType = e.MessageType }
-                    )
+                    new EventReason($"Cannot process message from worker, command pipeline not set: {e.MessageType} (ID: {e.MessageId})")
                 );
             }
         }
@@ -824,10 +740,7 @@ namespace Server.Core.Network.Supervisor
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.Error,
-                new EventReason(
-                    "Error occurred in TCP listener",
-                    new { errorMessage = e.Message }
-                )
+                new EventReason($"Error occurred in TCP listener: {e.Message}")
             );
         }
 
@@ -843,14 +756,7 @@ namespace Server.Core.Network.Supervisor
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.System,
-                new EventReason(
-                    "Server state changed",
-                    new
-                    {
-                        previousState = e.PreviousState,
-                        newState = e.NewState
-                    }
-                )
+                new EventReason($"Server state changed from {e.PreviousState} to {e.NewState}")
             );
 
             if (e.NewState == ServerStateEnum.SHUTTING_DOWN || e.NewState == ServerStateEnum.MAINTENANCE)

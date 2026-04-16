@@ -72,30 +72,58 @@ namespace Shared.EventBus
         /// </summary>
         public void Publish<T>(EventMessageType category, T newEvent) where T : class
         {
-            // Validate the newEvent argument
-            if (newEvent == null) throw new ArgumentNullException(nameof(newEvent));
-
-            // Get the type of the event being published
-            var eventType = typeof(T);
-
-            // Check if there are any typed subscribers for this category
-            if (_subscribers.TryGetValue(category, out var typeBucket))
+            try
             {
-                // Check if there are handlers for this specific event type                
-                if (typeBucket.TryGetValue(eventType, out var handlers))
+                // Validate the newEvent argument
+                if (newEvent == null) throw new ArgumentNullException(nameof(newEvent));
+
+                // Get the type of the event being published
+                var eventType = typeof(T);
+
+                // Check if there are any typed subscribers for this category
+                if (_subscribers.TryGetValue(category, out var typeBucket))
                 {
-                    // Iterate through the list of handlers - invoking each with event
-                    foreach (var handler in handlers)
+                    // Check if there are handlers for this specific event type                
+                    if (typeBucket.TryGetValue(eventType, out var handlers))
                     {
-                        handler.Invoke(newEvent);
+                        // Iterate through the list of handlers - invoking each with event
+                        foreach (var handler in handlers)
+                        {
+                            try
+                            {
+                                handler.Invoke(newEvent);
+                            }
+                            catch (Exception handlerEx)
+                            {
+                                // Log handler exception but continue processing other handlers
+                                System.Diagnostics.Debug.WriteLine($"[EventBus] Exception in typed subscriber handler for {eventType.Name}: {handlerEx.Message}");
+                                System.Diagnostics.Debug.WriteLine($"[EventBus] Stack trace: {handlerEx.StackTrace}");
+                            }
+                        }
+                    }
+                }
+
+                // Also invoke global typed subscribers (subscribe to ALL of type T)
+                foreach (var handler in _globalSubscriptionsList)
+                {
+                    try
+                    {
+                        handler(newEvent);
+                    }
+                    catch (Exception globalEx)
+                    {
+                        // Log global handler exception but continue processing other handlers
+                        System.Diagnostics.Debug.WriteLine($"[EventBus] Exception in global subscriber handler for {eventType.Name}: {globalEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[EventBus] Stack trace: {globalEx.StackTrace}");
                     }
                 }
             }
-
-            // Also invoke global typed subscribers (subscribe to ALL of type T)
-            foreach (var handler in _globalSubscriptionsList)
+            catch (Exception ex)
             {
-                handler(newEvent);
+                // Log top-level exception
+                System.Diagnostics.Debug.WriteLine($"[EventBus] CRITICAL exception in Publish<{typeof(T).Name}>: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[EventBus] Stack trace: {ex.StackTrace}");
+                throw; // Re-throw to signal failure
             }
         }
 

@@ -98,8 +98,7 @@ namespace Server.Core.Persistence
             var player = await GetPlayerByConnectionIdAsync(evt.ConnId);
             if (player is not null)
             {
-                _eventBus.Publish(EventMessageType.Domain,
-                    new PlayerEvents.PlayerLeftWorldEvent(evt.ConnId, player.CurrentLocation));
+                // Just remove the player - RemovePlayerAsync will publish the PlayerLeftWorldEvent
                 await RemovePlayerAsync(evt.ConnId);
             }
         }
@@ -179,8 +178,8 @@ namespace Server.Core.Persistence
                 // Emit a PlayerLeftWorldEvent to notify other parts of the system that the player has left the world. This event includes the player's connection ID and their current location in the world.
                 EventBusHelper.PublishEvent<PlayerLeftWorldEvent>(
                     _eventBus,
-                    EventMessageType.Player,
-                    new PlayerLeftWorldEvent(connId, player.CurrentLocation)
+                    EventMessageType.Domain,
+                    new PlayerLeftWorldEvent(connId, player.PlayerName, player.CurrentLocation)
                     );
 
                 // Return a completed task to maintain the asynchronous method signature, even though the operation is synchronous.

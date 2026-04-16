@@ -5,10 +5,10 @@ using Server.Core.Infrastructure.Lifecycle;
 namespace Server.Core.CommandPipeline.CommandHandler
 {
     /// <summary>
-    /// Handles the "serverstate" command, which allows a player to transition the server
+    /// Handles the "serverstate" command, which allows a player to query or transition the server
     /// between ACTIVE, MAINTENANCE, and SHUTTING_DOWN states.
     /// <para>
-    /// Usage: <c>serverstate &lt;active|maintenance|shutdown&gt;</c>
+    /// Usage: <c>serverstate</c> (query current state) or <c>serverstate &lt;active|maintenance|shutdown&gt;</c> (change state)
     /// </para>
     /// </summary>
     public sealed class ServerStateCommandHandler : ICommandHandler
@@ -29,12 +29,22 @@ namespace Server.Core.CommandPipeline.CommandHandler
         {
             string? targetArg = context.Command.Arguments.FirstOrDefault();
 
+            // If no argument provided, return the current state
             if (string.IsNullOrWhiteSpace(targetArg))
             {
+                string currentStateName = _lifecycle.CurrentState switch
+                {
+                    ServerStateEnum.LOADING => "LOADING",
+                    ServerStateEnum.ACTIVE => "ACTIVE",
+                    ServerStateEnum.MAINTENANCE => "MAINTENANCE",
+                    ServerStateEnum.SHUTTING_DOWN => "SHUTTING_DOWN",
+                    _ => "UNKNOWN"
+                };
+
                 return Task.FromResult(new CommandResult
                 {
-                    Success = false,
-                    Message = "Usage: serverstate <active|maintenance|shutdown>"
+                    Success = true,
+                    Message = $"Current server state: {currentStateName}"
                 });
             }
 
