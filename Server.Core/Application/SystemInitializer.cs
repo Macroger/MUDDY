@@ -6,8 +6,10 @@ using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Parser;
 using Server.Core.CommandPipeline.Policies;
 using Server.Core.Domain.Authentication;
-using Server.Core.Domain.Services.ConcreteClasses;
-using Server.Core.Domain.Services.Interfaces;
+using Server.Core.Domain.Services.ChatService;
+using Server.Core.Domain.Services.PlayerQueryService;
+using Server.Core.Domain.Services.WorldMovementService;
+using Server.Core.Domain.Services.WorldQueryService;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Server.Core.Infrastructure.Lifecycle;
@@ -42,10 +44,10 @@ namespace Server.Core.Application
             {
                 _eventBus = new BasicEventBus();
 
-                _lifecycleCoordinator = new LifecycleCoordinator();
-
                 _messageIdGenerator = new MessageIdGenerator();
                 _sessionIdGenerator = new SessionIdGenerator();
+
+                _lifecycleCoordinator = new LifecycleCoordinator(_eventBus);
 
                 _playerRepository = new InMemoryPlayerRepository(_eventBus);
                 _worldRepository = new InMemoryWorldRepository(_eventBus);
@@ -65,11 +67,13 @@ namespace Server.Core.Application
                 _worldQueryService = new WorldQueryService();
 
                 // Create handlers and wrap services
+
                 var chatHandler = new ChatCommandHandler(_chatService);
                 var movementHandler = new MovementCommandHandler(_movementService, _worldQueryService);
                 var playerHandler = new PlayerCommandHandler(_playerQueryService);
                 var serverStateHandler = new ServerStateCommandHandler(_lifecycleCoordinator);
                 var imageHandler = new ImageTransferCommandHandler();
+                var logoutHandler = new LogoutCommandHandler(_playerRepository, _eventBus);
 
                 // Register handlers in router
                 var cmdRouter = new StandardCommandRouter();
@@ -78,6 +82,7 @@ namespace Server.Core.Application
                 cmdRouter.RegisterHandler("player", playerHandler);
                 cmdRouter.RegisterHandler("serverstate", serverStateHandler);
                 cmdRouter.RegisterHandler("sendimage", imageHandler);
+                cmdRouter.RegisterHandler("logout", logoutHandler);
 
                 // Create a standard command parser.
                 ICommandParser cmdParser = new StandardCommandParser();
@@ -119,6 +124,8 @@ namespace Server.Core.Application
 
                 // Wire up the network supervisor to the commandPipeline
                 _networkSupervisor.SetCommandPipeline(_commandPipelineOrchestrator);
+
+                _eventBus.Subscribe<ServerStateChangeRequestedEvent>(EventMessageType.System, OnServerStateChangeRequested);
             }
             catch (ArgumentNullException ex)
             {
@@ -158,6 +165,22 @@ namespace Server.Core.Application
             _lifecycleCoordinator.ShutdownServer();
         }
 
+        public IEventBus GetEventBus()
+        {
+            return _eventBus;
+        }
 
+        private void OnServerStateChangeRequested(ServerStateChangeRequestedEvent evt)
+        {
+            bool ok = _lifecycleCoordinator.SetState(evt.RequestedState);
+            if (!ok)
+            {
+                // Publish an error event if the state change failed
+                _eventBus.Publish(EventMessageType.Error,
+                    new EventReason("Server state change failed", $"Could not change state to {evt.RequestedState} from current state."));
+            }
+        }
+
+        public IServerLifecycle LifecycleCoordinator => _lifecycleCoordinator;
     }
 }

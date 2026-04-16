@@ -16,12 +16,10 @@ namespace Server.Core.Infrastructure.Lifecycle
         bool IsShuttingDown { get; }
         bool IsInMaintenance { get; }
 
-        // Event for state changes
-        event EventHandler<ServerStateChangedEventData>? StateChanged;
-
         bool StartServer();
         bool ShutdownServer();
         bool SetState(ServerStateEnum newState);
+        bool TryTransition(ServerStateEnum expected, ServerStateEnum next);
     }
 
 }

@@ -23,8 +23,8 @@ namespace Server.Core.Network.Listener.Tests
         {
             public AcceptedConnection? LastConnection { get; private set; }
             public bool IsListeningForConnections => true;
-            public bool StartAcceptingClients() => true;
-            public bool StopAcceptingClients() => true;
+            public bool StartListener() => true;
+            public bool StopListener() => true;
             public void CloseConnection(ConnectionId connectionId, ConnectionCloseReason reason) { }
             public void ProcessNewConnection(AcceptedConnection connection)
             {

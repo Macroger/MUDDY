@@ -99,6 +99,17 @@ namespace Client.Core.Network
         }
 
         /// <summary>
+        /// Updates the server address and port. Throws if called while connected.
+        /// </summary>
+        public void UpdateEndpoint(string address, int port)
+        {
+            if (IsConnected)
+                throw new InvalidOperationException("Cannot update endpoint while connected. Please disconnect first.");
+            ServerAddress = address;
+            ServerPort = port;
+        }
+
+        /// <summary>
         /// Handles connect requests from the event bus.
         /// </summary>
         private async Task OnConnectRequestedAsync(ConnectRequestedEvent evt)
@@ -227,11 +238,11 @@ namespace Client.Core.Network
                 var bytes = _packetSerializer.Serialize(packet);
                 await _networkStream.WriteAsync(bytes, 0, bytes.Length);
 
-                // Notify listeners that a packet was sent
+                // Only publish to PacketLog channel for specialized logging
                 EventBusHelper.PublishEvent(
                     _eventBus,
-                    EventMessageType.ClientNetwork,
-                    new EventReason("Packet sent", new { envelope.MessageId, envelope.MessageType })
+                    EventMessageType.PacketLog,
+                    new EventReason("Packet sent", new { envelope.MessageId, envelope.MessageType, Direction = "Outbound", Envelope = envelope })
                 );
             }
             catch (Exception ex)
@@ -292,11 +303,11 @@ namespace Client.Core.Network
                     // Convert to higher-level envelope
                     var envelope = ConvertPacketToEnvelope(packet);
 
-                    // Notify listeners that a packet was received
+                    // Only publish to PacketLog channel for specialized logging
                     EventBusHelper.PublishEvent(
                         _eventBus,
-                        EventMessageType.ClientNetwork,
-                        new EventReason("Packet received", envelope)
+                        EventMessageType.PacketLog,
+                        new EventReason("Packet received", new { envelope.MessageId, envelope.MessageType, Direction = "Inbound", Envelope = envelope })
                     );
                 }
             }

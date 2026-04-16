@@ -15,7 +15,10 @@ namespace Shared.EventBus
         Gui,            // GUI events, such as updates to the client UI or notifications
         Persistence,    // Database, saving/loading, storage operations
         Chat,           // In-game chat messages and events
-        Error           // Cross-cutting error reporting
+        Error,          // Cross-cutting error reporting
+        PacketLog,       // Special channel for packet transmission events
+        World,
+        Player
     }
 
 }

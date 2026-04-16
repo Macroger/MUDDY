@@ -1,7 +1,7 @@
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Policies;
 using Server.Core.CommandPipeline.Types;
-using Server.Core.Domain.Player;
+using Shared.Domain.Player;
 using Shared.Identity;
 
 namespace Server.Tests.CommandPipeline;
