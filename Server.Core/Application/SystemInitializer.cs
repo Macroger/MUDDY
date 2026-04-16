@@ -77,9 +77,33 @@ namespace Server.Core.Application
 
                 // Register handlers in router
                 var cmdRouter = new StandardCommandRouter();
+
+                // Chat commands
                 cmdRouter.RegisterHandler("say", chatHandler);
+
+                // Movement commands
                 cmdRouter.RegisterHandler("move", movementHandler);
+                cmdRouter.RegisterHandler("go", movementHandler);
+                cmdRouter.RegisterHandler("look", movementHandler);
+
+                // Directional movement shortcuts
+                cmdRouter.RegisterHandler("north", movementHandler);
+                cmdRouter.RegisterHandler("south", movementHandler);
+                cmdRouter.RegisterHandler("east", movementHandler);
+                cmdRouter.RegisterHandler("west", movementHandler);
+                cmdRouter.RegisterHandler("northeast", movementHandler);
+                cmdRouter.RegisterHandler("northwest", movementHandler);
+                cmdRouter.RegisterHandler("southeast", movementHandler);
+                cmdRouter.RegisterHandler("southwest", movementHandler);
+                cmdRouter.RegisterHandler("up", movementHandler);
+                cmdRouter.RegisterHandler("down", movementHandler);
+
+                // Player info commands
+                cmdRouter.RegisterHandler("status", playerHandler);
+                cmdRouter.RegisterHandler("who", playerHandler);
                 cmdRouter.RegisterHandler("player", playerHandler);
+
+                // System commands
                 cmdRouter.RegisterHandler("serverstate", serverStateHandler);
                 cmdRouter.RegisterHandler("sendimage", imageHandler);
                 cmdRouter.RegisterHandler("logout", logoutHandler);
