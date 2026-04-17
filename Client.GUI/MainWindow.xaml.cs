@@ -22,6 +22,7 @@ using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using Shared.Identity;
 using Windows.UI;
+using Shared.Logging;
 
 namespace Client.GUI
 {
@@ -30,6 +31,7 @@ namespace Client.GUI
         private ClientNetworkService? _networkService;
         private ClientCommandPipelineOrchestrator? _orchestrator;
         private IEventBus? _eventBus;
+        private PacketLogger? _packetLogger;
         private bool _isConnected = false;
         private readonly List<string> _commandHistory = new();
         private int _historyIndex = -1;
@@ -57,6 +59,7 @@ namespace Client.GUI
             ErrorMessageHandler.OnErrorReceived -= OnErrorReceived;
             ResponseMessageHandler.OnResponseReceived -= OnResponseReceived;
             AuthSuccessMessageHandler.OnAuthSuccessReceived -= OnAuthSuccessReceived;
+            _packetLogger?.Dispose();
             _networkService?.DisconnectAsync().Wait();
         }
 
@@ -75,6 +78,12 @@ namespace Client.GUI
                 var protocolLimits = new MuddyProtocolLimits();
                 var packetSerializer = new MuddyPacketSerializer(protocolLimits);
                 var packetFactory = new MuddyPacketFactory();
+
+                // Initialize packet logging to file with timestamp to avoid file locking issues
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string logFileName = $"client_packets_{timestamp}.log";
+                var packetLogFileWriter = new StandardLogFileWriter(logFileName, append: true);
+                _packetLogger = new PacketLogger(_eventBus, packetLogFileWriter);
 
                 _networkService = new ClientNetworkService(_eventBus, packetSerializer, packetFactory, protocolLimits);
                 _orchestrator = new ClientCommandPipelineOrchestrator();

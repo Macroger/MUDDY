@@ -16,6 +16,8 @@ using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Supervisor;
 using Server.Core.Persistence;
 using Shared.EventBus;
+using Client.Core.Network;
+using Shared.Logging;
 
 namespace Server.Core.Application
 {
@@ -38,6 +40,8 @@ namespace Server.Core.Application
         private readonly IWorldQueryService _worldQueryService;
         private readonly IPlayerQueryService _playerQueryService;
 
+        private readonly PacketLogger _packetLogger;
+
         public SystemInitializer()
         {
             try
@@ -52,6 +56,11 @@ namespace Server.Core.Application
                 _playerRepository = new InMemoryPlayerRepository(_eventBus);
                 _worldRepository = new InMemoryWorldRepository(_eventBus);
 
+                // Initialize packet logging to file with timestamp to avoid file locking issues
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string logFileName = $"server_packets_{timestamp}.log";
+                var packetLogFileWriter = new StandardLogFileWriter(logFileName, append: true);
+                _packetLogger = new PacketLogger(_eventBus, packetLogFileWriter);
 
                 // Create the network supervisor
                 _networkSupervisor = new StandardNetworkSupervisor(
