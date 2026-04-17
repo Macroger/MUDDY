@@ -1,10 +1,7 @@
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Client.Core.Network;
 using Moq;
 using Shared.EventBus;
 using Shared.Protocol.Transport;
-using Client.Core.Network;
-using Client.Core.CommandPipeline;
 
 namespace Client.Tests
 {

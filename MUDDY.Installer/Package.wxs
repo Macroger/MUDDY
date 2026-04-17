@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="MUDDY Game Suite"
+           Manufacturer="Conestoga College - COMP72070-26W-Section1-Group3"
+           Version="1.0.0.0"
+           UpgradeCode="12345678-1234-1234-1234-123456789012"
+           Language="1033"
+           Compressed="yes"
+           InstallerVersion="500"
+           Scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of MUDDY Game is already installed." />
+    <SummaryInformation Description="MUDDY Game Suite Installer" Comments="Requires administrator privileges." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Use the built-in WixUI_FeatureTree dialog set for component selection -->
+    <ui:WixUI Id="WixUI_FeatureTree" />
+
+    <!-- Customize the license agreement -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <!-- Customize banner and dialog bitmaps (optional - will use defaults if not provided) -->
+    <!-- <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" /> -->
+    <!-- <WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" /> -->
+
+    <!-- Directory structure -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="MUDDY Game">
+        <Directory Id="SERVER_DIR" Name="Server" />
+        <Directory Id="CLIENT_DIR" Name="Client" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Feature tree for component selection -->
+    <Feature Id="ProductFeature" 
+             Title="MUDDY Game Suite" 
+             Description="Multi-User Dungeon for Dynamic Learning - Server and Client"
+             Level="1"
+             Display="expand"
+             ConfigurableDirectory="INSTALLFOLDER">
+
+      <!-- Server Dashboard Feature -->
+      <Feature Id="ServerFeature" 
+               Title="Server Dashboard" 
+               Description="Host a MUDDY game server. Runs on port 5000 and provides administration dashboard."
+               Level="1"
+               AllowAdvertise="no">
+        <ComponentGroupRef Id="ServerComponents" />
+      </Feature>
+
+      <!-- Game Client Feature -->
+      <Feature Id="ClientFeature" 
+               Title="Game Client" 
+               Description="Play MUDDY game. Connect to a server and explore the dungeon."
+               Level="1"
+               AllowAdvertise="no">
+        <ComponentGroupRef Id="ClientComponents" />
+      </Feature>
+
+    </Feature>
+
+    <!-- Server Components -->
+    <ComponentGroup Id="ServerComponents" Directory="SERVER_DIR">
+      <Component Id="ServerMSIX" Guid="A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D">
+        <File Id="ServerMSIXFile" 
+              Source="$(var.SolutionDir)Server.GUI\AppPackages\Server.GUI_1.0.0.0_x64_Test\Server.GUI_1.0.0.0_x64.msix" 
+              KeyPath="yes" />
+      </Component>
+      <Component Id="ServerDependencies" Guid="B2C3D4E5-F6A7-4B5C-8D9E-1F2A3B4C5D6E">
+        <File Source="$(var.SolutionDir)Server.GUI\AppPackages\Server.GUI_1.0.0.0_x64_Test\Dependencies\x64\Microsoft.WindowsAppRuntime.1.8.msix" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Client Components -->
+    <ComponentGroup Id="ClientComponents" Directory="CLIENT_DIR">
+      <Component Id="ClientMSIX" Guid="C3D4E5F6-A7B8-4C5D-8E9F-2A3B4C5D6E7F">
+        <File Id="ClientMSIXFile" 
+              Source="$(var.SolutionDir)Client.GUI\AppPackages\Client.GUI_1.0.0.0_x64_Test\Client.GUI_1.0.0.0_x64.msix" 
+              KeyPath="yes" />
+      </Component>
+      <Component Id="ClientDependencies" Guid="D4E5F6A7-B8C9-4D5E-8F9A-3B4C5D6E7F8A">
+        <File Source="$(var.SolutionDir)Client.GUI\AppPackages\Client.GUI_1.0.0.0_x64_Test\Dependencies\x64\Microsoft.WindowsAppRuntime.1.8.msix" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Custom Actions to install MSIX packages -->
+    <!-- ServerMSIX: set property then invoke via shell in user context -->
+    <SetProperty Id="POWERSHELL_SERVER"
+                 Before="InstallServerMSIX"
+                 Sequence="execute"
+                 Value="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe" />
+
+    <CustomAction Id="InstallServerMSIX"
+                  Property="POWERSHELL_SERVER"
+                  ExeCommand="-NoProfile -ExecutionPolicy Bypass -Command &quot;Add-AppxPackage -Path '[SERVER_DIR]Server.GUI_1.0.0.0_x64.msix' -DependencyPath '[SERVER_DIR]Microsoft.WindowsAppRuntime.1.8.msix'&quot;"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="yes" />
+
+    <!-- ClientMSIX: set property then invoke via shell in user context -->
+    <SetProperty Id="POWERSHELL_CLIENT"
+                 Before="InstallClientMSIX"
+                 Sequence="execute"
+                 Value="[SystemFolder]WindowsPowerShell\v1.0\powershell.exe" />
+
+    <CustomAction Id="InstallClientMSIX"
+                  Property="POWERSHELL_CLIENT"
+                  ExeCommand="-NoProfile -ExecutionPolicy Bypass -Command &quot;Add-AppxPackage -Path '[CLIENT_DIR]Client.GUI_1.0.0.0_x64.msix' -DependencyPath '[CLIENT_DIR]Microsoft.WindowsAppRuntime.1.8.msix'&quot;"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="yes" />
+
+    <!-- Install sequences: run when the feature files are being installed, skip on uninstall -->
+    <InstallExecuteSequence>
+      <Custom Action="InstallServerMSIX" After="InstallFiles" Condition="NOT REMOVE AND &amp;ServerFeature=3" />
+      <Custom Action="InstallClientMSIX" After="InstallServerMSIX" Condition="NOT REMOVE AND &amp;ClientFeature=3" />
+    </InstallExecuteSequence>
+
+  </Package>
+</Wix>

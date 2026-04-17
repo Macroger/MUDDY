@@ -1,6 +1,4 @@
-﻿using Shared.Protocol.Types;
-
-namespace Shared.EventBus
+﻿namespace Shared.EventBus
 {
     /// <summary>
     /// A container for an event message, including its type, payload, and metadata such as creation time and a unique identifier.

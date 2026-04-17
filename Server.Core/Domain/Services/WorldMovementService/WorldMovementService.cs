@@ -1,7 +1,7 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Persistence;
+using Shared.Domain.Player;
 using Shared.Identity;
 
 namespace Server.Core.Domain.Services.WorldMovementService

@@ -1,7 +1,6 @@
 using Moq;
-using Server.Core.CommandPipeline.ContextBuilder;
-using Shared.Domain.Player;
 using Server.Core.Persistence;
+using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
