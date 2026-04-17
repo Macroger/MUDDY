@@ -516,6 +516,21 @@ namespace Server.GUI
 
             ToggleListenerButton.IsEnabled = false; // Disable button until we get confirmation of state change
         }
+
+        private void SetActiveButton_Click(object sender, RoutedEventArgs e)
+        {
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(ServerStateEnum.ACTIVE));
+        }
+
+        private void SetMaintenanceButton_Click(object sender, RoutedEventArgs e)
+        {
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(ServerStateEnum.MAINTENANCE));
+        }
+
+        private void SetShutdownButton_Click(object sender, RoutedEventArgs e)
+        {
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(ServerStateEnum.SHUTTING_DOWN));
+        }
     }
 
     public class PlayerDisplay
