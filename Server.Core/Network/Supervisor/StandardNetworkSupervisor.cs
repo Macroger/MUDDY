@@ -105,6 +105,13 @@ namespace Server.Core.Network.Supervisor
                 try
                 {
                     connection.Worker.SendMessage(msg);
+
+                    // Log each broadcast packet
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.PacketLog,
+                        new EventReason("Packet sent (broadcast)", new { msg.MessageId, msg.MessageType, Direction = "Outbound", Client = connection.ClientConnection.connId, Envelope = msg })
+                    );
                 }
                 catch
                 {
@@ -240,11 +247,18 @@ namespace Server.Core.Network.Supervisor
                     ConnectionContext connection = _activeConnections[client];
                     connection.Worker.SendMessage(msg);
 
-                    // Log the event
+                    // Log the event to Network channel
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Network,
                         new EventReason($"Message sent to client: {client}, MessageID: {msg.MessageId}, Type: {msg.MessageType}")
+                    );
+
+                    // Log to PacketLog channel for packet logging
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.PacketLog,
+                        new EventReason("Packet sent", new { msg.MessageId, msg.MessageType, Direction = "Outbound", Client = client, Envelope = msg })
                     );
                 }
             }
@@ -257,7 +271,7 @@ namespace Server.Core.Network.Supervisor
                     new EventReason($"Failed to send message to client {client}: {msg.MessageType} (ID: {msg.MessageId})")
                 );
             }
-        }       
+        }
 
         /// <summary>
         /// Starts listening for incoming client connections on the configured network endpoint.
@@ -441,6 +455,13 @@ namespace Server.Core.Network.Supervisor
                     new EventReason($"Network supervisor already started on {_listenerEndPoint}")
                 );
                 return;
+            }
+
+            // Recreate the cancellation token source if it was previously cancelled/disposed
+            if (_serverCts.IsCancellationRequested)
+            {
+                _serverCts.Dispose();
+                _serverCts = new CancellationTokenSource();
             }
 
             EventBusHelper.PublishEvent
@@ -713,6 +734,13 @@ namespace Server.Core.Network.Supervisor
                 _eventBus,
                 EventMessageType.Network,
                 new EventReason($"Message received from client: {e.MessageType} (ID: {e.MessageId}, {e.Payload.Length} bytes)")
+            );
+
+            // Log to PacketLog channel for packet logging
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.PacketLog,
+                new EventReason("Packet received", new { e.MessageId, e.MessageType, Direction = "Inbound", e.ConnId, Envelope = e })
             );
 
             // Forward into command / message pipeline
