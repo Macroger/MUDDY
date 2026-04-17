@@ -1,8 +1,5 @@
 ﻿using Shared.Identity;
 using Shared.Protocol.Transport;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Shared.EventBus.DomainEvents
 {

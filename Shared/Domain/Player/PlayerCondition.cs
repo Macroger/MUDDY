@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.Domain.Player
+﻿namespace Shared.Domain.Player
 {
     public enum PlayerCondition
     {

@@ -3,7 +3,6 @@ using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
-using System;
 using System.Collections.Concurrent;
 using static Shared.EventBus.DomainEvents.ChatEvents;
 using static Shared.EventBus.DomainEvents.PlayerEvents;
@@ -29,7 +28,7 @@ namespace Server.Core.Persistence
             _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.ClientDisconnectedEvent>
                 (EventMessageType.Network, HandleDisconnect));
             _subscriptions.Add(_eventBus.Subscribe<MutePlayerRequestEvent>
-                (EventMessageType.Player, HandleMutePlayer ));
+                (EventMessageType.Player, HandleMutePlayer));
         }
 
         /// <summary>
@@ -38,7 +37,7 @@ namespace Server.Core.Persistence
         /// <param name="evnt"></param>
         private async void HandleMutePlayer(MutePlayerRequestEvent evnt)
         {
-            if(string.IsNullOrEmpty(evnt.targetPlayerName))
+            if (string.IsNullOrEmpty(evnt.targetPlayerName))
             {
                 EventBusHelper.PublishEvent(
                     _eventBus,
@@ -51,7 +50,7 @@ namespace Server.Core.Persistence
             PlayerState? targetPlayer = await GetPlayerByNameAsync(evnt.targetPlayerName);
 
             // Check if player was found.
-            if(targetPlayer == null )
+            if (targetPlayer == null)
             {
                 EventBusHelper.PublishEvent(
                     _eventBus,
@@ -62,7 +61,7 @@ namespace Server.Core.Persistence
             }
 
             // Check if player is already muted.
-            if(targetPlayer.ActiveConditions.Contains(PlayerCondition.Muted))
+            if (targetPlayer.ActiveConditions.Contains(PlayerCondition.Muted))
             {
                 EventBusHelper.PublishEvent(
                     _eventBus,
@@ -124,9 +123,9 @@ namespace Server.Core.Persistence
         /// <returns></returns>
         public async Task<PlayerState?> GetPlayerByNameAsync(string playerName)
         {
-            foreach (var player in _players.Values) 
+            foreach (var player in _players.Values)
             {
-                if(player.PlayerName == playerName)
+                if (player.PlayerName == playerName)
                 {
                     return await Task.FromResult(player);
                 }
@@ -164,7 +163,7 @@ namespace Server.Core.Persistence
         public async Task<bool> RemovePlayerAsync(ConnectionId connId)
         {
             PlayerState? player = await GetPlayerByConnectionIdAsync(connId);
-            if (player == null) 
+            if (player == null)
             {
                 // Player not found, return a completed task to maintain the asynchronous method signature.
                 return await Task.FromResult(true);

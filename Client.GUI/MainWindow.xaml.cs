@@ -1,28 +1,21 @@
+using Client.Core.CommandPipeline;
+using Client.Core.Network;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Documents;
+using Shared.EventBus;
+using Shared.Identity;
+using Shared.Logging;
+using Shared.Protocol.Transport;
+using Shared.Protocol.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using System.Text.Json;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Client.Core.Network;
-using Client.Core.CommandPipeline;
-using Shared.EventBus;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
-using Shared.Identity;
-using Windows.UI;
-using Shared.Logging;
+using System.Threading.Tasks;
 
 namespace Client.GUI
 {
@@ -79,11 +72,13 @@ namespace Client.GUI
                 var packetSerializer = new MuddyPacketSerializer(protocolLimits);
                 var packetFactory = new MuddyPacketFactory();
 
-                // Initialize packet logging to file with timestamp to avoid file locking issues
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string logFileName = $"client_packets_{timestamp}.log";
-                var packetLogFileWriter = new StandardLogFileWriter(logFileName, append: true);
+                // Initialize packet logging to file using safe path helper
+                string logFilePath = LogPathHelper.CreateTimestampedLogPath("client_packets");
+                var packetLogFileWriter = new StandardLogFileWriter(logFilePath, append: true);
                 _packetLogger = new PacketLogger(_eventBus, packetLogFileWriter);
+
+                // Log to user where logs are being saved
+                AppendGameOutput($"Packet logs will be saved to: {LogPathHelper.GetLogDirectory()}", "#FF808080");
 
                 _networkService = new ClientNetworkService(_eventBus, packetSerializer, packetFactory, protocolLimits);
                 _orchestrator = new ClientCommandPipelineOrchestrator();

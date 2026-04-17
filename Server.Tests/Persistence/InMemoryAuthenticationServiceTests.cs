@@ -1,5 +1,4 @@
 using Moq;
-using Server.Core.Domain.Authentication;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Server.Core.Persistence;
 using Shared.EventBus;

@@ -1,7 +1,7 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Persistence;
+using Shared.Domain.Player;
 using Shared.Identity;
 
 namespace Server.Core.CommandPipeline.ContextBuilder
@@ -13,7 +13,7 @@ namespace Server.Core.CommandPipeline.ContextBuilder
         private readonly IWorldRepository _worldRepository;
 
         public StandardCommandContextBuilder(
-            IPlayerRepository playerRepository, 
+            IPlayerRepository playerRepository,
             IWorldRepository worldRepository)
         {
             _playerRepository = playerRepository;
@@ -41,7 +41,7 @@ namespace Server.Core.CommandPipeline.ContextBuilder
 
             RoomState? currentRoomState = await _worldRepository.GetRoomAsync(player.CurrentLocation);
 
-            if(currentRoomState == null)
+            if (currentRoomState == null)
             {
                 CommandContext errorResponse = new CommandContext(
                     command: command,

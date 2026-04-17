@@ -3,7 +3,6 @@ using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Infrastructure.Lifecycle;
-using Shared.Identity;
 
 namespace Server.Tests.CommandPipeline;
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.EventBus
+﻿namespace Shared.EventBus
 {
     /// <summary>
     /// A record type representing the reason for a Event, including a message describing the reason and optional additional data.

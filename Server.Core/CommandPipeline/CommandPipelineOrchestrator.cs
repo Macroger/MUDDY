@@ -72,14 +72,14 @@ namespace Server.Core.CommandPipeline
             _msgEnvelopeQueue.Add(envelope);
         }
 
-       /// <summary>
-       /// Starts the message processing operation if it has not already been started.
-       /// </summary>
-       /// <remarks>Subsequent calls to this method have no effect if the operation is already running. Use
-       /// this method to initiate background message processing.</remarks>
+        /// <summary>
+        /// Starts the message processing operation if it has not already been started.
+        /// </summary>
+        /// <remarks>Subsequent calls to this method have no effect if the operation is already running. Use
+        /// this method to initiate background message processing.</remarks>
         public void Start()
         {
-            if(_started) return; // Prevent multiple starts
+            if (_started) return; // Prevent multiple starts
 
             _cts = new CancellationTokenSource();
             _msgProcessingTask = ProcessMessagesAsync(_cts.Token);
@@ -93,7 +93,7 @@ namespace Server.Core.CommandPipeline
         /// asynchronous and returns immediately; any ongoing stop process continues in the background.</remarks>
         public void Stop()
         {
-            if(!_started) return; // If not started, nothing to stop
+            if (!_started) return; // If not started, nothing to stop
 
             _ = StopAsync();
         }
@@ -106,7 +106,7 @@ namespace Server.Core.CommandPipeline
             _cts?.Cancel();                     // Signal that we want to cancel all other activities
 
             // If the processing task is still running, wait for it to finish. It will complete once all messages are processed or cancellation is observed.
-            if ( _msgProcessingTask != null )  await _msgProcessingTask.ConfigureAwait(false);
+            if (_msgProcessingTask != null) await _msgProcessingTask.ConfigureAwait(false);
 
             _cts?.Dispose();                     // Dispose of the cancellation token source
             _started = false;
@@ -162,7 +162,7 @@ namespace Server.Core.CommandPipeline
                 );
                 return;
             }
-            
+
             // 1st pass Policy check - AuthenticationPolicy
             foreach (var policy in _firstPassPolicies)
             {
@@ -177,7 +177,7 @@ namespace Server.Core.CommandPipeline
                     );
 
                     TransportEnvelope response = CreateErrorResponse(
-                        errorType: TransportMessageType.Error, 
+                        errorType: TransportMessageType.Error,
                         message: result.ErrorMessage ?? "Authentication failed",
                         connId: msg.ConnId);
 
@@ -234,7 +234,7 @@ namespace Server.Core.CommandPipeline
             // 2nd Pass: Dynamic policy (player-state level)
             foreach (var policy in _secondPassPolicies)
             {
-                var result = await policy.CheckPolicyAsync(context); 
+                var result = await policy.CheckPolicyAsync(context);
                 if (!result.IsValid)
                 {
                     TransportEnvelope errorResponseEnvelope = new TransportEnvelope(

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.Protocol.System
+﻿namespace Shared.Protocol.System
 {
 
     /// <summary>

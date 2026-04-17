@@ -4,7 +4,7 @@
     /// A wrapper to represent the unique identifier for a client connection in the server.
     /// This helps prevent accidentally using a connection ID in place of another string value, and vice versa.
     /// </summary>
-    public readonly struct ConnectionId: IEquatable<ConnectionId>
+    public readonly struct ConnectionId : IEquatable<ConnectionId>
     {
         public string Value { get; }
 

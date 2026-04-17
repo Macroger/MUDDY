@@ -7,7 +7,7 @@ namespace Server.Core.Domain.World
     {
         public RoomId Id { get; init; }             // Required - every room must have a unique identifier.
         public string? Description { get; init; }   // Optional - some rooms may have a description, while others may not.
-        
+
         /// <summary>
         /// Gets the set of conditions currently applied to the room.
         /// </summary>

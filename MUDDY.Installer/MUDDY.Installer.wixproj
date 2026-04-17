@@ -1,0 +1,16 @@
+﻿<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <WixToolsetOsmfAccepted>true</WixToolsetOsmfAccepted>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="README.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="InstallServer.bat" />
+    <None Include="License.rtf" />
+  </ItemGroup>
+</Project>
