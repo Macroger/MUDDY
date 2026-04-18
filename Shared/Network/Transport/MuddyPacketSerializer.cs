@@ -1,9 +1,6 @@
-﻿using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+﻿using Shared.Protocol.Types;
 using System.Buffers.Binary;
-using System.Collections.Specialized;
 using System.IO.Hashing;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Shared.Protocol.Transport
@@ -41,13 +38,13 @@ namespace Shared.Protocol.Transport
             // Validate that the serialized packet does not exceed the maximum allowed packet size.
             if (buffer.Length > packetLimits.MaxBinaryPacketBytes)
                 throw new InvalidDataException($"Packet too large; exceeds body size limit of {packetLimits.MaxBinaryPacketBytes} bytes, got {buffer.Length}.");
-            
+
             // Create a span targeting the header portion of the serialized packet.
             ReadOnlySpan<byte> headerSpan = buffer.Slice(0, headerSize);
 
             // Deserialize the header fields from the header span using BinaryPrimitives.ReadUIntx methods.
             // Create a new header object to hold the deserialized header values.
-            MuddyPacketHeader newHeader = DeserializeHeader(buffer[..headerSize]);     
+            MuddyPacketHeader newHeader = DeserializeHeader(buffer[..headerSize]);
 
             int expectedSize = headerSize + (int)newHeader.BodyLength + tailSize;
 

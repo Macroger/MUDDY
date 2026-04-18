@@ -4,10 +4,7 @@ using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Core.Persistence
 {
@@ -57,9 +54,9 @@ namespace Server.Core.Persistence
             var sessionId = _sessionIdGenerator.New();
             var record = new SessionRecord(connId, playerName);
 
-           bool result = _sessions.TryAdd(sessionId, record);
+            bool result = _sessions.TryAdd(sessionId, record);
 
-            if(result == false)
+            if (result == false)
             {
                 EventReason eventReason = new EventReason
                 (
@@ -68,7 +65,7 @@ namespace Server.Core.Persistence
                 );
 
                 EventBusHelper.PublishEvent(
-                    _eventBus, 
+                    _eventBus,
                     EventMessageType.Error,
                     eventReason
                     );

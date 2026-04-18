@@ -1,6 +1,6 @@
 ﻿namespace Server.Core.Infrastructure.Identity.MessageId
 {
-    public sealed class MessageIdGenerator: IMessageIdGenerator
+    public sealed class MessageIdGenerator : IMessageIdGenerator
     {
         private static int _counter = 0;
         public Shared.Identity.MessageId New()

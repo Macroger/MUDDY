@@ -1,11 +1,8 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Server.Core.Network.Model;
 using Server.Core.Network.Worker;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace Server.Core.Network.Model.Tests
 {

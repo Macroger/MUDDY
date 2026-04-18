@@ -1,5 +1,4 @@
 ﻿using Shared.EventBus;
-using Shared.Protocol.Types;
 
 namespace Shared.Logging
 {

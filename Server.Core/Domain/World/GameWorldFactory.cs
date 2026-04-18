@@ -13,7 +13,7 @@ namespace Server.Core.Domain.World
         /// The room ID where new players spawn when they log in.
         /// </summary>
         public static readonly RoomId StartingRoomId = new RoomId("tavern");
-       
+
 
         /// <summary>
         /// Creates the default world state with all rooms initialized.
@@ -59,10 +59,10 @@ namespace Server.Core.Domain.World
             };
 
             return new RoomState(
-                id: roomId, 
-                description: roomDescription, 
-                roomConditions: roomConditions, 
-                playersInRoom: playersPresent, 
+                id: roomId,
+                description: roomDescription,
+                roomConditions: roomConditions,
+                playersInRoom: playersPresent,
                 exits: roomExits);
         }
 

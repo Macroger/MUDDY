@@ -1,11 +1,10 @@
-﻿using Server.Core.CommandPipeline.ContextBuilder;
-using Server.Core.CommandPipeline.Types;
+﻿using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Authentication;
-using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Network.Supervisor;
 using Server.Core.Persistence;
+using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.Identity;
 using Shared.Protocol.Transport;
@@ -55,7 +54,7 @@ namespace Server.Core.CommandPipeline.Authentication
         {
             try
             {
-                
+
 
                 // Parse the JSON payload to extract command and arguments
                 string json = Encoding.UTF8.GetString(envelope.Payload);
@@ -197,9 +196,9 @@ namespace Server.Core.CommandPipeline.Authentication
                 EventBusHelper.PublishEvent<PlayerEnteredWorldEvent>(
                 _eventBus,
                 EventMessageType.World,
-                new PlayerEnteredWorldEvent(connId, username, updatedRoom.Id)                
+                new PlayerEnteredWorldEvent(connId, username, updatedRoom.Id)
                 );
-            }            
+            }
         }
 
         /// <summary>
@@ -208,9 +207,9 @@ namespace Server.Core.CommandPipeline.Authentication
         private void SendAuthError(ConnectionId connId, string message)
         {
             string payload = $"ERROR: {message}";
-            
+
             EventReason eventReason = new(payload);
-            
+
             EventBusHelper.PublishEvent(
                 _eventBus,
                 EventMessageType.Error,

@@ -1,6 +1,4 @@
-﻿using Windows.Media.Audio;
-
-namespace Shared.Protocol.Transport
+﻿namespace Shared.Protocol.Transport
 {
 
     /// <summary>
@@ -28,10 +26,6 @@ namespace Shared.Protocol.Transport
         public const int BitFlagsOffset = MsgTypeOffset + MsgTypeSize;          // BitFlags goes after MsgType, so its offset is the sum of MsgTypeOffset and MsgTypeSize. Total header size is the sum of all field sizes, which is 28 bytes.
 
 
-        //public const int SessionIdOffset = 0;       // SessionId size is 16 bytes, so next field starts at offset 16.
-        //public const int BodyLengthOffset = 16;     // BodyLength is 4 bytes, so next field starts at offset 20.
-        //public const int MsgIdOffset = 20;          // MsgId is 4 bytes, so next field starts at offset 24.
-        //public const int MsgTypeOffset = 24;        // MsgType is 2 bytes, so next field starts at offset 26.
         //public const int BitFlagsOffset = 26;       // BitFlags is 2 bytes, so total header size is 28 bytes.
 
 
@@ -49,7 +43,7 @@ namespace Shared.Protocol.Transport
     /// The class holds the deserialized packet data including header, body, and CRC for validation.
     /// Exceptions are thrown during deserialization if the packet is malformed or corrupted.</remarks>
     public sealed class MuddyPacket
-    {        
+    {
         public MuddyPacketHeader Header { get; init; }          // Store the header as a struct for easy access to its fields.
         public byte[] Body { get; init; }                       // Store the body as a byte array, since it can be either JSON or binary data.
 

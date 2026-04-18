@@ -1,18 +1,12 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Server.Core.CommandPipeline;
 using Server.Core.Infrastructure.Identity.ConnectionId;
-using Server.Core.Network.Listener;
 using Server.Core.Network.Model;
 using Server.Core.Network.Supervisor;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
-using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Server.Core.Network.Listener.Tests
 {
@@ -150,13 +144,13 @@ namespace Server.Core.Network.Listener.Tests
             var listener = new TcpConnectionListener(ep, _supervisor, _connIdGen, _listenerErrorHandler, _listenerNewConnectionHandler);
 
             // Act
-            try 
-            { 
-                listener.Start(); 
-            } 
-            catch (SocketException) 
-            { 
-                /* consumed exception */ 
+            try
+            {
+                listener.Start();
+            }
+            catch (SocketException)
+            {
+                /* consumed exception */
             }
 
             // Assert

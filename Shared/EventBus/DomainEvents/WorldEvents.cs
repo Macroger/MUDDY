@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.EventBus.DomainEvents
+﻿namespace Shared.EventBus.DomainEvents
 {
     internal class WorldEvents
     {

@@ -11,7 +11,7 @@
         /// Gets the previous state of the server before the most recent state change.
         /// </summary>
         public ServerStateEnum PreviousState { get; }
-        
+
         /// <summary>
         /// Gets the new state of the server after a state change event.
         /// </summary>

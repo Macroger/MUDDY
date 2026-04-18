@@ -1,11 +1,10 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Shared.Domain.Player;
 using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
+using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.Identity;
-using Shared.EventBus.SubscriptionToken;
 
 namespace Server.Core.Domain.Services.ChatService
 {
@@ -22,11 +21,11 @@ namespace Server.Core.Domain.Services.ChatService
             PlayerState sender,
             WorldState world,
             string message)
-         {
+        {
             // Validate
             if (string.IsNullOrEmpty(message))
             {
-               var errorResponse =  new CommandResult
+                var errorResponse = new CommandResult
                 {
                     Success = false,
                     Message = "Message cannot be empty"
@@ -56,7 +55,7 @@ namespace Server.Core.Domain.Services.ChatService
 
             // Build message
             string broadcastMsg = $"{sender.PlayerName} says: {message}";
-            
+
             // Publish with player list
             EventBusHelper.PublishEvent(
                 _eventBus,
@@ -67,7 +66,7 @@ namespace Server.Core.Domain.Services.ChatService
                     sender.PlayerName,
                     sender.CurrentLocation,
                     broadcastMsg,
-                    room.PlayersPresent 
+                    room.PlayersPresent
                 ))
             );
 

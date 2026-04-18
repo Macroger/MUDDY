@@ -1,6 +1,4 @@
-﻿using Shared.Protocol.Transport;
-
-namespace Server.Core.CommandPipeline.Types
+﻿namespace Server.Core.CommandPipeline.Types
 {
     /// <summary>
     /// Result of parsing a command.

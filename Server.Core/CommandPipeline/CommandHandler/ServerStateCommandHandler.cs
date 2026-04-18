@@ -50,10 +50,10 @@ namespace Server.Core.CommandPipeline.CommandHandler
 
             ServerStateEnum? target = targetArg.ToLowerInvariant() switch
             {
-                "active"      => ServerStateEnum.ACTIVE,
+                "active" => ServerStateEnum.ACTIVE,
                 "maintenance" => ServerStateEnum.MAINTENANCE,
-                "shutdown"    => ServerStateEnum.SHUTTING_DOWN,
-                _             => null
+                "shutdown" => ServerStateEnum.SHUTTING_DOWN,
+                _ => null
             };
 
             if (target is null)

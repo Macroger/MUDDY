@@ -1,7 +1,6 @@
-﻿using System.Net;
+﻿using Shared.Identity;
+using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using Shared.Identity;
 
 namespace Server.Core.Network.Model
 {
