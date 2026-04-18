@@ -1,5 +1,4 @@
 ﻿using Shared.EventBus.SubscriptionToken;
-using Shared.Protocol.Types;
 
 namespace Shared.EventBus
 {

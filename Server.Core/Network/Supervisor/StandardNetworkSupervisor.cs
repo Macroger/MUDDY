@@ -15,13 +15,12 @@ using Shared.Protocol.Types;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using Windows.Media.Protection.PlayReady;
 using static Shared.EventBus.DomainEvents.NetworkEvents;
 
 
 namespace Server.Core.Network.Supervisor
 {
-    public class StandardNetworkSupervisor : 
+    public class StandardNetworkSupervisor :
         IDisposable,
         INetworkSupervisor,
         IListenerErrorHandler,
@@ -30,7 +29,7 @@ namespace Server.Core.Network.Supervisor
         IStoppable
     {
         #region Dependencies
-        private IConnectionIdGenerator _connectionIdGenerator;        
+        private IConnectionIdGenerator _connectionIdGenerator;
         private IEventBus _eventBus;
         private CommandPipelineOrchestrator? _commandPipeline;
         private TcpConnectionListener _tcpConnectionListener;
@@ -56,14 +55,14 @@ namespace Server.Core.Network.Supervisor
         /// <param name="bus">The event bus used for publishing network and error events.</param>
         /// <param name="port">The port number on which the supervisor should listen for incoming connections. Must be in the range 1..65535.</param>
         /// <exception cref="System.ArgumentOutOfRangeException">Thrown if the provided <paramref name="port"/> is outside the valid range.</exception>
-        public StandardNetworkSupervisor( 
+        public StandardNetworkSupervisor(
             IServerLifecycle lifeCycle,
-            IEventBus bus, 
+            IEventBus bus,
             IMessageIdGenerator messageIdGenerator,
             int port = 30333)
         {
             // Validate port number is acceptable.
-            if(port <= 1 || port > 65535) throw new ArgumentOutOfRangeException(nameof(port), "Port number must be between 1 and 65535.");
+            if (port <= 1 || port > 65535) throw new ArgumentOutOfRangeException(nameof(port), "Port number must be between 1 and 65535.");
 
             // Dependencies - Generate new instances for use internally
             _connectionIdGenerator = new ConnectionIdGenerator();
@@ -105,6 +104,13 @@ namespace Server.Core.Network.Supervisor
                 try
                 {
                     connection.Worker.SendMessage(msg);
+
+                    // Log each broadcast packet
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.PacketLog,
+                        new EventReason("Packet sent (broadcast)", new { msg.MessageId, msg.MessageType, Direction = "Outbound", Client = connection.ClientConnection.connId, Envelope = msg })
+                    );
                 }
                 catch
                 {
@@ -154,7 +160,7 @@ namespace Server.Core.Network.Supervisor
                     new EventReason($"Exception while closing connection {connectionId} (Reason: {reason}): {ex.Message}"));
             }
         }
-        
+
         /// <summary>
         /// Processes a newly accepted TCP connection and registers it for active management.
         /// </summary>
@@ -240,11 +246,18 @@ namespace Server.Core.Network.Supervisor
                     ConnectionContext connection = _activeConnections[client];
                     connection.Worker.SendMessage(msg);
 
-                    // Log the event
+                    // Log the event to Network channel
                     EventBusHelper.PublishEvent(
                         _eventBus,
                         EventMessageType.Network,
                         new EventReason($"Message sent to client: {client}, MessageID: {msg.MessageId}, Type: {msg.MessageType}")
+                    );
+
+                    // Log to PacketLog channel for packet logging
+                    EventBusHelper.PublishEvent(
+                        _eventBus,
+                        EventMessageType.PacketLog,
+                        new EventReason("Packet sent", new { msg.MessageId, msg.MessageType, Direction = "Outbound", Client = client, Envelope = msg })
                     );
                 }
             }
@@ -257,7 +270,7 @@ namespace Server.Core.Network.Supervisor
                     new EventReason($"Failed to send message to client {client}: {msg.MessageType} (ID: {msg.MessageId})")
                 );
             }
-        }       
+        }
 
         /// <summary>
         /// Starts listening for incoming client connections on the configured network endpoint.
@@ -282,7 +295,7 @@ namespace Server.Core.Network.Supervisor
                     EventMessageType.Network,
                     new ListenerStateChangedEvent(IsListeningForConnections)
                 );
-                
+
             }
             catch
             {
@@ -299,7 +312,7 @@ namespace Server.Core.Network.Supervisor
 
             return true;
         }
-       
+
         /// <summary>
         /// Stops the server from accepting new client connections.
         /// </summary>
@@ -364,7 +377,7 @@ namespace Server.Core.Network.Supervisor
                 {
                     context.Worker.Stop();
                 }
-                
+
             }
             catch
             {
@@ -386,7 +399,7 @@ namespace Server.Core.Network.Supervisor
         private ValidationResult ValidateSystemCanAcceptMessages()
         {
             // Check if the server is in the shutting down state. If so, provide rejection response.
-            if(_lifecycle.IsShuttingDown)
+            if (_lifecycle.IsShuttingDown)
             {
                 // This is an error level event. Create appropriate response.
                 SystemResponse response = new SystemResponse(SystemResponseType.ServerShuttingDown,
@@ -422,7 +435,7 @@ namespace Server.Core.Network.Supervisor
         public void Start()
         {
             // Check if the commandPipeline has been set
-            if(_commandPipeline == null )
+            if (_commandPipeline == null)
             {
                 EventBusHelper.PublishEvent(
                     _eventBus,
@@ -441,6 +454,13 @@ namespace Server.Core.Network.Supervisor
                     new EventReason($"Network supervisor already started on {_listenerEndPoint}")
                 );
                 return;
+            }
+
+            // Recreate the cancellation token source if it was previously cancelled/disposed
+            if (_serverCts.IsCancellationRequested)
+            {
+                _serverCts.Dispose();
+                _serverCts = new CancellationTokenSource();
             }
 
             EventBusHelper.PublishEvent
@@ -488,7 +508,7 @@ namespace Server.Core.Network.Supervisor
                 new EventReason($"Network supervisor stopping on {_listenerEndPoint}")
             );
 
-            foreach(var subscription in _subscriptions)
+            foreach (var subscription in _subscriptions)
             {
                 subscription.Dispose();
             }
@@ -524,7 +544,7 @@ namespace Server.Core.Network.Supervisor
         /// <param name="msg">The message to send to each client</param>
         public void SendToMultipleClients(IEnumerable<ConnectionId> clients, TransportEnvelope msg)
         {
-            if(clients == null || !clients.Any())
+            if (clients == null || !clients.Any())
             {
                 EventBusHelper.PublishEvent(
                     _eventBus,
@@ -674,7 +694,7 @@ namespace Server.Core.Network.Supervisor
 
             if (result.IsValid == false)
             {
-                if(result.RejectionResponse == null)
+                if (result.RejectionResponse == null)
                 {
                     EventBusHelper.PublishEvent(
                         _eventBus,
@@ -713,6 +733,13 @@ namespace Server.Core.Network.Supervisor
                 _eventBus,
                 EventMessageType.Network,
                 new EventReason($"Message received from client: {e.MessageType} (ID: {e.MessageId}, {e.Payload.Length} bytes)")
+            );
+
+            // Log to PacketLog channel for packet logging
+            EventBusHelper.PublishEvent(
+                _eventBus,
+                EventMessageType.PacketLog,
+                new EventReason("Packet received", new { e.MessageId, e.MessageType, Direction = "Inbound", e.ConnId, Envelope = e })
             );
 
             // Forward into command / message pipeline
@@ -760,10 +787,10 @@ namespace Server.Core.Network.Supervisor
             );
 
             if (e.NewState == ServerStateEnum.SHUTTING_DOWN || e.NewState == ServerStateEnum.MAINTENANCE)
-            {                
+            {
                 StopListener(); // Proactively stop accepting connections
             }
-            else if(e.NewState == ServerStateEnum.ACTIVE)
+            else if (e.NewState == ServerStateEnum.ACTIVE)
             {
                 StartListener(); // Start accepting clients if the server becomes active
             }

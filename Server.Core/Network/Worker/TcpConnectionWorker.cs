@@ -1,6 +1,6 @@
 ﻿using Server.Core.Network.Model;
-using Shared.Protocol.Transport;
 using Shared.Identity;
+using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
 using System.Collections.Concurrent;
 
@@ -36,7 +36,7 @@ namespace Server.Core.Network.Worker
         private AcceptedConnection _acceptedConnection;
         private MuddyProtocolLimits _packetLimits;
 
-        private IPacketFactory _packetFactory;        
+        private IPacketFactory _packetFactory;
         private IPacketSerializer _packetSerializer;
 
         #endregion
@@ -121,7 +121,7 @@ namespace Server.Core.Network.Worker
         public void Start()
         {
             // If the connection is already running, there's no need to start it again
-            if (IsRunning) return;            
+            if (IsRunning) return;
 
             IsRunning = true;
 
@@ -219,7 +219,7 @@ namespace Server.Core.Network.Worker
 
                         // Process complete packets from the accumulator buffer
                         // Keep looping as long as we have enough bytes to read a full header (which is the minimum requirement to determine packet size)
-                        while (_byteAccumulatorBuffer.Count >= _packetLimits.headerSize )
+                        while (_byteAccumulatorBuffer.Count >= _packetLimits.headerSize)
                         {
                             // Copy the header bytes to a separate array for deserialization
                             byte[] headerBytes = _byteAccumulatorBuffer.GetRange(0, _packetLimits.headerSize).ToArray();
@@ -249,7 +249,7 @@ namespace Server.Core.Network.Worker
                             // Create a TransportEnvelope from the deserialized packet
                             var msg = new TransportEnvelope(
                                 sessionId: new SessionId(pktHeader.SessionId),
-                                messageId: new MessageId(pktHeader.MsgId),                                
+                                messageId: new MessageId(pktHeader.MsgId),
                                 messageType: (TransportMessageType)pktHeader.MsgType,
                                 flags: (MessageFlags)pkt.Header.BitFlags,
                                 payload: pkt.Body,
@@ -282,7 +282,8 @@ namespace Server.Core.Network.Worker
         {
             // The send loop runs in a background task. It processes messages from the sendQue and sends them over the socket.
             // It will continue running until cancellation is requested or an exception occurs. Any exceptions are reported via the ErrorOccurred event.
-            return Task.Run(() => {
+            return Task.Run(() =>
+            {
                 try
                 {
                     // GetConsumingEnumerable will block until items are available in the queue.

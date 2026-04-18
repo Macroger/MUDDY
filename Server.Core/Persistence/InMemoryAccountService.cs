@@ -1,5 +1,4 @@
 ﻿using Server.Core.Domain.Authentication;
-using System;
 using System.Collections.Concurrent;
 
 namespace Server.Core.Persistence
@@ -17,10 +16,10 @@ namespace Server.Core.Persistence
             _accounts = new ConcurrentDictionary<string, string>();
 
             // Pre-load some test accounts for testing
-            _accounts["Matt"]   = "123";
-            _accounts["Ahbi"]   = "123";
-            _accounts["Nasir"]  = "123";
-            _accounts["Yash"]   = "123";
+            _accounts["Matt"] = "123";
+            _accounts["Ahbi"] = "123";
+            _accounts["Nasir"] = "123";
+            _accounts["Yash"] = "123";
         }
 
         /// <summary>

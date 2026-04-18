@@ -1,10 +1,10 @@
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
-using Shared.Domain.Player;
+using Server.Core.Domain.Services.WorldMovementService;
 using Server.Core.Domain.World;
 using Server.Core.Persistence;
+using Shared.Domain.Player;
 using Shared.Identity;
-using Server.Core.Domain.Services.WorldMovementService;
 
 namespace Server.Tests.Domain;
 

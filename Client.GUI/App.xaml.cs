@@ -1,20 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -35,6 +21,48 @@ namespace Client.GUI
         public App()
         {
             InitializeComponent();
+
+            // Add global exception handler to catch and log any unhandled exceptions
+            UnhandledException += App_UnhandledException;
+        }
+
+        private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            // Mark as handled to prevent app crash
+            e.Handled = true;
+
+            string errorMessage = $"UNHANDLED EXCEPTION at {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                                 $"Message: {e.Message}\n" +
+                                 $"Exception: {e.Exception?.ToString() ?? "Unknown"}\n" +
+                                 $"Stack Trace: {e.Exception?.StackTrace ?? "No stack trace"}\n\n";
+
+            // Try to write to error log in safe location
+            try
+            {
+                string errorLogPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "MUDDY", "Logs", "client_errors.log");
+
+                Directory.CreateDirectory(Path.GetDirectoryName(errorLogPath)!);
+                File.AppendAllText(errorLogPath, errorMessage);
+            }
+            catch
+            {
+                // If that fails, try temp directory
+                try
+                {
+                    string tempErrorLog = Path.Combine(Path.GetTempPath(), "MUDDY_client_error.log");
+                    File.AppendAllText(tempErrorLog, errorMessage);
+                }
+                catch
+                {
+                    // Last resort - just write to console
+                }
+            }
+
+            // Always write to console/debug output
+            Console.WriteLine(errorMessage);
+            System.Diagnostics.Debug.WriteLine(errorMessage);
         }
 
         /// <summary>

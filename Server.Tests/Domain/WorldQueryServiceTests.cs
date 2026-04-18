@@ -1,8 +1,8 @@
 using Server.Core.CommandPipeline.ContextBuilder;
-using Shared.Domain.Player;
-using Server.Core.Domain.World;
-using Shared.Identity;
 using Server.Core.Domain.Services.WorldQueryService;
+using Server.Core.Domain.World;
+using Shared.Domain.Player;
+using Shared.Identity;
 
 namespace Server.Tests.Domain;
 

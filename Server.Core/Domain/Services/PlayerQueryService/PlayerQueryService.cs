@@ -1,6 +1,6 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Shared.Domain.Player;
 using Server.Core.Domain.World;
+using Shared.Domain.Player;
 
 namespace Server.Core.Domain.Services.PlayerQueryService
 {
@@ -42,7 +42,7 @@ namespace Server.Core.Domain.Services.PlayerQueryService
             var playersInRoom = world.Rooms[player.CurrentLocation].PlayersPresent.ToList();
 
             // Check if any other players are in the room.
-            if(playersInRoom.Count == 0)
+            if (playersInRoom.Count == 0)
             {
                 // There are no other players. Return a message indicating that.
                 return new CommandResult

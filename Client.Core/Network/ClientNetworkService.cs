@@ -1,12 +1,8 @@
-﻿using Client.Core.CommandPipeline;
-using Shared.EventBus;
+﻿using Shared.EventBus;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
-using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
 
 namespace Client.Core.Network
 {
@@ -31,19 +27,19 @@ namespace Client.Core.Network
 
         // Used to publish network events (e.g., connection, errors, packets)
         private readonly IEventBus _eventBus;
-        
+
         // Serializes/deserializes packets for network transmission
         private readonly IPacketSerializer _packetSerializer;
-        
+
         // Creates packets from envelopes
         private readonly IPacketFactory _packetFactory;
-        
+
         // Protocol limits (e.g., max packet size)
         private readonly MuddyProtocolLimits _protocolLimits;
 
         // TCP client for the network connection
         private TcpClient? _tcpClient;
-        
+
         // Stream for reading/writing network data
         private NetworkStream? _networkStream;
 

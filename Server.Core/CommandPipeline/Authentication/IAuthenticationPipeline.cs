@@ -1,7 +1,4 @@
 ﻿using Shared.Protocol.Transport;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Core.CommandPipeline.Authentication
 {

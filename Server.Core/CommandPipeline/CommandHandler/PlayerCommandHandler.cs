@@ -1,7 +1,6 @@
 ﻿using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Services.PlayerQueryService;
-using Shared.Domain.Player;
 
 namespace Server.Core.CommandPipeline.CommandHandler
 {
