@@ -1,4 +1,4 @@
-# MUDDY - Multi-User Domain for Dynamic Learning
+# MUDDY - Multi-User Dungeon for Dynamic Learning
 <div align="center">
 
 <table>
@@ -65,7 +65,7 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 
 **Command Pipeline:**
 - Multi-stage processing: Policies -> Parse -> Context Building -> Routing -> Execution
-- First-pass policies (authentication, rate limiting)
+- First-pass policies (authentication)
 - Second-pass policies (player conditions, muted players)
 - Extensible handler registration
 
@@ -76,8 +76,8 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 - In-memory account storage
 
 **Game World:**
-- Room-based navigation (10+ rooms)
-- Directional movement (N, S, E, W, NE, NW, SE, SW, Up, Down)
+- Room-based navigation (3 rooms)
+- Directional movement (N, S, E, W)
 - Room descriptions with exits
 - Player location tracking
 
@@ -94,7 +94,7 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 
 **Networking:**
 - Custom binary protocol (header + JSON body + CRC32)
-- Packet size validation (max 1MB)
+- Packet size validation (max 4MB)
 - Per-connection worker threads
 - Connection pooling
 - Packet logging for debugging
@@ -113,16 +113,14 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 - Handler-based message routing by type
 - Event-driven UI updates
 - Session token management
-- Auto-reconnect support
 
 ### Admin Features (Server GUI)
 
 **Dashboard Panels:**
 - Server status (uptime, state, listener status)
-- Active players list with mute/kick controls
+- Active players list with mute/kick controls (not fully implemented, yet)
 - Server state controls (ACTIVE, MAINTENANCE, SHUTTING_DOWN buttons)
-- Real-time event log with filtering
-- Connection statistics
+- Real-time event log 
 
 **Server Control:**
 - Toggle TCP listener on/off
@@ -180,12 +178,10 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 - `say [message]` - Send chat message
 - `move [direction]` - Navigate rooms
 - `north/south/east/west` - Directional shortcuts
-- `northeast/northwest/southeast/southwest` - Diagonal movement
-- `up/down` - Vertical movement
 - `look` - Describe current room
 - `status` - View player information
 - `who` - List online players
-- `serverstate [active|maintenance|shutdown]` - Change server state (admin)
+- `serverstate [active|maintenance|shutdown]` - Change server state
 - `logout` - Disconnect session
 
 ## Event Bus Architecture
@@ -275,7 +271,7 @@ dotnet test
 2. Press F5 or click "Start"
 3. Server dashboard will open
 4. Click "Toggle Listener" to start accepting connections
-5. Default port: 5000 (configurable in code)
+5. Default port: 30333 (configurable in code)
 
 ### Running the Client
 
