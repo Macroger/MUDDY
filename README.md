@@ -1,14 +1,13 @@
 # MUDDY - Multi-User Domain for Dynamic Learning
-![MUDDY Server UI Screenshot](./docs/images/MUDDY_Server_GUI.jpg)
 <div align="center">
 
 **MUDDY Server GUI**
 
-<img src="docs/images/MUDDY%20Server%20GUI.JPG" alt="MUDDY Server GUI" width="640"/>
+<img src="docs/images/MUDDY_Server_GUI.jpg" alt="MUDDY Server GUI" width="640"/>
 
 **MUDDY Client GUI**
 
-<img src="docs/images/MUDDY%20Client%20GUI.JPG" alt="MUDDY Client GUI" width="640"/>
+<img src="docs/images/MUDDY_Client_GUI.jpg" alt="MUDDY Client GUI" width="640"/>
 
 </div>
 
