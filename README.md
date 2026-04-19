@@ -1,5 +1,17 @@
 # MUDDY - Multi-User Domain for Dynamic Learning
 
+<div align="center">
+
+**MUDDY Server GUI**
+
+<img src="docs/images/MUDDY%20Server%20GUI.JPEG" alt="MUDDY Server GUI" width="640"/>
+
+**MUDDY Client GUI**
+
+<img src="docs/images/MUDDY%20Client%20GUI.JPEG" alt="MUDDY Client GUI" width="640"/>
+
+</div>
+
 **Version:** 1.0  
 **Framework:** .NET 10  
 **Architecture:** Event-driven pipeline with async TCP networking
@@ -132,13 +144,16 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 ### Wire Protocol (Binary)
 
 ```
-[Header: 10 bytes]
-  - Magic Number: 4 bytes
-  - Version: 1 byte
-  - Flags: 1 byte
-  - Body Length: 4 bytes
+[Header: 28 bytes]
+  - MessageId: 16 bytes (GUID)
+  - Body Length: 4 bytes (UInt32_t)
+  - Message ID: 4 bytes (UInt32_t)  
+  - MessageType: 2 bytes (UInt16_t)
+  - BitFlags: 2 bytes (UInt16_t)
+  
 [Body: Variable]
   - TransportEnvelope JSON
+  - Binary payload (optional, e.g. image data)
 [CRC32: 4 bytes]
   - Integrity checksum
 ```
@@ -260,8 +275,8 @@ dotnet test
 
 1. Set `Client.GUI` as startup project
 2. Press F5 or click "Start"
-3. Enter server address (default: 127.0.0.1)
-4. Enter port (default: 5000)
+3. Enter server address
+4. Enter port (default: 30333)
 5. Click "Connect"
 6. Use `register` or `login` commands to authenticate
 7. Explore the game world with movement commands

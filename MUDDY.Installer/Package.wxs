@@ -45,7 +45,7 @@
       <!-- Server Dashboard Feature -->
       <Feature Id="ServerFeature" 
                Title="Server Dashboard" 
-               Description="Host a MUDDY game server. Runs on port 5000 and provides administration dashboard."
+               Description="Host a MUDDY game server. Runs on port 30333 and provides administration dashboard."
                Level="1"
                AllowAdvertise="no">
         <ComponentGroupRef Id="ServerComponents" />
@@ -59,7 +59,6 @@
                AllowAdvertise="no">
         <ComponentGroupRef Id="ClientComponents" />
       </Feature>
-
     </Feature>
 
     <!-- Server Components -->
