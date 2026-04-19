@@ -3,7 +3,7 @@
 <div align="center">
 
 **MUDDY Server GUI**
-
+![MUDDY Server UI Screenshot](./docs/images/MUDDY_Server_GUI.jpg)
 <img src="docs/images/MUDDY%20Server%20GUI.JPG" alt="MUDDY Server GUI" width="640"/>
 
 **MUDDY Client GUI**
