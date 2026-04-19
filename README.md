@@ -4,11 +4,11 @@
 
 **MUDDY Server GUI**
 
-<img src="docs/images/MUDDY%20Server%20GUI.JPEG" alt="MUDDY Server GUI" width="640"/>
+<img src="docs/images/MUDDY%20Server%20GUI.JPG" alt="MUDDY Server GUI" width="640"/>
 
 **MUDDY Client GUI**
 
-<img src="docs/images/MUDDY%20Client%20GUI.JPEG" alt="MUDDY Client GUI" width="640"/>
+<img src="docs/images/MUDDY%20Client%20GUI.JPG" alt="MUDDY Client GUI" width="640"/>
 
 </div>
 
