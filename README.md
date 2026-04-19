@@ -1,6 +1,24 @@
-# MUDDY - Multi-User Domain for Dynamic Learning
+# MUDDY - Multi-User Dungeon for Dynamic Learning
+<div align="center">
 
-**Version:** 1.0  
+<table>
+  <tr>
+    <td align="center"><b>MUDDY Server GUI</b></td>
+    <td align="center"><b>MUDDY Client GUI</b></td>
+  </tr>
+  <tr>
+    <td>
+      <img src="docs/images/MUDDY_Server_GUI.jpg" alt="MUDDY Server GUI" width="400"/>
+    </td>
+    <td>
+      <img src="docs/images/MUDDY_Client_GUI.jpg" alt="MUDDY Client GUI" width="400"/>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+**Version:** 0.5 (2026-04-19)  
 **Framework:** .NET 10  
 **Architecture:** Event-driven pipeline with async TCP networking
 
@@ -47,7 +65,7 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 
 **Command Pipeline:**
 - Multi-stage processing: Policies -> Parse -> Context Building -> Routing -> Execution
-- First-pass policies (authentication, rate limiting)
+- First-pass policies (authentication)
 - Second-pass policies (player conditions, muted players)
 - Extensible handler registration
 
@@ -58,8 +76,8 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 - In-memory account storage
 
 **Game World:**
-- Room-based navigation (10+ rooms)
-- Directional movement (N, S, E, W, NE, NW, SE, SW, Up, Down)
+- Room-based navigation (3 rooms)
+- Directional movement (N, S, E, W)
 - Room descriptions with exits
 - Player location tracking
 
@@ -76,7 +94,7 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 
 **Networking:**
 - Custom binary protocol (header + JSON body + CRC32)
-- Packet size validation (max 1MB)
+- Packet size validation (max 4MB)
 - Per-connection worker threads
 - Connection pooling
 - Packet logging for debugging
@@ -95,16 +113,14 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 - Handler-based message routing by type
 - Event-driven UI updates
 - Session token management
-- Auto-reconnect support
 
 ### Admin Features (Server GUI)
 
 **Dashboard Panels:**
 - Server status (uptime, state, listener status)
-- Active players list with mute/kick controls
+- Active players list with mute/kick controls (not fully implemented, yet)
 - Server state controls (ACTIVE, MAINTENANCE, SHUTTING_DOWN buttons)
-- Real-time event log with filtering
-- Connection statistics
+- Real-time event log 
 
 **Server Control:**
 - Toggle TCP listener on/off
@@ -132,13 +148,16 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 ### Wire Protocol (Binary)
 
 ```
-[Header: 10 bytes]
-  - Magic Number: 4 bytes
-  - Version: 1 byte
-  - Flags: 1 byte
-  - Body Length: 4 bytes
+[Header: 28 bytes]
+  - MessageId: 16 bytes (GUID)
+  - Body Length: 4 bytes (UInt32_t)
+  - Message ID: 4 bytes (UInt32_t)  
+  - MessageType: 2 bytes (UInt16_t)
+  - BitFlags: 2 bytes (UInt16_t)
+  
 [Body: Variable]
   - TransportEnvelope JSON
+  - Binary payload (optional, e.g. image data)
 [CRC32: 4 bytes]
   - Integrity checksum
 ```
@@ -159,12 +178,10 @@ MUDDY uses a **pipeline-based command processor** with a **pub/sub event system*
 - `say [message]` - Send chat message
 - `move [direction]` - Navigate rooms
 - `north/south/east/west` - Directional shortcuts
-- `northeast/northwest/southeast/southwest` - Diagonal movement
-- `up/down` - Vertical movement
 - `look` - Describe current room
 - `status` - View player information
 - `who` - List online players
-- `serverstate [active|maintenance|shutdown]` - Change server state (admin)
+- `serverstate [active|maintenance|shutdown]` - Change server state
 - `logout` - Disconnect session
 
 ## Event Bus Architecture
@@ -254,14 +271,14 @@ dotnet test
 2. Press F5 or click "Start"
 3. Server dashboard will open
 4. Click "Toggle Listener" to start accepting connections
-5. Default port: 5000 (configurable in code)
+5. Default port: 30333 (configurable in code)
 
 ### Running the Client
 
 1. Set `Client.GUI` as startup project
 2. Press F5 or click "Start"
-3. Enter server address (default: 127.0.0.1)
-4. Enter port (default: 5000)
+3. Enter server address
+4. Enter port (default: 30333)
 5. Click "Connect"
 6. Use `register` or `login` commands to authenticate
 7. Explore the game world with movement commands
@@ -368,14 +385,6 @@ Server GUI displays real-time event log with filtering by channel.
 - Server clustering
 - Admin role-based permissions
 
-**Technical Improvements:**
-- Performance metrics (Prometheus)
-- Telemetry (OpenTelemetry)
-- Docker containerization
-- Kubernetes deployment
-- CI/CD pipeline (GitHub Actions)
-- Code coverage reporting
-
 ## Contributing
 
 This is an internal student project for COMP72070 (Project IV). Contributions are limited to team members:
@@ -392,7 +401,7 @@ Educational project - Conestoga College BCS Program
 ## Authors
 
 - Student project for COMP72070-26W-Section1-Group3
-- Instructor: [Professor Name]
+- Instructor: Monti Sachdeva
 - Semester: Winter 2026
 
 ## Acknowledgments
@@ -401,4 +410,5 @@ Educational project - Conestoga College BCS Program
 - WinUI 3 team for modern UI framework
 - Community ToolKit for WinUI controls
 - Doxygen for documentation generation
+- Claude Sonnet 4.5 for code review, feedback, and disussions on architecture and design decisions
 
