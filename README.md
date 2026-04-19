@@ -18,7 +18,7 @@
 
 </div>
 
-**Version:** 1.0  
+**Version:** 0.5 (2026-04-19)  
 **Framework:** .NET 10  
 **Architecture:** Event-driven pipeline with async TCP networking
 
@@ -385,14 +385,6 @@ Server GUI displays real-time event log with filtering by channel.
 - Server clustering
 - Admin role-based permissions
 
-**Technical Improvements:**
-- Performance metrics (Prometheus)
-- Telemetry (OpenTelemetry)
-- Docker containerization
-- Kubernetes deployment
-- CI/CD pipeline (GitHub Actions)
-- Code coverage reporting
-
 ## Contributing
 
 This is an internal student project for COMP72070 (Project IV). Contributions are limited to team members:
@@ -409,7 +401,7 @@ Educational project - Conestoga College BCS Program
 ## Authors
 
 - Student project for COMP72070-26W-Section1-Group3
-- Instructor: [Professor Name]
+- Instructor: Monti Sachdeva
 - Semester: Winter 2026
 
 ## Acknowledgments
@@ -418,4 +410,5 @@ Educational project - Conestoga College BCS Program
 - WinUI 3 team for modern UI framework
 - Community ToolKit for WinUI controls
 - Doxygen for documentation generation
+- Claude Sonnet 4.5 for code review, feedback, and disussions on architecture and design decisions
 
