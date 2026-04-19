@@ -6,15 +6,14 @@ using Microsoft.UI.Xaml.Media;
 using Server.Core.Infrastructure.Lifecycle;
 using Shared.Domain.Player;
 using Shared.EventBus;
+using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
-using Shared.Identity;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using Windows.Graphics;
-using Shared.EventBus.DomainEvents;
 using static Shared.EventBus.DomainEvents.NetworkEvents;
 
 namespace Server.GUI
@@ -391,7 +390,7 @@ namespace Server.GUI
         {
             DispatcherQueue.TryEnqueue(() =>
             {
-                if(evnt.IsListenerStarted == true)
+                if (evnt.IsListenerStarted == true)
                 {
                     _listenerStateText = "ONLINE";
                     ListenerStateText = _listenerStateText;
@@ -503,7 +502,7 @@ namespace Server.GUI
         private void ToggleListenerButton_Click(object sender, RoutedEventArgs e)
         {
             // Check current state and publish appropriate event to toggle listener
-            if(ListenerStateText == "ONLINE")
+            if (ListenerStateText == "ONLINE")
             {
                 // Publish event to stop listener
                 _eventBus.Publish(EventMessageType.Network, new StopListenerRequestEvent());
@@ -515,6 +514,21 @@ namespace Server.GUI
             }
 
             ToggleListenerButton.IsEnabled = false; // Disable button until we get confirmation of state change
+        }
+
+        private void SetActiveButton_Click(object sender, RoutedEventArgs e)
+        {
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(ServerStateEnum.ACTIVE));
+        }
+
+        private void SetMaintenanceButton_Click(object sender, RoutedEventArgs e)
+        {
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(ServerStateEnum.MAINTENANCE));
+        }
+
+        private void SetShutdownButton_Click(object sender, RoutedEventArgs e)
+        {
+            _eventBus.Publish(EventMessageType.System, new ServerStateChangeRequestedEvent(ServerStateEnum.SHUTTING_DOWN));
         }
     }
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.Identity
+﻿namespace Shared.Identity
 {
     /// <summary>
     /// A wrapper to represent the unique identifier for a room in the game world.

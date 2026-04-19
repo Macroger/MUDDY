@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Client.Core.CommandPipeline
+﻿namespace Client.Core.CommandPipeline
 {
     /// <summary>
     /// Orchestrates routing and handling of incoming messages from the server.

@@ -1,5 +1,4 @@
 ﻿using Shared.Identity;
-using Shared.Domain.Player;
 
 namespace Shared.EventBus.DomainEvents
 {

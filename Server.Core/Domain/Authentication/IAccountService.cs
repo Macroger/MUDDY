@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Server.Core.Domain.Authentication
+﻿namespace Server.Core.Domain.Authentication
 {
     /// <summary>
     /// Service for managing player accounts (username/password validation and registration).

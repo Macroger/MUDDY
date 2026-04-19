@@ -1,9 +1,9 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using Server.Core.Infrastructure.Identity.ConnectionId;
+﻿using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Network.Model;
 using Server.Core.Network.Supervisor;
 using Shared.Identity;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Server.Core.Network.Listener
 {
@@ -23,8 +23,8 @@ namespace Server.Core.Network.Listener
         public IPEndPoint ConnectionEndPoint { get; init; }
 
         public TcpConnectionListener(
-            IPEndPoint localEndPoint, 
-            INetworkSupervisor supervisor, 
+            IPEndPoint localEndPoint,
+            INetworkSupervisor supervisor,
             IConnectionIdGenerator connIdGenerator,
             IListenerErrorHandler listenerErrorHandler,
             IConnectionAcceptedHandler connectionAcceptedHandler
@@ -41,10 +41,10 @@ namespace Server.Core.Network.Listener
 
         public void Start()
         {
-            String self = "TcpConnectionListener.Start";           
+            String self = "TcpConnectionListener.Start";
 
             try
-            {           
+            {
                 // Check if already listening.
                 if (ListenerIsRunning) return;
 
@@ -80,11 +80,11 @@ namespace Server.Core.Network.Listener
             _cts?.Cancel();
             _listener.Stop();
 
-            if ( _acceptClientsTask != null && _cts != null) await _acceptClientsTask.ConfigureAwait(false);
+            if (_acceptClientsTask != null && _cts != null) await _acceptClientsTask.ConfigureAwait(false);
 
             _cts?.Dispose();
             _acceptClientsTask = null;
-            _cts = null;           
+            _cts = null;
 
         }
 
@@ -119,7 +119,7 @@ namespace Server.Core.Network.Listener
                         client.Dispose();
                         continue;
                     }
-                    
+
                 }
                 catch (OperationCanceledException)
                 {
@@ -145,7 +145,7 @@ namespace Server.Core.Network.Listener
                     // Log and continue, to try to allow listener to stay online.
                     _listenerErrorHandler.OnListenerError(ex);
                     continue;
-                }                    
+                }
             }
         }
     }

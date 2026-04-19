@@ -4,10 +4,7 @@ using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Core.Persistence
 {
@@ -81,8 +78,8 @@ namespace Server.Core.Persistence
         {
             // AddOrUpdate replaces whatever was stored for this RoomId with the new version.
             _rooms.AddOrUpdate(
-                key: room.Id, 
-                addValue: room, 
+                key: room.Id,
+                addValue: room,
                 updateValueFactory: (_, _) => room
             );
 

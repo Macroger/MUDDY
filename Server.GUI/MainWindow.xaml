@@ -98,8 +98,9 @@
                 <!-- Place your current server status, active players, and server metrics grid here -->
                 <Grid Margin="18,18,18,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="260"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="260"/>        <!-- Server Status Panel -->
+                        <ColumnDefinition Width="*"/>          <!-- Active Players Panel -->
+                        <ColumnDefinition Width="260"/>        <!-- Server State Controls Panel -->
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -117,7 +118,6 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                <!-- Add more RowDefinitions as needed -->
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -140,7 +140,7 @@
                                     <TextBlock Grid.Column="1" Text="{Binding ServerStateText, ElementName=MainWindowRoot}" Foreground="{Binding ServerStateBrush, ElementName=MainWindowRoot}" 
                                                FontWeight="Bold" FontSize="14" FontFamily="Consolas" VerticalAlignment="Center" Padding="0,4,0,4" HorizontalAlignment="Right" TextAlignment="Right"/>
                                 </Grid>
-                                
+
                                 <!-- Listener State -->
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Listener:" Foreground="#DDD" FontSize="14" FontFamily="Consolas" VerticalAlignment="Center"/>
                                 <Grid Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -154,66 +154,63 @@
                                 </Grid>
 
                                 <!-- Toggle Listener Button -->
-                                <Grid Grid.Row="3" Grid.ColumnSpan="2">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Button x:Name="ToggleListenerButton" Content="Toggle Listener" Click="ToggleListenerButton_Click" HorizontalAlignment="Right"/>
-                                </Grid>
-
-                                <!-- Add more rows here as needed -->
+                                <Button Grid.Row="3" Grid.ColumnSpan="2" x:Name="ToggleListenerButton" 
+                                        Content="Toggle Listener" Click="ToggleListenerButton_Click" 
+                                        HorizontalAlignment="Stretch" Margin="0,8,0,0"/>
                             </Grid>
                         </StackPanel>
                     </Border>
 
                     <!-- Active Players Panel -->
                     <Border Grid.Column="1" Background="{StaticResource PanelBackground}" BorderBrush="{StaticResource PanelBorder}" BorderThickness="2" 
-                            CornerRadius="8" Margin="0,0,0,0">
-                        
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{StaticResource HeaderOrange}">
+                            CornerRadius="8" Margin="0,0,12,0">
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>   <!-- Header with buttons -->
+                                <RowDefinition Height="*"/>      <!-- Player list -->
+                            </Grid.RowDefinitions>
+
+                            <!-- Header with Mute/Kick Buttons -->
+                            <Border Grid.Row="0" Background="{StaticResource HeaderOrange}" Padding="12,8" CornerRadius="6,6,0,0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button x:Name="MuteButton" Grid.Column="0" Content="Mute" Click="MutePlayer_Click" HorizontalAlignment="Left"/>
+                                    <Button x:Name="MuteButton" Grid.Column="0" Content="Mute" Click="MutePlayer_Click" Margin="0,0,8,0"/>
                                     <TextBlock Text="Active Players" Grid.Column="1" Foreground="White" FontWeight="Bold" FontSize="14" FontFamily="Consolas" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <Button x:Name="KickButton" Grid.Column="2" Content="Kick" Click="KickPlayer_Click" HorizontalAlignment="Right"/>
+                                    <Button x:Name="KickButton" Grid.Column="2" Content="Kick" Click="KickPlayer_Click" Margin="8,0,0,0"/>
                                 </Grid>
                             </Border>
 
-                            <!-- Player List Headers-->
-                            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" >
+                            <!-- Player List with Aligned Headers -->
+                            <Grid Grid.Row="1" Margin="8">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>   <!-- Column Headers -->
+                                    <RowDefinition Height="*"/>      <!-- Player Data -->
                                 </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="50"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="150"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Muted:" HorizontalAlignment="Center" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
-                                <TextBlock Grid.Column="1" Grid.Row="0" Text="Name:" HorizontalAlignment="Center" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
-                                <TextBlock Grid.Column="2" Grid.Row="0" Text="Location:" HorizontalAlignment="Center" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
-                                
-                                <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Auto">
-                                    <ListView x:Name="PlayersListView" Background="Transparent" BorderThickness="0" SelectionMode="Single" SelectionChanged="PlayersListView_SelectionChanged" Margin="0,0,0,0">
+
+                                <!-- Column Headers -->
+                                <Grid Grid.Row="0" Background="#1A1A1A" Padding="8,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="200"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Muted" HorizontalAlignment="Center" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="Name" HorizontalAlignment="Center" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="2" Text="Location" HorizontalAlignment="Center" Foreground="#FFB347" FontWeight="Bold" FontSize="12" FontFamily="Consolas"/>
+                                </Grid>
+
+                                <!-- Player Data List -->
+                                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                    <ListView x:Name="PlayersListView" Background="Transparent" BorderThickness="0" SelectionMode="Single" SelectionChanged="PlayersListView_SelectionChanged">
                                         <ListView.ItemContainerStyle>
                                             <Style TargetType="ListViewItem">
-                                                <Setter Property="Padding" Value="10,6"/>
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                                 <Setter Property="Background" Value="Transparent"/>
                                                 <Setter Property="BorderBrush" Value="#2A2A2A"/>
                                                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
@@ -221,32 +218,78 @@
                                         </ListView.ItemContainerStyle>
                                         <ListView.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid>
+                                                <Grid Padding="8,6">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="50"/>
+                                                        <ColumnDefinition Width="60"/>
                                                         <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="150"/>                                                        
+                                                        <ColumnDefinition Width="200"/>
                                                     </Grid.ColumnDefinitions>
                                                     <!-- Muted Icon -->
-                                                    <FontIcon Grid.Column="0"  
-                                                        Glyph="&#xE198;" 
-                                                        FontSize="16" 
-                                                        VerticalAlignment="Center"
-                                                        HorizontalAlignment="Center"
-                                                        Visibility="{Binding IsMuted, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="#FFF" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Consolas"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding Location}" Foreground="#FFF" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Consolas"/>
+                                                    <FontIcon Grid.Column="0" Glyph="&#xE198;" FontSize="16" 
+                                                              VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                              Visibility="{Binding IsMuted, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="#FFF" 
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Consolas"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Location}" Foreground="#FFF" 
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Consolas"/>
                                                 </Grid>
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-
                                 </ScrollViewer>
                             </Grid>
+                        </Grid>
+                    </Border>
 
-                            
-                            </Grid>
-                        
+                    <!-- Server State Controls Panel -->
+                    <Border Grid.Column="2" Background="{StaticResource PanelBackground}" BorderBrush="{StaticResource PanelBorder}" BorderThickness="2" CornerRadius="8" Margin="0,0,0,0">
+                        <StackPanel>
+                            <Border Background="{StaticResource HeaderOrange}" Padding="12,8" CornerRadius="6,6,0,0">
+                                <TextBlock Text="Server State Controls" Foreground="White" HorizontalAlignment="Center" FontWeight="Bold" FontSize="14" FontFamily="Consolas"/>
+                            </Border>
+                            <StackPanel Padding="16,16,16,16" Spacing="8">
+                                <!-- Set Active Button -->
+                                <Button x:Name="SetActiveButton" 
+                                        Content="Set ACTIVE" Click="SetActiveButton_Click" 
+                                        HorizontalAlignment="Stretch"
+                                        Background="{StaticResource ButtonBackground}" 
+                                        BorderBrush="{StaticResource ButtonBorder}"
+                                        Padding="12,8">
+                                    <Button.Resources>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#7C8696"/>
+                                    </Button.Resources>
+                                </Button>
+
+                                <!-- Set Maintenance Button -->
+                                <Button x:Name="SetMaintenanceButton" 
+                                        Content="Set MAINTENANCE" Click="SetMaintenanceButton_Click" 
+                                        HorizontalAlignment="Stretch"
+                                        Background="{StaticResource ButtonBackground}" 
+                                        BorderBrush="{StaticResource ButtonBorder}"
+                                        Padding="12,8">
+                                    <Button.Resources>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#7C8696"/>
+                                    </Button.Resources>
+                                </Button>
+
+                                <!-- Set Shutdown Button -->
+                                <Button x:Name="SetShutdownButton" 
+                                        Content="Set SHUTTING_DOWN" Click="SetShutdownButton_Click" 
+                                        HorizontalAlignment="Stretch"
+                                        Background="{StaticResource ButtonBackground}" 
+                                        BorderBrush="{StaticResource ButtonBorder}"
+                                        Padding="12,8">
+                                    <Button.Resources>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#7C8696"/>
+                                    </Button.Resources>
+                                </Button>
+
+                                <!-- Info Text -->
+                                <TextBlock Text="Use these controls to manage the server operational state." 
+                                           Foreground="#AAA" FontSize="11" FontFamily="Consolas" 
+                                           TextWrapping="Wrap" Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
                     </Border>
                 </Grid>
             </TabViewItem>
