@@ -1,5 +1,4 @@
 ﻿using Shared.EventBus.SubscriptionToken;
-using Shared.Protocol.Types;
 
 namespace Shared.EventBus
 {
@@ -9,12 +8,12 @@ namespace Shared.EventBus
         /// An internal interface.
         /// </summary>  
         private interface IEventSubscriber
-        { 
+        {
             /// Invokes the subscriber with the given event.
             void Invoke(object newEvent);
         }
 
-        private class EventSubscriber<T>: IEventSubscriber where T : class
+        private class EventSubscriber<T> : IEventSubscriber where T : class
         {
             /// <summary>
             /// A reference to the action that will handle the event.
@@ -51,7 +50,7 @@ namespace Shared.EventBus
             /// </summary>
             public override int GetHashCode() => _handler.GetHashCode();
 
-            
+
         }
 
         /// <summary>

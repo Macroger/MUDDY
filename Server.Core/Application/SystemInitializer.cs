@@ -1,4 +1,5 @@
-﻿using Server.Core.CommandPipeline;
+﻿using Client.Core.Network;
+using Server.Core.CommandPipeline;
 using Server.Core.CommandPipeline.Authentication;
 using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.CommandRouter;
@@ -16,6 +17,7 @@ using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Supervisor;
 using Server.Core.Persistence;
 using Shared.EventBus;
+using Shared.Logging;
 
 namespace Server.Core.Application
 {
@@ -38,10 +40,19 @@ namespace Server.Core.Application
         private readonly IWorldQueryService _worldQueryService;
         private readonly IPlayerQueryService _playerQueryService;
 
+        private readonly PacketLogger _packetLogger;
+
         public SystemInitializer()
         {
             try
             {
+                // DIAGNOSTIC: Track initialization progress
+                try
+                {
+                    System.IO.File.AppendAllText(@"C:\temp\server_app_started.txt", $"\nSystemInitializer constructor started at {DateTime.Now}");
+                }
+                catch { }
+
                 _eventBus = new BasicEventBus();
 
                 _messageIdGenerator = new MessageIdGenerator();
@@ -52,6 +63,33 @@ namespace Server.Core.Application
                 _playerRepository = new InMemoryPlayerRepository(_eventBus);
                 _worldRepository = new InMemoryWorldRepository(_eventBus);
 
+                // DIAGNOSTIC: Before logging
+                try
+                {
+                    System.IO.File.AppendAllText(@"C:\temp\server_app_started.txt", $"\nAbout to create packet logger at {DateTime.Now}");
+                }
+                catch { }
+
+                // Initialize packet logging to file with timestamp to avoid file locking issues
+                // Create packet logger with file writer using safe path
+                string logFilePath = Shared.Logging.LogPathHelper.CreateTimestampedLogPath("server_packets");
+
+                // DIAGNOSTIC: Log file path determined
+                try
+                {
+                    System.IO.File.AppendAllText(@"C:\temp\server_app_started.txt", $"\nLog file path: {logFilePath}");
+                }
+                catch { }
+
+                var packetLogFileWriter = new StandardLogFileWriter(logFilePath, append: true);
+                _packetLogger = new PacketLogger(_eventBus, packetLogFileWriter);
+
+                // DIAGNOSTIC: After logging
+                try
+                {
+                    System.IO.File.AppendAllText(@"C:\temp\server_app_started.txt", $"\nPacket logger created successfully at {DateTime.Now}");
+                }
+                catch { }
 
                 // Create the network supervisor
                 _networkSupervisor = new StandardNetworkSupervisor(
@@ -158,7 +196,7 @@ namespace Server.Core.Application
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Failed to initialize system services. Check inner exception for details.", ex);
-            }            
+            }
         }
 
         /// <summary>

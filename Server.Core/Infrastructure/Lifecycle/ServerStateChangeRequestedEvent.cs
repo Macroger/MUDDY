@@ -1,5 +1,3 @@
-using System;
-
 namespace Server.Core.Infrastructure.Lifecycle
 {
     /// <summary>

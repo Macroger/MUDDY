@@ -48,8 +48,8 @@ namespace Shared.Protocol.Transport
         /// <param name="connectionId">Optional connection ID associated with the message.</param>
         /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="payload"/> is null.</exception>
         public TransportEnvelope(
-            MessageId messageId,             
-            TransportMessageType messageType,            
+            MessageId messageId,
+            TransportMessageType messageType,
             MessageFlags flags,
             byte[] payload,
             ConnectionId connectionId,

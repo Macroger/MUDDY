@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Shared.EventBus.SubscriptionToken
+﻿namespace Shared.EventBus.SubscriptionToken
 {
     internal sealed class BasicSubscriptionToken : ISubscriptionToken
     {
@@ -13,7 +9,7 @@ namespace Shared.EventBus.SubscriptionToken
         public BasicSubscriptionToken(Action unsubscribe)
         {
             // Assign the unsubscribe action; if the action is invalid throw an exception
-            _unsubscribe = unsubscribe ?? throw new ArgumentNullException(nameof(unsubscribe)); 
+            _unsubscribe = unsubscribe ?? throw new ArgumentNullException(nameof(unsubscribe));
         }
 
         public void Dispose()

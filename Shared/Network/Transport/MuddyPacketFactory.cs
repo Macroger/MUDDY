@@ -6,7 +6,7 @@ namespace Shared.Protocol.Transport
     {
         public MuddyPacket CreateMuddyPacket(TransportEnvelope message)
         {
-            if(message == null) throw new ArgumentNullException("message cannot be null.");
+            if (message == null) throw new ArgumentNullException("message cannot be null.");
 
             MuddyPacketHeader newHeader = new MuddyPacketHeader();
 

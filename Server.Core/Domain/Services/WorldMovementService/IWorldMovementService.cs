@@ -1,6 +1,6 @@
 ﻿using Server.Core.CommandPipeline.Types;
-using Shared.Domain.Player;
 using Server.Core.Domain.World;
+using Shared.Domain.Player;
 
 namespace Server.Core.Domain.Services.WorldMovementService
 {

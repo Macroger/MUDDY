@@ -1,6 +1,5 @@
 ﻿using Server.Core.CommandPipeline;
 using Server.Core.Network.Model;
-using Shared.EventBus;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;

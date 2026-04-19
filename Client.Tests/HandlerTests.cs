@@ -1,7 +1,5 @@
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shared.Protocol.Transport;
 using Client.Core.CommandPipeline;
+using Shared.Protocol.Transport;
 
 namespace Tests.Client
 {
