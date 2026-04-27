@@ -22,6 +22,7 @@
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
+  <Project Path="MUDDY.Installer.Prerequisites/MUDDY.Installer.Prerequisites.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
   <Project Path="MUDDY.Installer/MUDDY.Installer.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" Id="221fbe21-edd1-46f4-86b7-96068df6acb4" />
   <Project Path="Server.Core/Server.Core.csproj" Id="111424d6-f503-4edf-b4cd-b7cd393e31a9">
     <Platform Solution="*|ARM64" Project="x64" />
