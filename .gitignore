@@ -16,6 +16,9 @@
 # Mono auto generated files
 mono_crash.*
 
+# Ignore any files in the redist folder
+*.redist/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -32,6 +35,7 @@ bld/
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+[Pp]ublish/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -361,7 +365,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
 /docs/doxygen
-/ARCHITECTURE.md
-/PROJECT_REQUIREMENTS.txt
 /MUDDY.Installer.Prerequisites/redist/WindowsAppRuntimeInstall-x64.exe
