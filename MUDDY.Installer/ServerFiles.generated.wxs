@@ -1,0 +1,731 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <ComponentGroup Id="ServerFiles" Directory="ServerFolder">
+      <Component Id="cmp_ServerFiles_F3C5C18A" Guid="543d7dd4-e6f9-4f38-838c-951f361e8974">
+        <File Source="ServerGuiPublish\clretwrc.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D869A5A7" Guid="6f936719-4ce9-4815-8e83-a62de0803eb1">
+        <File Source="ServerGuiPublish\clrgc.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C855EC56" Guid="57730a1c-d349-4dda-b2d2-b41c3f81ac49">
+        <File Source="ServerGuiPublish\clrgcexp.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_883A16C0" Guid="13b006ab-a6f2-4c61-8675-e279bfba9afb">
+        <File Source="ServerGuiPublish\clrjit.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_EAAF6996" Guid="af14b8e4-1ad6-47de-ace7-e853e40eee8e">
+        <File Source="ServerGuiPublish\CommunityToolkit.WinUI.UI.Controls.DataGrid.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_63E799BE" Guid="016f89a4-d6d9-4a16-b829-3dd66c228b7f">
+        <File Source="ServerGuiPublish\coreclr.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_173352BD" Guid="c657867b-dee4-4a38-a4da-0373193c8dfd">
+        <File Source="ServerGuiPublish\createdump.exe" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3C34B3DC" Guid="0af4a482-e7c2-497f-861a-1d9f9ce71a57">
+        <File Source="ServerGuiPublish\hostfxr.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3D5CD247" Guid="bfe7ab04-e412-485a-8eb3-bda5973dbd8b">
+        <File Source="ServerGuiPublish\hostpolicy.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3464590A" Guid="02bd731d-b0ba-4bd8-9f91-8dce315143e9">
+        <File Source="ServerGuiPublish\Microsoft.CSharp.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_004EED97" Guid="cc46f04d-1ddc-4a94-9e74-5585f6da0f9a">
+        <File Source="ServerGuiPublish\Microsoft.DiaSymReader.Native.amd64.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_88EEB02E" Guid="c092896a-1282-41f1-95bf-f8e86adcf9c3">
+        <File Source="ServerGuiPublish\Microsoft.Graphics.Imaging.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_ED6E3A0F" Guid="a0a7f0e6-3ca0-4534-b505-36327b8124b1">
+        <File Source="ServerGuiPublish\Microsoft.InteractiveExperiences.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_BE16E7CD" Guid="c1d261f4-65aa-40c6-b809-8403fc130ccc">
+        <File Source="ServerGuiPublish\Microsoft.ML.OnnxRuntime.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C65D4CCC" Guid="55adbe1b-d503-429a-8af0-74188866bc98">
+        <File Source="ServerGuiPublish\Microsoft.Security.Authentication.OAuth.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1E3EBD05" Guid="6c0b31ae-3443-409d-af62-87293307d13f">
+        <File Source="ServerGuiPublish\Microsoft.VisualBasic.Core.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3BDAE630" Guid="7ae7edb5-c33b-46fd-96c3-1cbef2e9df94">
+        <File Source="ServerGuiPublish\Microsoft.VisualBasic.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_FB5C0421" Guid="6535541c-dc5c-48f2-a39c-2ef6905b7eec">
+        <File Source="ServerGuiPublish\Microsoft.Web.WebView2.Core.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F3881F11" Guid="c7c0d6fc-9095-43bc-9f12-fa711719ab9d">
+        <File Source="ServerGuiPublish\Microsoft.Web.WebView2.Core.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_7F46482C" Guid="62f5d32e-25de-492e-b1cb-21bbb5b410b8">
+        <File Source="ServerGuiPublish\Microsoft.Win32.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1AE96254" Guid="1b240b5d-5846-4c8a-acb8-4d97c90b9089">
+        <File Source="ServerGuiPublish\Microsoft.Win32.Registry.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0C2B3AF6" Guid="4bd62bd8-d34c-410c-9526-649bec9a7c3c">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AI.ContentSafety.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6F6D54BB" Guid="b911052f-3657-495a-8f0b-4cf3924a4705">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AI.Foundation.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_035D89D0" Guid="56770acd-c356-4b7d-8673-1753f9adc8fd">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AI.Imaging.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C3FE6E50" Guid="5cdb13fc-5c01-46e3-8be9-b3f569168f93">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AI.MachineLearning.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E2FF1DCC" Guid="f09f561c-a1e9-4aad-a274-d09a6e3b07f6">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AI.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_478B5478" Guid="0e04f2c2-8bc3-4d62-ae54-3af0b92b9aa6">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AI.Text.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CE04DD44" Guid="5581d817-0f72-4ed7-9497-64b3a7bca3df">
+        <File Source="ServerGuiPublish\Microsoft.Windows.ApplicationModel.Background.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2089309E" Guid="b8966682-7496-4e37-88e6-d00b9e98d146">
+        <File Source="ServerGuiPublish\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0AE6E9CE" Guid="a946b872-1492-4a8e-ab5d-0331f6157246">
+        <File Source="ServerGuiPublish\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_AE8FE12E" Guid="2b7ed4dd-0c7a-4634-90ca-5e0ae42d52c5">
+        <File Source="ServerGuiPublish\Microsoft.Windows.ApplicationModel.Resources.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_AF74FB97" Guid="197c31a9-53be-4c81-b5ca-ee53acf00b5a">
+        <File Source="ServerGuiPublish\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6D3EB95B" Guid="936cb2e4-83c4-43b6-b4f5-accca80cdc43">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AppLifecycle.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D6E7E45C" Guid="1aa8ecea-bb45-47fe-98e3-69856c95af9a">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AppNotifications.Builder.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DA1DAE26" Guid="5bb06267-f792-487d-8b04-c86dacf9c3f1">
+        <File Source="ServerGuiPublish\Microsoft.Windows.AppNotifications.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_088B1DE1" Guid="c317ff4e-a91c-4f95-8259-be7a0f03b3ed">
+        <File Source="ServerGuiPublish\Microsoft.Windows.BadgeNotifications.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_96D8C125" Guid="b2a7a610-32b2-4c14-a98f-5fb840829116">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Foundation.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A25488E8" Guid="df0e8bf2-dad9-4657-8e15-c042f89ad438">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Management.Deployment.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CBAD7B55" Guid="cddc39dc-115a-44f7-9283-60bda9810c65">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Media.Capture.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_96EC2A22" Guid="4fa82ed4-901a-483f-8da3-af7dc99952e3">
+        <File Source="ServerGuiPublish\Microsoft.Windows.PushNotifications.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_562BD408" Guid="ea1fa728-cc5e-4b9d-82ad-11f1066188cc">
+        <File Source="ServerGuiPublish\Microsoft.Windows.SDK.NET.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_98A7232B" Guid="5e5f8f78-ebbd-46cb-9017-f637c23aa4d2">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Security.AccessControl.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A195AC4A" Guid="031cf78f-5e81-4f8d-a42d-a457cd8b0de3">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Storage.Pickers.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_64952F19" Guid="f0ae78c8-171d-4f85-ab33-9d911b4de986">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Storage.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B34AEE65" Guid="b92e3e42-6f3d-4392-aede-0f0e51c57373">
+        <File Source="ServerGuiPublish\Microsoft.Windows.System.Power.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_5EFB4300" Guid="3cdeb047-e052-4eef-9bef-310db5e92ae4">
+        <File Source="ServerGuiPublish\Microsoft.Windows.System.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_5AA6D46A" Guid="7a70c6f8-7d9a-4fd7-940b-14d883daa59a">
+        <File Source="ServerGuiPublish\Microsoft.Windows.Widgets.Projection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A4DE4B3C" Guid="19ef4436-e97f-416a-ae92-9e94900bca64">
+        <File Source="ServerGuiPublish\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_7D66CAC5" Guid="80382602-8db7-4dc3-a6bd-c55efe3562b1">
+        <File Source="ServerGuiPublish\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_84E49EBF" Guid="31932100-9ce4-40d7-82d3-97414cb62f38">
+        <File Source="ServerGuiPublish\Microsoft.WinUI.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F056BA9B" Guid="7b7e3899-810d-4d91-8974-216f45eb5005">
+        <File Source="ServerGuiPublish\mscordaccore.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_33BE495F" Guid="0d4f7fbc-a4b8-4c73-95d6-f365d7d16fa4">
+        <File Source="ServerGuiPublish\mscordaccore_amd64_amd64_10.0.526.15411.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_209EC7DC" Guid="558efea5-21d0-4a54-a864-7c63c9b0bdb6">
+        <File Source="ServerGuiPublish\mscordbi.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3F83668D" Guid="b53b2271-308f-4dca-997b-bc9c47648535">
+        <File Source="ServerGuiPublish\mscorlib.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_8BF6F57C" Guid="b81e47b6-d45d-4336-b614-b61e53cdd277">
+        <File Source="ServerGuiPublish\mscorrc.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_11C88A06" Guid="def84154-a670-4075-a2c5-49831d540bbb">
+        <File Source="ServerGuiPublish\msquic.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_07D2F533" Guid="6a74e296-bd40-44a6-8a5a-8b9d2f8a44a9">
+        <File Source="ServerGuiPublish\netstandard.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2858704D" Guid="daff81e8-0b77-4909-904d-2c94d9eb4017">
+        <File Source="ServerGuiPublish\resources.pri" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F822656D" Guid="133aacb4-b368-4b3f-92da-daa8828c1c06">
+        <File Source="ServerGuiPublish\Server.Core.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0299A369" Guid="c65454b4-e115-495a-bd21-401317c67fb6">
+        <File Source="ServerGuiPublish\Server.Core.pdb" />
+      </Component>
+      <Component Id="cmp_ServerFiles_5358E564" Guid="56baef34-9b5b-4f46-8415-cccf6dbc0687">
+        <File Source="ServerGuiPublish\Server.GUI.deps.json" />
+      </Component>
+      <Component Id="cmp_ServerFiles_553EB852" Guid="99fe82e9-88b3-441d-965f-552baf22e26d">
+        <File Source="ServerGuiPublish\Server.GUI.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_863EF331" Guid="d6f1c2ba-d19f-4624-aca3-62728abc71be">
+        <File Id="fil_MainExe" Source="ServerGuiPublish\Server.GUI.exe" KeyPath="yes">
+          <Shortcut
+            Id="ServerFilesStartMenuShortcut"
+            Directory="MUDDYProgramMenuFolder"
+            Name="MUDDY Server"
+            WorkingDirectory="ServerFolder" />
+        </File>
+        <RemoveFolder
+          Id="RemoveMUDDYProgramMenuFolder_ServerFiles"
+          Directory="MUDDYProgramMenuFolder"
+          On="uninstall" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C08995E3" Guid="77292c7c-45ef-48b6-acce-43a6602fdb5c">
+        <File Source="ServerGuiPublish\Server.GUI.pdb" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3B2B41B4" Guid="26dbe837-6776-46f1-9845-35c51f967801">
+        <File Source="ServerGuiPublish\Server.GUI.runtimeconfig.json" />
+      </Component>
+      <Component Id="cmp_ServerFiles_5774992C" Guid="6b31a53f-3bdf-4d77-9f54-aaf45c431c70">
+        <File Source="ServerGuiPublish\Shared.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_4C34A7D9" Guid="27d9ba70-6e28-49f7-a550-e653abdf1f29">
+        <File Source="ServerGuiPublish\Shared.pdb" />
+      </Component>
+      <Component Id="cmp_ServerFiles_155F20E5" Guid="3e8f4d9e-8a51-4b68-8c9b-7c04affad5e2">
+        <File Source="ServerGuiPublish\System.AppContext.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_571755DB" Guid="954c90e1-060b-484b-a712-cd4eef272b71">
+        <File Source="ServerGuiPublish\System.Buffers.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2E0E5D6F" Guid="03dda601-08a6-41a9-93f1-546d890c69ed">
+        <File Source="ServerGuiPublish\System.Collections.Concurrent.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F89BA8FF" Guid="3cd35ded-9e5d-4680-8390-805ceebe9bc7">
+        <File Source="ServerGuiPublish\System.Collections.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B5942699" Guid="1030dced-0adf-4db6-85ef-06ed442fa2f1">
+        <File Source="ServerGuiPublish\System.Collections.Immutable.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A171F5E3" Guid="e5b6e062-22fc-40fb-a4f2-9b30dfeba3b0">
+        <File Source="ServerGuiPublish\System.Collections.NonGeneric.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E47B4538" Guid="b57c30cb-0441-428a-8239-98c175d14c13">
+        <File Source="ServerGuiPublish\System.Collections.Specialized.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3374857A" Guid="615e6440-8c93-489c-993b-44050176e572">
+        <File Source="ServerGuiPublish\System.ComponentModel.Annotations.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_56CCCE69" Guid="2cbbb4fb-5039-43b5-a4cf-86aab1d58572">
+        <File Source="ServerGuiPublish\System.ComponentModel.DataAnnotations.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_EA25651E" Guid="143450ab-f40d-4968-b470-195b376279fe">
+        <File Source="ServerGuiPublish\System.ComponentModel.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_11E3FC3E" Guid="7a76bd43-6074-4f37-976e-b63382430823">
+        <File Source="ServerGuiPublish\System.ComponentModel.EventBasedAsync.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1EE8ED49" Guid="e8eed26a-6315-4a96-a8b6-11922e593938">
+        <File Source="ServerGuiPublish\System.ComponentModel.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3F51DCD1" Guid="f487a684-9a8d-4fc2-b6b0-76e88bb780a2">
+        <File Source="ServerGuiPublish\System.ComponentModel.TypeConverter.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_41AD1F40" Guid="483ed7ac-8a15-45ac-9515-e18066476645">
+        <File Source="ServerGuiPublish\System.Configuration.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_486BF61B" Guid="b8473645-03cb-4298-91a1-dd4b09796d21">
+        <File Source="ServerGuiPublish\System.Console.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1DA93A9D" Guid="f9a0597f-3e4e-4d1b-bd86-d64e8f7166c2">
+        <File Source="ServerGuiPublish\System.Core.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D63B7DF2" Guid="7b86ea76-9640-49df-9e26-63e7442ceae3">
+        <File Source="ServerGuiPublish\System.Data.Common.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A7B4A529" Guid="b8cb77b7-9532-4d0e-9244-fb29e489a52d">
+        <File Source="ServerGuiPublish\System.Data.DataSetExtensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E32DB3C7" Guid="3a66e5af-1cce-4049-a12d-7f589b9486be">
+        <File Source="ServerGuiPublish\System.Data.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6BA7805D" Guid="7a302c6a-6d7d-44e6-808e-572d033b084c">
+        <File Source="ServerGuiPublish\System.Diagnostics.Contracts.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_722FEA1D" Guid="f3f381d5-cbb3-48ff-bd82-d7f3fc4a072f">
+        <File Source="ServerGuiPublish\System.Diagnostics.Debug.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C939B3A0" Guid="ed2aa00e-ee93-46f7-a5cb-ff04cd7b6de3">
+        <File Source="ServerGuiPublish\System.Diagnostics.DiagnosticSource.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F5745D29" Guid="f3e67799-3082-4a9e-b14f-dd63b14cbd9a">
+        <File Source="ServerGuiPublish\System.Diagnostics.FileVersionInfo.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_46A39660" Guid="6ce36b24-b695-4fea-9644-aa7fc2fa657c">
+        <File Source="ServerGuiPublish\System.Diagnostics.Process.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F2E494A5" Guid="c4813af9-6926-4db4-8a1d-8b753dbbdda3">
+        <File Source="ServerGuiPublish\System.Diagnostics.StackTrace.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B4A20887" Guid="8bdc86ee-5bdb-49b3-8cc6-846a87b6124e">
+        <File Source="ServerGuiPublish\System.Diagnostics.TextWriterTraceListener.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_03431730" Guid="2a6bb9c6-edb7-40c6-a51b-0297cdc7434f">
+        <File Source="ServerGuiPublish\System.Diagnostics.Tools.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0D734562" Guid="85376c0d-567c-4cbf-91fe-0f3b408a8173">
+        <File Source="ServerGuiPublish\System.Diagnostics.TraceSource.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_48639F6A" Guid="f61137fc-48be-49e0-a662-a58419980e8d">
+        <File Source="ServerGuiPublish\System.Diagnostics.Tracing.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_20BDB486" Guid="49464e6a-bc4d-479b-a9f3-1b5352316f06">
+        <File Source="ServerGuiPublish\System.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_73F7E14A" Guid="9b1f8e62-eea6-4b1f-8862-5c007f4ee7a4">
+        <File Source="ServerGuiPublish\System.Drawing.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_8B9870CA" Guid="055f278e-9df6-459e-a85e-15d20461c63b">
+        <File Source="ServerGuiPublish\System.Drawing.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B9E5C412" Guid="6d1b928c-3de8-469e-b931-5ad20b34d6c5">
+        <File Source="ServerGuiPublish\System.Dynamic.Runtime.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2125C357" Guid="eff04ee9-e71e-4690-8462-016e016e0b16">
+        <File Source="ServerGuiPublish\System.Formats.Asn1.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_81145C71" Guid="ec43dc82-ee16-4492-91f8-22b59ef5e45d">
+        <File Source="ServerGuiPublish\System.Formats.Tar.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A8CB117B" Guid="e0057f2a-08fc-401d-ae5a-251be5e4aced">
+        <File Source="ServerGuiPublish\System.Globalization.Calendars.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F0E9ED9D" Guid="03438ae5-ab84-4553-ab08-509c65b63d4d">
+        <File Source="ServerGuiPublish\System.Globalization.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_488595D3" Guid="137d1e1a-2474-45b2-93ee-bbea78c68f2e">
+        <File Source="ServerGuiPublish\System.Globalization.Extensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_444D9275" Guid="fd497778-deff-4783-a889-6b1669fcbe0e">
+        <File Source="ServerGuiPublish\System.IO.Compression.Brotli.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B3D6DBA7" Guid="0d034581-c032-4ed6-a2b7-d1f796ffcc99">
+        <File Source="ServerGuiPublish\System.IO.Compression.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_900927E6" Guid="695d567d-4210-43ee-8e5a-a9b96fe21965">
+        <File Source="ServerGuiPublish\System.IO.Compression.FileSystem.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_31C93C60" Guid="2ff686aa-7646-445b-9a3f-f4f3f7aa7f57">
+        <File Source="ServerGuiPublish\System.IO.Compression.Native.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_8E9BD40A" Guid="6db36985-e270-453c-9c6d-8496a3f674f8">
+        <File Source="ServerGuiPublish\System.IO.Compression.ZipFile.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_70A09755" Guid="24c08555-1724-4219-98d9-7d193d8d02f7">
+        <File Source="ServerGuiPublish\System.IO.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_BB779A00" Guid="f41c2bfd-cc35-4aec-9098-eac2468dcdd0">
+        <File Source="ServerGuiPublish\System.IO.FileSystem.AccessControl.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D4E13C5C" Guid="d1f14087-341b-401d-8722-747733b2e7ba">
+        <File Source="ServerGuiPublish\System.IO.FileSystem.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2C21C1AB" Guid="dee39fda-bf10-47d9-a478-7a787eccf0b6">
+        <File Source="ServerGuiPublish\System.IO.FileSystem.DriveInfo.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6DEC41C2" Guid="a0d71d19-21c7-44f2-b496-4b7484f4146e">
+        <File Source="ServerGuiPublish\System.IO.FileSystem.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_11787256" Guid="4f3c0a54-ea9e-49aa-bb27-43c5f42a08ab">
+        <File Source="ServerGuiPublish\System.IO.FileSystem.Watcher.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_73A4B138" Guid="ae94c8e6-5b2b-4421-8530-86bb218fc84e">
+        <File Source="ServerGuiPublish\System.IO.Hashing.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CA6CA055" Guid="cf0acc46-5e96-47ca-8a50-d26cd478dfa3">
+        <File Source="ServerGuiPublish\System.IO.IsolatedStorage.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_4FD960B2" Guid="8052aa4c-3246-46e2-90b1-5dcb0260638e">
+        <File Source="ServerGuiPublish\System.IO.MemoryMappedFiles.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E5BBA680" Guid="67178ecc-538a-4dbb-be91-4010e7f33975">
+        <File Source="ServerGuiPublish\System.IO.Pipelines.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_01DCB0B8" Guid="ea8f57c8-57d3-4e68-abe4-f14e741e9ec5">
+        <File Source="ServerGuiPublish\System.IO.Pipes.AccessControl.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_72960972" Guid="176af226-f730-4e35-984f-a0fe91749646">
+        <File Source="ServerGuiPublish\System.IO.Pipes.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_44AF9D82" Guid="ba807640-25eb-4445-af13-471c356324fa">
+        <File Source="ServerGuiPublish\System.IO.UnmanagedMemoryStream.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C4BEDC07" Guid="2abcda43-d377-4abd-aad5-2426b99fb9fa">
+        <File Source="ServerGuiPublish\System.Linq.AsyncEnumerable.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_A07F6319" Guid="49ed8d1c-df65-4bf2-950b-17d7db874523">
+        <File Source="ServerGuiPublish\System.Linq.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B1AB5DE6" Guid="0cf3da1b-a155-4292-9959-79dd843c4b3a">
+        <File Source="ServerGuiPublish\System.Linq.Expressions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6D3B7CD2" Guid="4ea92525-d005-406e-af0d-be17abebe9e1">
+        <File Source="ServerGuiPublish\System.Linq.Parallel.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_25219D87" Guid="ef03d3a8-2cdb-46a8-ac1b-15c46dc59d54">
+        <File Source="ServerGuiPublish\System.Linq.Queryable.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_7959B80A" Guid="36a6c26d-980f-4f6e-8264-b9481fee49ab">
+        <File Source="ServerGuiPublish\System.Memory.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0A0A54CF" Guid="6ad43cfa-2a52-4797-8a0e-79f069ab07db">
+        <File Source="ServerGuiPublish\System.Net.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6F6625D6" Guid="fc1d3a63-19e9-40ae-b112-ac3cd041e804">
+        <File Source="ServerGuiPublish\System.Net.Http.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C76103E7" Guid="9272283a-8957-40b2-a731-9cb716e90d17">
+        <File Source="ServerGuiPublish\System.Net.Http.Json.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C2FCF601" Guid="279d091d-86d7-4854-bb6d-269a289c4a3b">
+        <File Source="ServerGuiPublish\System.Net.HttpListener.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_698E9C56" Guid="14545f45-83a4-427a-aaec-c91e8179025c">
+        <File Source="ServerGuiPublish\System.Net.Mail.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_BF2B3A76" Guid="b85d6023-2849-43ad-9996-c5343728ff56">
+        <File Source="ServerGuiPublish\System.Net.NameResolution.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_06DC1B86" Guid="f6a5ba2a-c367-4ca8-a74e-390cde5079ab">
+        <File Source="ServerGuiPublish\System.Net.NetworkInformation.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_40948EC3" Guid="6208b861-7194-4779-9062-01da2e74e031">
+        <File Source="ServerGuiPublish\System.Net.Ping.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B0420317" Guid="90062036-7f48-4a74-8325-0cc32ce9d02a">
+        <File Source="ServerGuiPublish\System.Net.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DC89F9E6" Guid="16779169-5a7a-4d97-aa44-d9c427d7f6c1">
+        <File Source="ServerGuiPublish\System.Net.Quic.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DBC1D03A" Guid="b7b47200-7edb-4c3c-9245-4b0dd8cb4eda">
+        <File Source="ServerGuiPublish\System.Net.Requests.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DD643F44" Guid="91700668-60e2-4981-a417-c9758ea2c685">
+        <File Source="ServerGuiPublish\System.Net.Security.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0C9160F2" Guid="69b98953-3363-4944-ba97-586e1d9f606e">
+        <File Source="ServerGuiPublish\System.Net.ServerSentEvents.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CADD99F4" Guid="6cf2a437-1ff8-406f-812c-ecad3d9a59f8">
+        <File Source="ServerGuiPublish\System.Net.ServicePoint.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_9A427BBA" Guid="ac51433b-a000-4cde-b3ac-ccb2d81b7ebe">
+        <File Source="ServerGuiPublish\System.Net.Sockets.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2518956C" Guid="0f056cbc-61a1-426b-a961-e14fb299fa25">
+        <File Source="ServerGuiPublish\System.Net.WebClient.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_30E9BDAA" Guid="87913341-4f5b-41bd-a73f-0a03383f6ee6">
+        <File Source="ServerGuiPublish\System.Net.WebHeaderCollection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2D4DAFBD" Guid="627e867c-338e-408d-91bb-ce53e3b656eb">
+        <File Source="ServerGuiPublish\System.Net.WebProxy.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_4CF7B77E" Guid="2654d1e8-b41f-43ce-a523-e6af218c21f6">
+        <File Source="ServerGuiPublish\System.Net.WebSockets.Client.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B66AC4E5" Guid="146e00d3-33d5-4e1d-861d-7c1dcdb9572d">
+        <File Source="ServerGuiPublish\System.Net.WebSockets.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2115E6CB" Guid="ba1af3aa-d86c-40b5-9e0d-7cd8465d1da0">
+        <File Source="ServerGuiPublish\System.Numerics.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_ACE9C82C" Guid="d12b3623-b896-4f90-a09b-26baba8e1390">
+        <File Source="ServerGuiPublish\System.Numerics.Tensors.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_EFEC42B1" Guid="fa68f5c3-a3b1-4b39-9012-db4590c8efd8">
+        <File Source="ServerGuiPublish\System.Numerics.Vectors.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E1BB189E" Guid="38d7ed0c-b045-495d-a8f7-0ed5391ebce5">
+        <File Source="ServerGuiPublish\System.ObjectModel.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_66D05B90" Guid="bf71db8d-f261-40c0-a2da-b874c5667e88">
+        <File Source="ServerGuiPublish\System.Private.CoreLib.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_7B8C24D1" Guid="f296c963-a1e6-4d28-a429-a60825b85021">
+        <File Source="ServerGuiPublish\System.Private.DataContractSerialization.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_99C8C397" Guid="2eb670b4-7d65-4a4d-90dc-0cb60d966b6f">
+        <File Source="ServerGuiPublish\System.Private.Uri.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_065F88CD" Guid="500fdcfa-f08d-4675-ac86-d53d24a8b387">
+        <File Source="ServerGuiPublish\System.Private.Xml.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_83333574" Guid="d873ba11-0ebd-45e9-bf65-b52259646a97">
+        <File Source="ServerGuiPublish\System.Private.Xml.Linq.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_258FD44D" Guid="52efdd70-bdbc-4250-bac5-1c5ddad9f2f2">
+        <File Source="ServerGuiPublish\System.Reflection.DispatchProxy.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C8280E59" Guid="23d71000-6390-45ce-9970-58b676a2eb0c">
+        <File Source="ServerGuiPublish\System.Reflection.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DAD4A627" Guid="c4d9f364-6a32-4ff9-ac4a-8e3f60bb6e07">
+        <File Source="ServerGuiPublish\System.Reflection.Emit.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DAB3DDEE" Guid="78af9f18-74a0-4715-9501-86483308bbb1">
+        <File Source="ServerGuiPublish\System.Reflection.Emit.ILGeneration.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D83CF6DF" Guid="22bc82ee-6b4f-495b-9628-e8fc412da7f6">
+        <File Source="ServerGuiPublish\System.Reflection.Emit.Lightweight.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D7E2C2B4" Guid="e67684db-ab16-4a42-8f94-ff012756683b">
+        <File Source="ServerGuiPublish\System.Reflection.Extensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D2182856" Guid="526c5dd8-6e49-4447-88e4-a3eddba89662">
+        <File Source="ServerGuiPublish\System.Reflection.Metadata.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_9A3F0DCB" Guid="76b6013d-aae0-480c-8bde-201023d45470">
+        <File Source="ServerGuiPublish\System.Reflection.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D99C6034" Guid="7e8c5330-ce36-469d-a14f-28b4dffb1239">
+        <File Source="ServerGuiPublish\System.Reflection.TypeExtensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_3AE49954" Guid="1c8ae0a1-b0c0-4d9c-81c5-114209e6a186">
+        <File Source="ServerGuiPublish\System.Resources.Reader.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E637EB3C" Guid="ee37f814-0f12-482d-a247-20089f2218a4">
+        <File Source="ServerGuiPublish\System.Resources.ResourceManager.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CB4FF6E6" Guid="12c2503b-3155-43c9-a6db-7d2455b65224">
+        <File Source="ServerGuiPublish\System.Resources.Writer.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1FCBF920" Guid="47bde00e-f434-47df-ac98-bb1275e85128">
+        <File Source="ServerGuiPublish\System.Runtime.CompilerServices.Unsafe.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0FFD4FD8" Guid="3cb0c0d9-3695-4065-b381-126d80696472">
+        <File Source="ServerGuiPublish\System.Runtime.CompilerServices.VisualC.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2C175108" Guid="f84217b0-b17b-47f1-9c21-0d055f61fd66">
+        <File Source="ServerGuiPublish\System.Runtime.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_EB25A234" Guid="17d24514-de82-4997-a6bf-1ed12f61c671">
+        <File Source="ServerGuiPublish\System.Runtime.Extensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6AA59743" Guid="e73e932a-14ac-4721-85a1-c5d105276198">
+        <File Source="ServerGuiPublish\System.Runtime.Handles.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_147C51FD" Guid="154d402f-53ea-482a-b24a-acabf2562480">
+        <File Source="ServerGuiPublish\System.Runtime.InteropServices.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_4F9B7570" Guid="e64317e1-6d14-45f8-a69e-e3616efd00cd">
+        <File Source="ServerGuiPublish\System.Runtime.InteropServices.JavaScript.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_070E76A1" Guid="ebfffea3-8cea-4f8b-89da-1aecf72c145a">
+        <File Source="ServerGuiPublish\System.Runtime.InteropServices.RuntimeInformation.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_91FF6E18" Guid="ed1ef725-b62d-4e51-936e-02767dffa52a">
+        <File Source="ServerGuiPublish\System.Runtime.Intrinsics.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_84E99961" Guid="89b3537f-5571-4380-8fb2-2c10f1215759">
+        <File Source="ServerGuiPublish\System.Runtime.Loader.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_EE2504CB" Guid="fa368331-38dc-4844-ad27-c69d064e5662">
+        <File Source="ServerGuiPublish\System.Runtime.Numerics.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F81AA157" Guid="49161aba-38f9-448b-a0d8-a6b64b63d28f">
+        <File Source="ServerGuiPublish\System.Runtime.Serialization.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1B1E1803" Guid="79021879-c218-43a2-8d73-cef50b58f932">
+        <File Source="ServerGuiPublish\System.Runtime.Serialization.Formatters.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_04F90AB1" Guid="8f31d441-5091-4cfb-914a-1f7b5789d18c">
+        <File Source="ServerGuiPublish\System.Runtime.Serialization.Json.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_1DB6FBA7" Guid="37cd5028-a946-4e93-9038-723534015419">
+        <File Source="ServerGuiPublish\System.Runtime.Serialization.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_8945CE67" Guid="b59ee2e3-ede6-48ec-8dc3-9f06dd6af03b">
+        <File Source="ServerGuiPublish\System.Runtime.Serialization.Xml.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_5EF25A8D" Guid="bb798109-7d0d-4c77-8659-c1eeff53e2c7">
+        <File Source="ServerGuiPublish\System.Security.AccessControl.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_C9828C21" Guid="67108331-56e2-4ac3-b938-68c5eedf27ca">
+        <File Source="ServerGuiPublish\System.Security.Claims.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6E96FD17" Guid="5dd9f139-f02b-421e-b839-5853a7707954">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.Algorithms.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D905B4BD" Guid="8c13f4b2-87b8-40e1-b7a3-cbcc01db8152">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.Cng.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2E6BEE2F" Guid="3c6406a6-7c15-48ec-aec6-b705d00c39e6">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.Csp.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_828299A4" Guid="1e4ea12a-0da3-4d93-bbba-8f5b5cdbfcc6">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E7865577" Guid="dc8d2f3d-f16c-4644-a336-3ed3a4cea795">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.Encoding.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_08DB4FCF" Guid="9f644b6d-e36d-4cde-a908-76f62938463c">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.OpenSsl.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_EDBBD14C" Guid="4b76965c-d2fc-4310-936e-7e5dc3e56532">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.Primitives.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_2E71B4C3" Guid="e9e3ff1d-b586-4026-bff8-b9a1172bb7b0">
+        <File Source="ServerGuiPublish\System.Security.Cryptography.X509Certificates.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_137C7DED" Guid="a37262f3-2628-4359-8bc0-8214e8f2512f">
+        <File Source="ServerGuiPublish\System.Security.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_8DA09A06" Guid="3c062d13-71bf-430e-8876-02f304781a53">
+        <File Source="ServerGuiPublish\System.Security.Principal.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D7869434" Guid="01dc3adf-2f39-42d1-81b2-7e055df9bbc4">
+        <File Source="ServerGuiPublish\System.Security.Principal.Windows.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_330CDDF3" Guid="d2654f94-6f7b-4b79-b8d6-f2a71f149262">
+        <File Source="ServerGuiPublish\System.Security.SecureString.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_036C1324" Guid="71bce7b5-90e4-489f-a07b-7e99a552c205">
+        <File Source="ServerGuiPublish\System.ServiceModel.Web.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6CA48237" Guid="cf4d49ed-80d6-48d9-8fa2-b63faa755fc1">
+        <File Source="ServerGuiPublish\System.ServiceProcess.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_9E8A47FE" Guid="7fc6bed9-38bf-4d8b-9d04-5f053cb21958">
+        <File Source="ServerGuiPublish\System.Text.Encoding.CodePages.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_B65CB849" Guid="9910eb4c-37da-4c54-a53b-4139200c6751">
+        <File Source="ServerGuiPublish\System.Text.Encoding.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F3D185D2" Guid="934a086b-c95f-480b-b8b2-9d1618ecf1ec">
+        <File Source="ServerGuiPublish\System.Text.Encoding.Extensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_0D89FAB1" Guid="93245649-2b54-4f77-bec1-261a653bbb9d">
+        <File Source="ServerGuiPublish\System.Text.Encodings.Web.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_DA4DC91B" Guid="420bf03d-39cd-4dd7-b67e-595508328e02">
+        <File Source="ServerGuiPublish\System.Text.Json.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_71DB3B3A" Guid="8c74ea9d-2922-422c-bed9-e89e85d616c5">
+        <File Source="ServerGuiPublish\System.Text.RegularExpressions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_42A857BF" Guid="391779a2-2576-465e-9be4-fad03bd531f8">
+        <File Source="ServerGuiPublish\System.Threading.AccessControl.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_ADF9944B" Guid="85010155-024e-4647-bcf0-1ae226213435">
+        <File Source="ServerGuiPublish\System.Threading.Channels.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_58EC8A30" Guid="80e1d404-6315-4e1a-a587-d8f2821abffb">
+        <File Source="ServerGuiPublish\System.Threading.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6D158D90" Guid="8d400857-a34d-4cbe-8663-262deb1ef373">
+        <File Source="ServerGuiPublish\System.Threading.Overlapped.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D87E12A8" Guid="85b4f371-e747-4028-a239-a3709b7bd1b9">
+        <File Source="ServerGuiPublish\System.Threading.Tasks.Dataflow.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_4DD85F0C" Guid="6e8438fa-75e4-457c-bf8b-2f95ee5c0136">
+        <File Source="ServerGuiPublish\System.Threading.Tasks.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D9489093" Guid="6cbda92f-4f8b-4565-89ce-9f6816300f56">
+        <File Source="ServerGuiPublish\System.Threading.Tasks.Extensions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6B62B53C" Guid="370d39b4-e375-40da-9f50-0ea547830bfb">
+        <File Source="ServerGuiPublish\System.Threading.Tasks.Parallel.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CF98864A" Guid="1da6a42e-7b7e-4963-9f91-86f0b55f1583">
+        <File Source="ServerGuiPublish\System.Threading.Thread.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_E786271C" Guid="857220d9-81d3-426e-a127-7f2fa8879764">
+        <File Source="ServerGuiPublish\System.Threading.ThreadPool.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_7F00BE2E" Guid="c64fbb8f-6a64-40ea-9031-42668ae894fc">
+        <File Source="ServerGuiPublish\System.Threading.Timer.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_984E560D" Guid="68e1f3d3-d6c6-4928-9ff1-147d278034a9">
+        <File Source="ServerGuiPublish\System.Transactions.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6DA8A975" Guid="537fffad-e178-45ad-9e8b-4a3a2d7500fe">
+        <File Source="ServerGuiPublish\System.Transactions.Local.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CB3D1379" Guid="955e6610-4ea9-488d-8eb7-fa88fb36654d">
+        <File Source="ServerGuiPublish\System.ValueTuple.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_7539B0F3" Guid="5c033b6a-54eb-4720-968b-9bd958af98d0">
+        <File Source="ServerGuiPublish\System.Web.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_238C65D6" Guid="419f592b-8afb-4a04-b536-6ea2ede3883f">
+        <File Source="ServerGuiPublish\System.Web.HttpUtility.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6DA2E264" Guid="a0e57391-4134-495f-9f11-a33bb8dce74d">
+        <File Source="ServerGuiPublish\System.Windows.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_858968D1" Guid="d5863ff8-b818-4e8a-8e52-c1faf91468b7">
+        <File Source="ServerGuiPublish\System.Xml.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_ED8D4971" Guid="85a6376f-c000-4f86-bfa2-08663cad1fb6">
+        <File Source="ServerGuiPublish\System.Xml.Linq.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_751AFF54" Guid="b00f2ed1-aad1-4d78-b17c-0d976adc0851">
+        <File Source="ServerGuiPublish\System.Xml.ReaderWriter.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_86EDB495" Guid="15461a9c-4b90-4fb0-857e-447898aa5972">
+        <File Source="ServerGuiPublish\System.Xml.Serialization.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_03F20FAF" Guid="53691b4f-9a99-41a0-9bbc-cc5633e77f26">
+        <File Source="ServerGuiPublish\System.Xml.XDocument.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_6A04FC27" Guid="fe32151c-3630-4971-ae87-7fc133f5b9bf">
+        <File Source="ServerGuiPublish\System.Xml.XmlDocument.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_393FB368" Guid="9760c9ee-27e4-46d3-a586-b0d301ff3ca1">
+        <File Source="ServerGuiPublish\System.Xml.XmlSerializer.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_D3F2E7F4" Guid="69ae2906-8f57-44e4-8dc2-b163ade84cf8">
+        <File Source="ServerGuiPublish\System.Xml.XPath.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_F442B87B" Guid="a59acc36-3d2a-49a7-90ff-7711cd948f7e">
+        <File Source="ServerGuiPublish\System.Xml.XPath.XDocument.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_40CCE2E6" Guid="f8c4de24-f2c8-4bb9-867e-10ac3b37433b">
+        <File Source="ServerGuiPublish\WebView2Loader.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_666D239A" Guid="c5cf7a17-635b-4eec-bf65-3b19ca086da6">
+        <File Source="ServerGuiPublish\WindowsBase.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_CCAE61C4" Guid="c0b5e57d-d045-4058-9e89-031a0206443f">
+        <File Source="ServerGuiPublish\WinRT.Runtime.dll" />
+      </Component>
+      <Component Id="cmp_ServerFiles_FF76B5CF" Guid="5036d722-bb99-4515-85c5-b3bd25a603a7">
+        <File Source="ServerGuiPublish\Images\copilot_cat.jpg" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

@@ -16,7 +16,7 @@
 # Mono auto generated files
 mono_crash.*
 
-# Ignore any files in the redist folder
+# Ignore any files in any redist folder
 *.redist/
 
 # Build results

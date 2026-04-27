@@ -1,12 +1,19 @@
 ﻿<Project Sdk="WixToolset.Sdk/7.0.0">
-  <PropertyGroup>
-    <WixToolsetOsmfAccepted>true</WixToolsetOsmfAccepted>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="License.rtf" />
-  </ItemGroup>
+
+	<PropertyGroup>
+		<WixUI>WixUI_FeatureTree</WixUI>
+	</PropertyGroup>
+
+	<!-- Bind paths for file harvesting -->
+	<ItemGroup>
+		<BindPath Include="$(SolutionDir)Client.GUI\publish"
+				  Name="ClientGuiPublish" />
+		<BindPath Include="$(SolutionDir)Server.GUI\publish"
+				  Name="ServerGuiPublish" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+	</ItemGroup>
+
 </Project>
