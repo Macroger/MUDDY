@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /docs/doxygen
 /ARCHITECTURE.md
 /PROJECT_REQUIREMENTS.txt
+/MUDDY.Installer.Prerequisites/redist/WindowsAppRuntimeInstall-x64.exe
