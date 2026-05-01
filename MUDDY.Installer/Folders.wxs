@@ -5,11 +5,7 @@
 			  <Directory Id="ClientFolder" Name="Client" />
 			  <Directory Id="ServerFolder" Name="Server" />
 		  </Directory>
-
-		  <Directory Id="ProgramMenuFolder">
-			  <Directory Id="MUDDYProgramMenuFolder" Name="MUDDY"/>
-		  </Directory>
-
 	  </StandardDirectory>
+	  <StandardDirectory Id="ProgramMenuFolder" />
   </Fragment>
 </Wix>

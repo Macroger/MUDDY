@@ -4,7 +4,7 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Platforms>x64;x86</Platforms>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,16 +12,8 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Network\Protocol\" />
 		<None Include="Images\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Remove="Domain\Managers\**" />
-	  <EmbeddedResource Remove="Domain\Managers\**" />
-	  <None Remove="Domain\Managers\**" />
-	</ItemGroup>
-
 </Project>

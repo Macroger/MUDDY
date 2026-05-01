@@ -19,14 +19,22 @@
 			<!-- Windows App Runtime -->
 			<ExePackage
 			  Id="WindowsAppRuntime"
-			  SourceFile="WindowsAppRuntimeInstall-x64.exe"
+			  SourceFile=".\redist\WindowsAppRuntimeInstall-x64.exe"
 			  InstallArguments="/install /quiet /norestart"
-			  UninstallArguments="/uninstall /quiet /norestart"
-			  DetectCondition="WINDOWSAPPRUNTIMEINSTALLED"
-			  PerMachine="yes"
-			  Vital="yes" />
+			  
+			  Vital="yes"
+			  Permanent="yes">
 
-			<!-- Main MSI -->
+
+				<!-- Normal success -->
+				<ExitCode Value="0" Behavior="success" />
+
+				<!-- "Already installed" is ALSO success -->
+				<ExitCode Value="-2147024736" Behavior="success" />
+
+			</ExePackage>
+
+				<!-- Main MSI -->
 			<MsiPackage
 			  SourceFile="..\MUDDY.Installer\bin\x64\Release\en-US\MUDDY.Installer.msi"
 			  Vital="yes" />

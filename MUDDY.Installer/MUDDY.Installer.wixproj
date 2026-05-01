@@ -7,9 +7,9 @@
 	<!-- Bind paths for file harvesting -->
 	<ItemGroup>
 		<BindPath Include="$(SolutionDir)Client.GUI\publish"
-				  Name="ClientGuiPublish" />
+				  Name="ClientPublishDir" />
 		<BindPath Include="$(SolutionDir)Server.GUI\publish"
-				  Name="ServerGuiPublish" />
+				  Name="ServerPublishDir" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -31,7 +31,7 @@ namespace Server.GUI
         private string _listenerStateText = "OFFLINE";
         private Brush _listenerStateBrush = new SolidColorBrush(Microsoft.UI.Colors.Red);
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         private readonly List<ISubscriptionToken> _eventSubscriptions = new();
@@ -338,7 +338,7 @@ namespace Server.GUI
             }
             catch { }
 
-            return identityObject.ToString();
+            return identityObject.ToString() ?? string.Empty;
         }
 
         public static EventEntry ToEventEntry(DateTime time, string source, string message)

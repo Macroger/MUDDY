@@ -1,8 +1,5 @@
 {
-  "profiles": {
-    "Client.GUI (Package)": {
-      "commandName": "MsixPackage"
-    },
+  "profiles": {    
     "Client.GUI (Unpackaged)": {
       "commandName": "Project"
     }
