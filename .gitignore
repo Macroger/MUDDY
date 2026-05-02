@@ -399,3 +399,5 @@ Microsoft.ML.OnnxRuntime.dll
 Microsoft.Security.Authentication.OAuth.Projection.dll
 Microsoft.Windows.AI.ContentSafety.Projection.dll
 Microsoft.Graphics.Imaging.Projection.dll
+/Client.Installer/redist/WindowsAppRuntimeInstall-x64.exe
+/Server.Installer/redist/WindowsAppRuntimeInstall-x64.exe
