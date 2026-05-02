@@ -9,7 +9,7 @@ namespace Tests.Client
         [TestMethod]
         public async Task ChatMessageHandler_RaisesEvent()
         {
-            string received = null;
+            string? received = null;
             var handler = new ChatMessageHandler();
             ChatMessageHandler.OnChatMessageReceived += msg => received = msg;
             var envelope = new TransportEnvelope(

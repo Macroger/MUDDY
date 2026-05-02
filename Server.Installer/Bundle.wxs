@@ -12,7 +12,8 @@
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication
               LicenseFile="License.rtf"
-              Theme="rtfLicense" />
+              Theme="rtfLicense"
+              LogoFile="..\Server.msi\Images\server-logo.png" />
         </BootstrapperApplication>
 
         <Chain>

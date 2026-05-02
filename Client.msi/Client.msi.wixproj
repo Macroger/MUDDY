@@ -1,18 +1,19 @@
 <Project Sdk="WixToolset.Sdk/7.0.0">
-
-    <PropertyGroup>
-        <WixUI>WixUI_Minimal</WixUI>
-        <OutputName>Client.Installer</OutputName>
-    </PropertyGroup>
-
-    <!-- Bind paths for file harvesting -->
-    <ItemGroup>
-        <BindPath Include="$(SolutionDir)Client.GUI\publish"
-                  Name="ClientPublishDir" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
-    </ItemGroup>
-
+  <PropertyGroup>
+    <WixUI>WixUI_Minimal</WixUI>
+    <OutputName>Client.Installer</OutputName>
+  </PropertyGroup>
+  <!-- Bind paths for file harvesting -->
+  <ItemGroup>
+    <BindPath Include="$(SolutionDir)Client.GUI\publish" Name="ClientPublishDir" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Images\client-logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\client.ico" />
+  </ItemGroup>
 </Project>

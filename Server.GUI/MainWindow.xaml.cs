@@ -241,7 +241,7 @@ namespace Server.GUI
             return new PlayerDisplay
             {
                 Name = state.PlayerName,
-                Location = state.CurrentLocation.ToString()
+                Location = state.CurrentLocation.ToString() ?? string.Empty
             };
         }
 

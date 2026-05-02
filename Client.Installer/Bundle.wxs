@@ -13,7 +13,7 @@
             <bal:WixStandardBootstrapperApplication
               LicenseFile="License.rtf"
               Theme="rtfLicense"
-              LogoFile="..\Client.GUI\Assets\Square150x150Logo.scale-200.png" />
+              LogoFile="..\Client.msi\Images\client-logo.png" />
         </BootstrapperApplication>
 
         <Chain>
