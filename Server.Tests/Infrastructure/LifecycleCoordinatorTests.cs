@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.Infrastructure.Lifecycle;
 using Shared.EventBus;
@@ -21,7 +23,7 @@ public class LifecycleCoordinatorTests
     }
 
     // -------------------------------------------------------------------------
-    // StartServer — LOADING → ACTIVE
+    // StartServer â€” LOADING â†’ ACTIVE
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -34,7 +36,7 @@ public class LifecycleCoordinatorTests
     }
 
     // -------------------------------------------------------------------------
-    // ShutdownServer — ACTIVE → SHUTTING_DOWN
+    // ShutdownServer â€” ACTIVE â†’ SHUTTING_DOWN
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -49,13 +51,13 @@ public class LifecycleCoordinatorTests
     }
 
     // -------------------------------------------------------------------------
-    // TryTransition — invalid transition returns false
+    // TryTransition â€” invalid transition returns false
     // -------------------------------------------------------------------------
 
     [TestMethod]
     public void TryTransition_FromLoadingToShuttingDown_ReturnsFalse()
     {
-        // LOADING → SHUTTING_DOWN is not an allowed transition
+        // LOADING â†’ SHUTTING_DOWN is not an allowed transition
         bool result = _coordinator.TryTransition(ServerStateEnum.LOADING, ServerStateEnum.SHUTTING_DOWN);
 
         Assert.IsFalse(result);

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
@@ -239,7 +241,7 @@ public class PacketSerializerTests
     }
 
     // -------------------------------------------------------------------------
-    // Binary flag — size cap switching
+    // Binary flag â€” size cap switching
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -259,7 +261,7 @@ public class PacketSerializerTests
         var packet = _packetFactory.CreateMuddyPacket(message);
         byte[] serialized = _serializer.Serialize(packet);
 
-        // Should NOT throw — binary cap applies
+        // Should NOT throw â€” binary cap applies
         MuddyPacket deserialized = _serializer.Deserialize(serialized);
 
         Assert.AreEqual((uint)body.Length, deserialized.Header.BodyLength);
@@ -282,11 +284,11 @@ public class PacketSerializerTests
         };
 
         // Build a raw buffer with the oversized BodyLength declared but only small body bytes.
-        // Deserialize reads the header first then checks the declared length against the limit —
+        // Deserialize reads the header first then checks the declared length against the limit â€”
         // the mismatch check fires before we even reach the body-limit check, so we inject
         // the oversized length into an otherwise valid packet and verify via the thrown message.
         var packet = new MuddyPacket(header, smallBody);
-        // The Serialize step will throw BodyLength mismatch — that's expected and correct:
+        // The Serialize step will throw BodyLength mismatch â€” that's expected and correct:
         // we can't even build a wire packet that large in a unit test. Instead, verify the
         // flag is read correctly by checking a body that is exactly at the cap passes.
         byte[] atCapBody = new byte[_limits.MaxBinaryBodyBytes];

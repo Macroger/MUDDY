@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.Policies;
 using Server.Core.Domain.Authentication;
@@ -39,7 +41,7 @@ public class AuthenticationPolicyTests
     }
 
     // -------------------------------------------------------------------------
-    // Unauthenticated session — always allowed
+    // Unauthenticated session â€” always allowed
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -53,7 +55,7 @@ public class AuthenticationPolicyTests
     }
 
     // -------------------------------------------------------------------------
-    // Authenticated but invalid session — rejected
+    // Authenticated but invalid session â€” rejected
     // -------------------------------------------------------------------------
 
     [TestMethod]

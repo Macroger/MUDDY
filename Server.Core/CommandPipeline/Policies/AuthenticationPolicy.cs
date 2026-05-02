@@ -1,4 +1,6 @@
-﻿using Server.Core.Domain.Authentication;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.Domain.Authentication;
 using Shared.Identity;
 using Shared.Protocol.Transport;
 

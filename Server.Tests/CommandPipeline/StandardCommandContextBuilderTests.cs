@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
@@ -37,7 +39,7 @@ public class StandardCommandContextBuilderTests
     }
 
     // -------------------------------------------------------------------------
-    // No player found — error context
+    // No player found â€” error context
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -55,7 +57,7 @@ public class StandardCommandContextBuilderTests
     }
 
     // -------------------------------------------------------------------------
-    // Player found — success context
+    // Player found â€” success context
     // -------------------------------------------------------------------------
 
     [TestMethod]

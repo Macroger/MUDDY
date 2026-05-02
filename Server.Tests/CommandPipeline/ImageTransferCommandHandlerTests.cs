@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
@@ -48,7 +50,7 @@ public class ImageTransferCommandHandlerTests
             errorMessage: null);
 
     /// <summary>Creates a JPEG file in the Images folder with the correct magic bytes.
-    /// Returns the bare filename without extension — pass this directly to the handler.</summary>
+    /// Returns the bare filename without extension â€” pass this directly to the handler.</summary>
     private string CreateFakeJpeg(int sizeBytes)
     {
         string name = Guid.NewGuid().ToString("N");

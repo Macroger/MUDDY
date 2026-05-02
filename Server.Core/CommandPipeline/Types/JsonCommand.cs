@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using System.Text.Json.Serialization;
 
 namespace Server.Core.CommandPipeline.Types
 {

@@ -1,6 +1,6 @@
 <Project Sdk="WixToolset.Sdk/7.0.0">
   <PropertyGroup>
-    <WixUI>WixUI_Minimal</WixUI>
+    <WixUI>WixUI_InstallDir</WixUI>
     <OutputName>Client.Installer</OutputName>
   </PropertyGroup>
   <!-- Bind paths for file harvesting -->

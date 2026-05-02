@@ -369,6 +369,7 @@ FodyWeavers.xsd
 
 /docs/doxygen
 /MUDDY.Installer.Prerequisites/redist/WindowsAppRuntimeInstall-x64.exe
+**/redist/*.exe
 
 # ============================================================
 # WiX / Installer build outputs

@@ -1,4 +1,6 @@
-﻿namespace Shared.Protocol.Types
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.Protocol.Types
 {
     /// <summary>
     /// Indicates the result of a processing step or operation.

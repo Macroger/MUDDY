@@ -1,4 +1,6 @@
-﻿namespace Server.Core.Domain.Authentication
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Server.Core.Domain.Authentication
 {
     /// <summary>
     /// Service for managing player accounts (username/password validation and registration).

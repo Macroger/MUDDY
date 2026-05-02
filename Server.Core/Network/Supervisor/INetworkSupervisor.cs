@@ -1,4 +1,6 @@
-﻿using Server.Core.CommandPipeline;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.CommandPipeline;
 using Server.Core.Network.Model;
 using Shared.Identity;
 using Shared.Protocol.Transport;

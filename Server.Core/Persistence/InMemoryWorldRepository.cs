@@ -1,4 +1,6 @@
-﻿using Server.Core.CommandPipeline.ContextBuilder;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.World;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;

@@ -1,4 +1,6 @@
-﻿using Server.Core.CommandPipeline;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.CommandPipeline;
 using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;

@@ -1,4 +1,6 @@
-﻿namespace Shared.Identity
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.Identity
 {
     /// <summary>
     /// A wrapper to make it easier to see that we are dealing with a sessionID instead of just a normal ulong.

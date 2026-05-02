@@ -1,4 +1,6 @@
-﻿namespace Shared.EventBus
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.EventBus
 {
     /// <summary>
     /// Helper class for publishing events to the event bus. This class provides a convenient method for publishing events with a specific message type and reason.

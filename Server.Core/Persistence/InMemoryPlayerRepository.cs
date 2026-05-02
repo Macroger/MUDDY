@@ -1,4 +1,6 @@
-﻿using Shared.Domain.Player;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.EventBus.DomainEvents;
 using Shared.EventBus.SubscriptionToken;

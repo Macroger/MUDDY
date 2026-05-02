@@ -1,4 +1,6 @@
-﻿namespace Shared.EventBus
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.EventBus
 {
     /// <summary>
     /// A record type representing the reason for a Event, including a message describing the reason and optional additional data.

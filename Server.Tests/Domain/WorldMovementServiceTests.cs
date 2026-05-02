@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.Services.WorldMovementService;
@@ -71,7 +73,7 @@ public class WorldMovementServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // MovePlayerAsync — valid direction
+    // MovePlayerAsync â€” valid direction
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -84,7 +86,7 @@ public class WorldMovementServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // MovePlayerAsync — invalid direction
+    // MovePlayerAsync â€” invalid direction
     // -------------------------------------------------------------------------
 
     [TestMethod]

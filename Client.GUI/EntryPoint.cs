@@ -1,4 +1,6 @@
-﻿using Microsoft.UI.Xaml;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Microsoft.UI.Xaml;
 using Microsoft.Windows.ApplicationModel.DynamicDependency;
 using System;
 using System.Diagnostics.CodeAnalysis;

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.Services.ChatService;
@@ -57,7 +59,7 @@ public class ChatServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // BroadcastMessageAsync — empty message
+    // BroadcastMessageAsync â€” empty message
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -69,7 +71,7 @@ public class ChatServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // BroadcastMessageAsync — valid message
+    // BroadcastMessageAsync â€” valid message
     // -------------------------------------------------------------------------
 
     [TestMethod]

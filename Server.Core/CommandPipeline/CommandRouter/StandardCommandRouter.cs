@@ -1,4 +1,6 @@
-﻿using Server.Core.CommandPipeline.CommandHandler;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.CommandPipeline.CommandHandler;
 
 namespace Server.Core.CommandPipeline.CommandRouter
 {

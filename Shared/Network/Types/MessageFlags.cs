@@ -1,4 +1,6 @@
-﻿namespace Shared.Protocol.Types
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.Protocol.Types
 {
     /// <summary>
     /// Bit flags that describe metadata and processing requirements for protocol messages.

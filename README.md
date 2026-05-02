@@ -18,7 +18,7 @@
 
 </div>
 
-**Version:** 0.5 (2026-04-19)  
+**Version:** 0.3.0
 **Framework:** .NET 10  
 **Architecture:** Event-driven pipeline with async TCP networking
 
@@ -26,8 +26,8 @@
 
 MUDDY is a text-based multiplayer game server and client application built with modern .NET technologies. The system demonstrates advanced software engineering concepts including event-driven architecture, async I/O, command pipeline processing, and custom binary network protocols.
 
-**Repository:** COMP72070-26W-Section1-Group3  
-**Purpose:** Semester project demonstrating client-server architecture and OOP design
+**Repository:** MUDDY  
+**Purpose:** Open-source text-based multiplayer game server and client demonstrating client-server architecture and OOP design
 
 ## Architecture Summary
 
@@ -230,29 +230,43 @@ Solution Root
 
 ## Design Patterns Used
 
-- **Pipeline Pattern** - Command processing flow
-- **Strategy Pattern** - Pluggable handlers and policies
-- **Observer Pattern** - EventBus pub/sub
+- **Pipeline Pattern**   - Command processing flow
+- **Strategy Pattern**   - Pluggable handlers and policies
+- **Observer Pattern**   - EventBus pub/sub
 - **Repository Pattern** - Data access abstraction
-- **Factory Pattern** - Packet creation
-- **Command Pattern** - ICommandHandler interface
-- **State Pattern** - Server lifecycle states
-- **Mediator Pattern** - EventBus as central mediator
+- **Factory Pattern**    - Packet creation
+- **Command Pattern**    - ICommandHandler interface
+- **State Pattern**      - Server lifecycle states
+- **Mediator Pattern**   - EventBus as central mediator
 
 ## Getting Started
 
 ### Prerequisites
 
-- .NET 10 SDK
-- Visual Studio 2026 (or VS Code with C# extension)
 - Windows 10/11 (for WinUI 3)
+- .NET 10 SDK (for building from source)
+- Visual Studio 2026 (or VS Code with C# extension) (for building from source)
 - Graphviz (optional, for Doxygen documentation)
 
-### Building
+### Installing via Installer (Recommended)
+
+Pre-built installers are provided for both the server and client. Each is a bootstrapper that silently installs the Windows App Runtime if not already present, then installs the application.
+
+**Server:**
+1. Run `Server.Installer.exe`
+2. Accept the licence and complete the wizard
+3. Launch **MUDDY Server** from the Start Menu
+
+**Client:**
+1. Run `Client.Installer.exe`
+2. Accept the licence and complete the wizard
+3. Launch **MUDDY Client** from the Start Menu
+
+### Building from Source
 
 ```powershell
 # Clone repository
-git clone https://github.com/Macroger/COMP72070-26W-Section1-Group3
+git clone https://github.com/Macroger/MUDDY.git
 cd "Project IV"
 
 # Restore dependencies
@@ -265,7 +279,7 @@ dotnet build
 dotnet test
 ```
 
-### Running the Server
+### Running the Server (from source)
 
 1. Set `Server.GUI` as startup project
 2. Press F5 or click "Start"
@@ -273,7 +287,7 @@ dotnet test
 4. Click "Toggle Listener" to start accepting connections
 5. Default port: 30333 (configurable in code)
 
-### Running the Client
+### Running the Client (from source)
 
 1. Set `Client.GUI` as startup project
 2. Press F5 or click "Start"
@@ -285,7 +299,7 @@ dotnet test
 
 ### Multiple Clients
 
-Run multiple instances of Client.GUI to test multiplayer functionality. Each client needs its own session.
+Run multiple instances of Client.GUI (or installed client) to test multiplayer functionality. Each client needs its own session.
 
 ## Testing
 
@@ -387,22 +401,25 @@ Server GUI displays real-time event log with filtering by channel.
 
 ## Contributing
 
-This is an internal student project for COMP72070 (Project IV). Contributions are limited to team members:
+Contributions are welcome from anyone. To contribute:
 
-- Follow existing code style and patterns
-- Write unit tests for new features
-- Use meaningful commit messages
-- Create feature branches for development
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes with meaningful messages
+4. Push to your fork and open a Pull Request
+5. All PRs are reviewed and approved by the maintainer before merging
+
+Please follow the existing code style and patterns, and include unit tests for any new functionality.
 
 ## License
 
-Educational project - Conestoga College BCS Program
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+You are free to use, modify, and distribute this software in accordance with the terms of the Apache 2.0 licence. See the `LICENSE` file in the repository root for the full licence text.
 
 ## Authors
 
-- Student project for COMP72070-26W-Section1-Group3
-- Instructor: Monti Sachdeva
-- Semester: Winter 2026
+- **Matthew Schatz** ([@Macroger](https://github.com/Macroger)) - Original author
 
 ## Acknowledgments
 

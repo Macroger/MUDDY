@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.Network.Worker;
 using Shared.Identity;
 using Shared.Protocol.Transport;

@@ -1,4 +1,6 @@
-﻿namespace Server.Core.CommandPipeline.Policies
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Server.Core.CommandPipeline.Policies
 {
     /// <summary>
     /// Represents the result of a policy check, indicating whether the policy was satisfied

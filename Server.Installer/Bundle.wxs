@@ -16,7 +16,29 @@
               LogoFile="..\Server.msi\Images\server-logo.png" />
         </BootstrapperApplication>
 
+        <!-- Default install location; updated if the user changes it in the UI -->
+        <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]MUDDY\Server\" />
+
         <Chain>
+
+            <!-- .NET 10 Desktop Runtime (silent, skips if already installed) -->
+            <ExePackage
+              Id="DotNetDesktopRuntime"
+              SourceFile=".\redist\windowsdesktop-runtime-10.0.7-win-x64.exe"
+              InstallArguments="/install /quiet /norestart"
+              Vital="yes"
+              Permanent="yes">
+
+                <!-- Detect via ARP so the package is skipped if already installed -->
+                <ArpEntry Id="Microsoft.WindowsDesktop.App.Runtime.win-x64 10.0.7" Version="10.0.7" Win64="yes" />
+
+                <!-- Normal success -->
+                <ExitCode Value="0" Behavior="success" />
+
+                <!-- Already installed is also success -->
+                <ExitCode Value="1638" Behavior="success" />
+
+            </ExePackage>
 
             <!-- Windows App Runtime (silent, skips if already installed) -->
             <ExePackage
@@ -40,7 +62,10 @@
             <!-- MUDDY Server MSI -->
             <MsiPackage
               SourceFile="..\Server.msi\bin\x64\Release\en-US\Server.Installer.msi"
-              Vital="yes" />
+              Vital="yes">
+                <!-- Pass the user-chosen install folder into the MSI -->
+                <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+            </MsiPackage>
 
         </Chain>
 

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.Persistence;
 
 namespace Server.Tests.Persistence;
@@ -7,7 +9,7 @@ namespace Server.Tests.Persistence;
 /// Covers credential validation, account registration, and account existence checks.
 ///
 /// Note: InMemoryAccountService pre-loads four test accounts on construction:
-///   Matt, Ahbi, Nasir, Yash — all with password "123".
+///   Matt, Ahbi, Nasir, Yash â€” all with password "123".
 /// </summary>
 [TestClass]
 public class InMemoryAccountServiceTests
@@ -64,7 +66,7 @@ public class InMemoryAccountServiceTests
     [TestMethod]
     public async Task RegisterAccount_ReturnsFalse_WhenUsernameAlreadyExists()
     {
-        // "Matt" is a pre-loaded account — registering the same name should fail
+        // "Matt" is a pre-loaded account â€” registering the same name should fail
         bool result = await _service.RegisterAccountAsync("Matt", "newpassword");
 
         Assert.IsFalse(result);

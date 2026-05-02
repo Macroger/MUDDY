@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.World;
@@ -15,8 +17,8 @@ namespace Server.Tests.Persistence;
 ///
 /// The repository uses a single ConcurrentDictionary (_rooms) as the authoritative
 /// source of truth. The constructor pre-populates it with the default world
-/// (tavern, town, forest), so all three methods — GetRoomAsync, UpdateRoomAsync,
-/// and GetWorldStateAsync — always reflect the same live state.
+/// (tavern, town, forest), so all three methods â€” GetRoomAsync, UpdateRoomAsync,
+/// and GetWorldStateAsync â€” always reflect the same live state.
 /// </summary>
 [TestClass]
 public class InMemoryWorldRepositoryTests
@@ -89,7 +91,7 @@ public class InMemoryWorldRepositoryTests
     [TestMethod]
     public async Task GetWorldState_ReturnsSnapshot_NotTheLiveDictionary()
     {
-        // GetWorldStateAsync returns a copy — modifying the snapshot should not
+        // GetWorldStateAsync returns a copy â€” modifying the snapshot should not
         // affect what the repository returns on a subsequent call
         var snapshot = await _repository.GetWorldStateAsync();
         int originalCount = snapshot.Rooms.Count;

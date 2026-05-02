@@ -1,4 +1,6 @@
-﻿namespace Shared.Protocol.Transport
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.Protocol.Transport
 {
     /// <summary>
     /// Creates a MuddyPacket representing the given message.

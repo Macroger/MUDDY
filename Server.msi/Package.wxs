@@ -8,6 +8,9 @@
       InstallerVersion="500"
       Compressed="yes">
 
+        <!-- Bind the install directory dialog to INSTALLFOLDER -->
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
         <!-- Suppress ARP entry — the bundle is the user-facing installer -->
         <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
 
