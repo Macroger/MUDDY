@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+
+    <Bundle
+      Name="MUDDY Client"
+      Version="0.3.0"
+      Manufacturer="Matthew Schatz"
+      UpgradeCode="{C1D2E3F4-0001-4001-8001-000000000001}"
+      IconSourceFile="..\Client.msi\Icons\client.ico">
+
+        <BootstrapperApplication>
+            <bal:WixStandardBootstrapperApplication
+              LicenseFile="License.rtf"
+              Theme="rtfLicense"
+              LogoFile="..\Client.GUI\Assets\Square150x150Logo.scale-200.png" />
+        </BootstrapperApplication>
+
+        <Chain>
+
+            <!-- Windows App Runtime (silent, skips if already installed) -->
+            <ExePackage
+              Id="WindowsAppRuntime"
+              SourceFile=".\redist\WindowsAppRuntimeInstall-x64.exe"
+              InstallArguments="/install /quiet /norestart"
+              Vital="yes"
+              Permanent="yes">
+
+                <!-- Detect via ARP so the package is skipped if already installed -->
+                <ArpEntry Id="Microsoft.WindowsAppRuntime.1.8" Version="1.8.0" Win64="yes" />
+
+                <!-- Normal success -->
+                <ExitCode Value="0" Behavior="success" />
+
+                <!-- Already installed is also success -->
+                <ExitCode Value="-2147024736" Behavior="success" />
+
+            </ExePackage>
+
+            <!-- MUDDY Client MSI -->
+            <MsiPackage
+              SourceFile="..\Client.msi\bin\x64\Release\en-US\Client.Installer.msi"
+              Vital="yes" />
+
+        </Chain>
+
+    </Bundle>
+</Wix>

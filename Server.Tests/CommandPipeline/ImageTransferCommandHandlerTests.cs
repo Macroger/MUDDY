@@ -128,7 +128,7 @@ public class ImageTransferCommandHandlerTests
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
-        Assert.AreEqual(1024, result.BinaryPayload.Length);
+        Assert.HasCount(1024, result.BinaryPayload);
         // Confirm BinaryPayload carries the correct magic bytes
         Assert.AreEqual(0xFF, result.BinaryPayload[0]);
         Assert.AreEqual(0xD8, result.BinaryPayload[1]);
@@ -145,7 +145,7 @@ public class ImageTransferCommandHandlerTests
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
-        Assert.IsTrue(result.BinaryPayload.Length > oneMB,
+        Assert.IsGreaterThan(result.BinaryPayload.Length, oneMB,
             $"Expected payload > 1 MB, got {result.BinaryPayload.Length} bytes.");
     }
 }

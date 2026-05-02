@@ -13,7 +13,7 @@ namespace Server.Tests.Domain;
 [TestClass]
 public class PlayerQueryServiceTests
 {
-    private PlayerQueryService _service;
+    private PlayerQueryService _service = null!;
     private ConnectionId _connectionId;
     private RoomId _roomId;
 

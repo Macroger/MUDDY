@@ -15,17 +15,17 @@ namespace Server.Tests.Domain;
 [TestClass]
 public class WorldMovementServiceTests
 {
-    private Mock<IPlayerRepository> _mockPlayerRepo;
-    private Mock<IWorldRepository> _mockWorldRepo;
-    private WorldMovementService _service;
+    private Mock<IPlayerRepository> _mockPlayerRepo = null!;
+    private Mock<IWorldRepository> _mockWorldRepo = null!;
+    private WorldMovementService _service = null!;
 
     private ConnectionId _connectionId;
     private RoomId _tavernId;
     private RoomId _townId;
-    private PlayerState _player;
-    private RoomState _tavernRoom;
-    private RoomState _townRoom;
-    private WorldState _world;
+    private PlayerState _player = null!;
+    private RoomState _tavernRoom = null!;
+    private RoomState _townRoom = null!;
+    private WorldState _world = null!;
 
     [TestInitialize]
     public void TestInitialize()

@@ -15,11 +15,11 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class StandardCommandContextBuilderTests
 {
-    private Mock<IPlayerRepository> _mockPlayerRepo;
-    private Mock<IWorldRepository> _mockWorldRepo;
-    private StandardCommandContextBuilder _builder;
+    private Mock<IPlayerRepository> _mockPlayerRepo = null!;
+    private Mock<IWorldRepository> _mockWorldRepo = null!;
+    private StandardCommandContextBuilder _builder = null!;
     private ConnectionId _connectionId;
-    private ParsedCommand _command;
+    private ParsedCommand _command = null!;
 
     [TestInitialize]
     public void TestInitialize()

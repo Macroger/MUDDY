@@ -1,0 +1,18 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+
+    <PropertyGroup>
+        <WixUI>WixUI_Minimal</WixUI>
+        <OutputName>Server.Installer</OutputName>
+    </PropertyGroup>
+
+    <!-- Bind paths for file harvesting -->
+    <ItemGroup>
+        <BindPath Include="$(SolutionDir)Server.GUI\publish"
+                  Name="ServerPublishDir" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+    </ItemGroup>
+
+</Project>

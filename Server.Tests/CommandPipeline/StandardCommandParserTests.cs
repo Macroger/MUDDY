@@ -14,7 +14,7 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class StandardCommandParserTests
 {
-    private StandardCommandParser _parser;
+    private StandardCommandParser _parser = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]

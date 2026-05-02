@@ -13,7 +13,7 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class StandardCommandRouterTests
 {
-    private StandardCommandRouter _router;
+    private StandardCommandRouter _router = null!;
 
     [TestInitialize]
     public void TestInitialize()

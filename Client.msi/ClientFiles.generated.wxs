@@ -2,151 +2,160 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <ComponentGroup Id="ClientFiles" Directory="ClientFolder">
-      <Component Id="cmp_ClientFiles_7DE434F5" Guid="fbdbce1a-c650-46b2-9308-085778dde581">
+      <Component Id="cmp_ClientFiles_EF15755D" Guid="09f244ae-93d9-4cf2-9004-01af17814832">
+        <File Source="..\Client.GUI\publish\App.xbf" />
+      </Component>
+      <Component Id="cmp_ClientFiles_7DE434F5" Guid="56ba1ed7-5374-4b79-a1d0-095a046c4309">
         <File Source="..\Client.GUI\publish\Client.Core.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_BA8E1808" Guid="8cb3f6b7-a970-46fa-9a15-5345375ac251">
+      <Component Id="cmp_ClientFiles_BA8E1808" Guid="15a7d518-3384-4bb2-b958-b9a25637b5c8">
         <File Source="..\Client.GUI\publish\Client.Core.pdb" />
       </Component>
-      <Component Id="cmp_ClientFiles_47944BC6" Guid="06631fea-15c2-452d-9d9d-fc9a71490703">
+      <Component Id="cmp_ClientFiles_47944BC6" Guid="d3319b9d-2fba-4c2f-8789-aa3642a769e3">
         <File Source="..\Client.GUI\publish\Client.GUI.deps.json" />
       </Component>
-      <Component Id="cmp_ClientFiles_093AFDE5" Guid="ede4c5c3-9177-4dae-841e-ece4bde3b03b">
+      <Component Id="cmp_ClientFiles_093AFDE5" Guid="20a497cb-ebd2-4f0a-a43c-2740a18fed7b">
         <File Source="..\Client.GUI\publish\Client.GUI.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_43158458" Guid="210781a6-2b81-4387-b821-89ab04aed050">
+      <Component Id="cmp_ClientFiles_43158458" Guid="15d6965e-3e3e-40ca-a617-f86d6f642d03">
         <File Id="ClientFiles_MainExe" Source="..\Client.GUI\publish\Client.GUI.exe" KeyPath="yes" />
       </Component>
-      <Component Id="cmp_ClientFiles_81BF34FB" Guid="6243e31c-09bf-4c74-b5dd-03df7531a0ef">
+      <Component Id="cmp_ClientFiles_81BF34FB" Guid="f685f0d0-5ab9-4705-a79e-9a24fe79335d">
         <File Source="..\Client.GUI\publish\Client.GUI.pdb" />
       </Component>
-      <Component Id="cmp_ClientFiles_7E5D6D6C" Guid="48ab8b0b-91d7-462b-ab83-b304bd90fc15">
+      <Component Id="cmp_ClientFiles_4CE5C653" Guid="f791bdb4-c53c-46e1-b289-00b16161a9c9">
+        <File Source="..\Client.GUI\publish\Client.GUI.pri" />
+      </Component>
+      <Component Id="cmp_ClientFiles_7E5D6D6C" Guid="fa564afb-d3a1-4f3c-9f1b-d1974a724a8a">
         <File Source="..\Client.GUI\publish\Client.GUI.runtimeconfig.json" />
       </Component>
-      <Component Id="cmp_ClientFiles_88EEB02E" Guid="581f0946-f41e-408e-ab96-27edb510c6b0">
+      <Component Id="cmp_ClientFiles_6B36C07E" Guid="4b617706-01fa-41ce-9473-e279b6f9a1d7">
+        <File Source="..\Client.GUI\publish\MainWindow.xbf" />
+      </Component>
+      <Component Id="cmp_ClientFiles_88EEB02E" Guid="ae6349bb-391b-4a9a-8089-80b4756a61b1">
         <File Source="..\Client.GUI\publish\Microsoft.Graphics.Imaging.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_ED6E3A0F" Guid="b4aa5169-781f-4339-9b7a-fabac459f46b">
+      <Component Id="cmp_ClientFiles_ED6E3A0F" Guid="2c0f485e-da15-440c-af62-6e5ab8dd14df">
         <File Source="..\Client.GUI\publish\Microsoft.InteractiveExperiences.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_BE16E7CD" Guid="32ca458e-5ec5-449f-94be-4c5d466a4d6e">
+      <Component Id="cmp_ClientFiles_BE16E7CD" Guid="d873c0a4-a777-48ee-8c2b-be005d7a96a5">
         <File Source="..\Client.GUI\publish\Microsoft.ML.OnnxRuntime.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_C65D4CCC" Guid="55321b2c-2c5c-48e8-96b5-5661f2986588">
+      <Component Id="cmp_ClientFiles_C65D4CCC" Guid="b99018e3-b504-4b91-a31d-720fc8f71424">
         <File Source="..\Client.GUI\publish\Microsoft.Security.Authentication.OAuth.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_FB5C0421" Guid="d3a9528b-61fe-49cc-8415-5628f100497a">
+      <Component Id="cmp_ClientFiles_FB5C0421" Guid="9a913c71-b999-4829-87ec-a1b1fd657d09">
         <File Source="..\Client.GUI\publish\Microsoft.Web.WebView2.Core.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_F3881F11" Guid="c0432d03-32e5-46f9-b749-1f05d3eaf02a">
+      <Component Id="cmp_ClientFiles_F3881F11" Guid="3b4e2d46-c85a-43a0-b41f-9b89132ac850">
         <File Source="..\Client.GUI\publish\Microsoft.Web.WebView2.Core.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_0C2B3AF6" Guid="5a3ae32a-ab03-4b89-a652-e5f5bc884c30">
+      <Component Id="cmp_ClientFiles_0C2B3AF6" Guid="84f33329-ef37-49e5-b669-d1aa8119cb62">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AI.ContentSafety.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_6F6D54BB" Guid="bdda4250-0515-44a2-a03d-6c70f3d0972c">
+      <Component Id="cmp_ClientFiles_6F6D54BB" Guid="ca719059-a3c6-411a-a200-9ae227fd3e15">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AI.Foundation.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_035D89D0" Guid="cc5e0cc0-e711-4ad3-846d-0e4b801c7a40">
+      <Component Id="cmp_ClientFiles_035D89D0" Guid="75ad95c4-303f-4a64-b9e5-8de2c33bc623">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AI.Imaging.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_C3FE6E50" Guid="1238f693-6f3d-4dc7-81f3-b0418b6ae659">
+      <Component Id="cmp_ClientFiles_C3FE6E50" Guid="8e0b938b-0d68-4bd3-8512-e446982bd6c9">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AI.MachineLearning.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_E2FF1DCC" Guid="dc3ea5e8-e839-4594-a078-344eb04178c7">
+      <Component Id="cmp_ClientFiles_E2FF1DCC" Guid="5a37d1e4-9927-4500-a3fc-d1f588a863b1">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AI.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_478B5478" Guid="a060e3cb-2870-42fa-8e36-f78357660bcc">
+      <Component Id="cmp_ClientFiles_478B5478" Guid="8e9c4143-cc67-4c7c-99f0-464717be5376">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AI.Text.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_CE04DD44" Guid="3ec6a7c6-e186-4653-81e9-5e17d0fcbd11">
+      <Component Id="cmp_ClientFiles_CE04DD44" Guid="5c84079b-2aad-4687-90a3-b22e7b4527cf">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.ApplicationModel.Background.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_2089309E" Guid="e5c6cf37-4dcb-4d33-8feb-56af37e6cf07">
+      <Component Id="cmp_ClientFiles_2089309E" Guid="b049dc2f-efe6-44cc-beee-7d36f18e6446">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_0AE6E9CE" Guid="407a4f4c-36fa-4e39-a41e-6ba39b810061">
+      <Component Id="cmp_ClientFiles_0AE6E9CE" Guid="cff5ba3f-4b44-48d0-85c9-92288db22f86">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_AE8FE12E" Guid="9d4b90fc-461d-4faa-84a8-4eb97c39b439">
+      <Component Id="cmp_ClientFiles_AE8FE12E" Guid="0420be67-45a6-451f-a8b9-d921aff12093">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.ApplicationModel.Resources.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_AF74FB97" Guid="db997b29-3146-42f6-84cd-6795326c18c3">
+      <Component Id="cmp_ClientFiles_AF74FB97" Guid="4ee5fdca-eeaf-42ca-8427-c86e51afca03">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_6D3EB95B" Guid="57aa0d9d-a6f5-4aee-90ce-616abbfea9ed">
+      <Component Id="cmp_ClientFiles_6D3EB95B" Guid="6add8b9e-5467-4097-8fc8-cf7cc46e6b5e">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AppLifecycle.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_D6E7E45C" Guid="51179347-5017-48be-8c70-ac0f41c053eb">
+      <Component Id="cmp_ClientFiles_D6E7E45C" Guid="d178c267-7b73-470d-bbfb-2175e0ee3cb7">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AppNotifications.Builder.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_DA1DAE26" Guid="6ad11477-b835-481f-aeb8-2bf0116cef2e">
+      <Component Id="cmp_ClientFiles_DA1DAE26" Guid="22bacbd7-159b-45e2-a039-e15a6da75f46">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.AppNotifications.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_088B1DE1" Guid="48dafde9-2940-4414-8ad4-7c189ccf0262">
+      <Component Id="cmp_ClientFiles_088B1DE1" Guid="9d64ec12-d9e9-49c5-a4e4-714df664036c">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.BadgeNotifications.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_96D8C125" Guid="e2d085e5-9b72-459c-8bef-8c39fa0ad638">
+      <Component Id="cmp_ClientFiles_96D8C125" Guid="51dfec60-05a0-48b4-bf16-636155ca6793">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Foundation.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_A25488E8" Guid="a0e10307-0e2c-4a99-8d64-5d116de95b0f">
+      <Component Id="cmp_ClientFiles_A25488E8" Guid="8dc53135-d280-4809-bd71-8c997b74f5a8">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Management.Deployment.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_CBAD7B55" Guid="535ceed3-dd7e-4872-9f7d-9ff137d0e515">
+      <Component Id="cmp_ClientFiles_CBAD7B55" Guid="bc7645eb-8335-44f1-b654-e2783762c821">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Media.Capture.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_96EC2A22" Guid="15400f4f-472d-40fb-af72-812b4316ee84">
+      <Component Id="cmp_ClientFiles_96EC2A22" Guid="24c2daa0-0ca4-43ed-beb2-bf82471ac84d">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.PushNotifications.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_562BD408" Guid="94daa364-5e46-487e-a93a-c760c1cb6846">
+      <Component Id="cmp_ClientFiles_562BD408" Guid="abd105a9-a705-43e3-930e-620e884293bc">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.SDK.NET.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_98A7232B" Guid="573bc9ff-269a-494d-86b9-60a884262680">
+      <Component Id="cmp_ClientFiles_98A7232B" Guid="b2ac2186-6911-4f5e-b7fe-4fccc656f6c4">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Security.AccessControl.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_A195AC4A" Guid="b16dd352-147d-49d8-a1b3-a15086510795">
+      <Component Id="cmp_ClientFiles_A195AC4A" Guid="a139dea7-0eaf-4949-9dc8-7ab2be148369">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Storage.Pickers.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_64952F19" Guid="f61acab8-439f-4615-9464-98e207505c58">
+      <Component Id="cmp_ClientFiles_64952F19" Guid="cd00dd71-b8a2-4cb9-ad14-b6e0eeda79a0">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Storage.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_B34AEE65" Guid="295013ca-2195-4f56-afc3-683a4ca1882c">
+      <Component Id="cmp_ClientFiles_B34AEE65" Guid="a664ee1c-59c5-432b-ac7b-49cabd581bde">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.System.Power.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_5EFB4300" Guid="e8f90353-529d-4385-b9c7-877b94e90d43">
+      <Component Id="cmp_ClientFiles_5EFB4300" Guid="56ac24ba-bc7f-41ae-9a5e-894409ede74f">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.System.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_5AA6D46A" Guid="23a49305-480f-4fbf-a593-ecf9ea46dfea">
+      <Component Id="cmp_ClientFiles_5AA6D46A" Guid="97b49562-8aa4-4e3d-8db4-b8f6a099785d">
         <File Source="..\Client.GUI\publish\Microsoft.Windows.Widgets.Projection.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_A4DE4B3C" Guid="19bbfce3-30cc-471f-8b2b-7d7d654031c2">
+      <Component Id="cmp_ClientFiles_A4DE4B3C" Guid="6eb1fe89-06ac-4f43-9823-3dc70d137b0f">
         <File Source="..\Client.GUI\publish\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_7D66CAC5" Guid="dd2fa441-375a-4afc-a702-01b9fb3f33e4">
+      <Component Id="cmp_ClientFiles_7D66CAC5" Guid="8731d813-566e-4e4b-888b-751f38868f1c">
         <File Source="..\Client.GUI\publish\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_84E49EBF" Guid="0262a763-f403-47b8-97c4-bf986a22003e">
+      <Component Id="cmp_ClientFiles_84E49EBF" Guid="f8fdc4a9-c1c1-4f7b-aba3-4390901053c2">
         <File Source="..\Client.GUI\publish\Microsoft.WinUI.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_5774992C" Guid="a8498624-2ca9-4d24-819a-8d98307d1583">
+      <Component Id="cmp_ClientFiles_5774992C" Guid="77cb5caf-ef9b-4edb-a42a-a11a087547e6">
         <File Source="..\Client.GUI\publish\Shared.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_4C34A7D9" Guid="654a7565-fb73-40a0-ae19-7cf85618cd63">
+      <Component Id="cmp_ClientFiles_4C34A7D9" Guid="0c5db32c-23fb-4bf4-8011-6394dd721154">
         <File Source="..\Client.GUI\publish\Shared.pdb" />
       </Component>
-      <Component Id="cmp_ClientFiles_73A4B138" Guid="3c74a9d9-9cef-4d33-8488-a23b2c69f07e">
+      <Component Id="cmp_ClientFiles_73A4B138" Guid="67a932b2-c7bf-4a4c-81da-860f0639db66">
         <File Source="..\Client.GUI\publish\System.IO.Hashing.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_ACE9C82C" Guid="9ed3978d-7187-4103-95a7-c29bb5148d95">
+      <Component Id="cmp_ClientFiles_ACE9C82C" Guid="7d79e6de-c4a8-46d3-aaf9-561a27c80be8">
         <File Source="..\Client.GUI\publish\System.Numerics.Tensors.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_40CCE2E6" Guid="b0fcbf76-830b-4498-a02e-b91efec7b577">
+      <Component Id="cmp_ClientFiles_40CCE2E6" Guid="ff110a3f-9d5e-451e-a77e-a36e83069871">
         <File Source="..\Client.GUI\publish\WebView2Loader.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_CCAE61C4" Guid="6f8fe2e0-bfde-484a-9316-14974c7e0ce2">
+      <Component Id="cmp_ClientFiles_CCAE61C4" Guid="dcc826fa-a059-4b63-84b4-aafeae05ca9f">
         <File Source="..\Client.GUI\publish\WinRT.Runtime.dll" />
       </Component>
-      <Component Id="cmp_ClientFiles_StartMenuShortcut" Guid="486b01a5-57fa-4024-9dbf-ca50951fc969">
+      <Component Id="cmp_ClientFiles_StartMenuShortcut" Guid="432628a8-3ef5-4796-907e-685e361d45e6">
         <RegistryValue
           Root="HKCU"
           Key="Software\MUDDY\ClientFiles"
@@ -159,7 +168,8 @@
           Directory="ProgramMenuFolder"
           Name="MUDDY Client"
           Target="[ClientFolder]Client.GUI.exe"
-          WorkingDirectory="ClientFolder" />
+          WorkingDirectory="ClientFolder"
+          Icon="ClientIcon" />
         <RemoveFolder
           Id="RemoveMUDDYProgramMenuFolder_ClientFiles"
           Directory="ProgramMenuFolder"

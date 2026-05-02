@@ -7,7 +7,7 @@ namespace Server.Core.Network.Model.Tests
     [TestClass]
     public class AcceptedConnectionTests
     {
-        private Socket _socket;
+        private Socket _socket = null!;
 
         [TestInitialize]
         public void Setup()

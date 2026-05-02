@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Package
+      Name="MUDDY Server"
+      Manufacturer="Matthew Schatz"
+      Version="0.3.0"
+      UpgradeCode="{A1B2C3D4-0002-4002-8002-000000000002}"
+      InstallerVersion="500"
+      Compressed="yes">
+
+        <!-- Suppress ARP entry — the bundle is the user-facing installer -->
+        <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
+
+        <!-- Allow upgrades -->
+        <MajorUpgrade DowngradeErrorMessage="A newer version of MUDDY Server is already installed." />
+
+        <MediaTemplate />
+
+        <Icon Id="ServerIcon" SourceFile="Icons\server.ico" />
+
+        <Feature Id="ServerFeature" Title="MUDDY Server" Level="1">
+            <ComponentGroupRef Id="ServerFiles" />
+        </Feature>
+    </Package>
+</Wix>

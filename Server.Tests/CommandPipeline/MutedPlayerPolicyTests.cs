@@ -13,7 +13,7 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class MutedPlayerPolicyTests
 {
-    private MutedPlayerPolicy _policy;
+    private MutedPlayerPolicy _policy = null!;
 
     [TestInitialize]
     public void TestInitialize()

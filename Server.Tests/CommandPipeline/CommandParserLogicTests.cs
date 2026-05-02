@@ -15,8 +15,8 @@ namespace Muddy.Tests
 
     public class Command
     {
-        public string Verb { get; set; }
-        public string Arg { get; set; }
+        public string Verb { get; set; } = string.Empty;
+        public string Arg { get; set; } = string.Empty;
     }
 
     public class CommandParser

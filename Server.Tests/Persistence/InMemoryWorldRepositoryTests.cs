@@ -21,8 +21,8 @@ namespace Server.Tests.Persistence;
 [TestClass]
 public class InMemoryWorldRepositoryTests
 {
-    private InMemoryWorldRepository _repository;
-    private Mock<IEventBus> _mockEventBus;
+    private InMemoryWorldRepository _repository = null!;
+    private Mock<IEventBus> _mockEventBus = null!;
 
     [TestInitialize]
     public void TestInitialize()

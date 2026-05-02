@@ -7,7 +7,7 @@ namespace Server.Tests.Network.Packet;
 [TestClass]
 public class PacketFactoryTests
 {
-    private MuddyPacketFactory _packetFactory;
+    private MuddyPacketFactory _packetFactory = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]

@@ -14,8 +14,8 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class AuthenticationPolicyTests
 {
-    private Mock<IAuthenticationService> _mockAuthService;
-    private AuthenticationPolicy _policy;
+    private Mock<IAuthenticationService> _mockAuthService = null!;
+    private AuthenticationPolicy _policy = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]

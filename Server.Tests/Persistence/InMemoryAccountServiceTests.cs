@@ -12,7 +12,7 @@ namespace Server.Tests.Persistence;
 [TestClass]
 public class InMemoryAccountServiceTests
 {
-    private InMemoryAccountService _service;
+    private InMemoryAccountService _service = null!;
 
     [TestInitialize]
     public void TestInitialize()

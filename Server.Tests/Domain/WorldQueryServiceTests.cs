@@ -13,7 +13,7 @@ namespace Server.Tests.Domain;
 [TestClass]
 public class WorldQueryServiceTests
 {
-    private WorldQueryService _service;
+    private WorldQueryService _service = null!;
 
     [TestInitialize]
     public void TestInitialize()

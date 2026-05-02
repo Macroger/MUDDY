@@ -7,9 +7,9 @@ namespace Server.Tests.Network.Packet;
 [TestClass]
 public class PacketSerializerTests
 {
-    private MuddyProtocolLimits _limits;
-    private MuddyPacketSerializer _serializer;
-    private MuddyPacketFactory _packetFactory;
+    private MuddyProtocolLimits _limits = null!;
+    private MuddyPacketSerializer _serializer = null!;
+    private MuddyPacketFactory _packetFactory = null!;
     private readonly ConnectionId _connectionId = new ConnectionId(Guid.NewGuid().ToString());
     public TestContext? TestContext { get; set; }
 

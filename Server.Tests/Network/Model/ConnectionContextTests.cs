@@ -9,7 +9,7 @@ namespace Server.Core.Network.Model.Tests
     [TestClass]
     public class ConnectionContextTests
     {
-        private Socket _socket;
+        private Socket _socket = null!;
 
         [TestInitialize]
         public void Setup()
@@ -29,9 +29,21 @@ namespace Server.Core.Network.Model.Tests
         {
             public bool IsRunning => false;
             public ConnectionId ConnId => new();
-            public event EventHandler<TransportEnvelope>? MessageReceived;
-            public event EventHandler? ConnectionClosed;
-            public event EventHandler<Exception>? ErrorOccurred;
+            public event EventHandler<TransportEnvelope>? MessageReceived
+            {
+                add { }
+                remove { }
+            }
+            public event EventHandler? ConnectionClosed
+            {
+                add { }
+                remove { }
+            }
+            public event EventHandler<Exception>? ErrorOccurred
+            {
+                add { }
+                remove { }
+            }
             public bool SendMessage(TransportEnvelope msg) => true;
             public void Start() { }
             public void Stop() { }

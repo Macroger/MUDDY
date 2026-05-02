@@ -16,9 +16,9 @@ namespace Server.Tests.Persistence;
 [TestClass]
 public class InMemoryAuthenticationServiceTests
 {
-    private InMemoryAuthenticationService _service;
-    private Mock<IEventBus> _mockEventBus;
-    private Mock<ISessionIdGenerator> _mockSessionIdGenerator;
+    private InMemoryAuthenticationService _service = null!;
+    private Mock<IEventBus> _mockEventBus = null!;
+    private Mock<ISessionIdGenerator> _mockSessionIdGenerator = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]

@@ -29,7 +29,7 @@ namespace Muddy.Tests
 
     public class Player
     {
-        public Room CurrentRoom;
+        public Room CurrentRoom = null!;
         public bool Move(string direction)
         {
             if (CurrentRoom.Exits.ContainsKey(direction))

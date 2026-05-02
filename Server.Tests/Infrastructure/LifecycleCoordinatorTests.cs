@@ -11,7 +11,7 @@ namespace Server.Tests.Infrastructure;
 [TestClass]
 public class LifecycleCoordinatorTests
 {
-    private LifecycleCoordinator _coordinator;
+    private LifecycleCoordinator _coordinator = null!;
 
     [TestInitialize]
     public void TestInitialize()

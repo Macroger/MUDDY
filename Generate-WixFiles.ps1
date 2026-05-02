@@ -1,4 +1,4 @@
-<#
+﻿<#
 ================================================================================
 Generate-WixFiles.ps1
 
@@ -24,8 +24,8 @@ $installerDir = Join-Path $repoRoot "MUDDY.Installer"
 $clientSource = Join-Path $repoRoot "Client.GUI\publish"
 $serverSource = Join-Path $repoRoot "Server.GUI\publish"
 
-$clientOutput = Join-Path $installerDir "ClientFiles.generated.wxs"
-$serverOutput = Join-Path $installerDir "ServerFiles.generated.wxs"
+$clientOutput = Join-Path $repoRoot "Client.msi\ClientFiles.generated.wxs"
+$serverOutput = Join-Path $repoRoot "Server.msi\ServerFiles.generated.wxs"
 
 # --------------------------------------------------------------------------
 # HELPER FUNCTION
@@ -58,7 +58,10 @@ function Generate-WixFileList {
 
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [string]$ShortcutName
+        [string]$ShortcutName,
+
+        [Parameter()]
+        [string]$IconId = ""
     )
 
     Write-Host ""
@@ -103,7 +106,14 @@ function Generate-WixFileList {
         $componentId = "cmp_${ComponentGroupId}_$hash"
         $guid = [Guid]::NewGuid()
 
-        $xml += "      <Component Id=`"$componentId`" Guid=`"$guid`">"
+        # Determine subdirectory relative to SourceDir root
+        $subDir = Split-Path $relativePath -Parent
+
+        if ($subDir) {
+            $xml += "      <Component Id=`"$componentId`" Guid=`"$guid`" Subdirectory=`"$subDir`">"
+        } else {
+            $xml += "      <Component Id=`"$componentId`" Guid=`"$guid`">"
+        }
 
         if ($file.Name -ieq $MainExeName) {
             # Main EXE component (file only)
@@ -131,12 +141,13 @@ function Generate-WixFileList {
     $xml += "          Value=`"1`""
     $xml += "          KeyPath=`"yes`" />"
 
+    $iconAttr = if ($IconId) { "`r`n          Icon=`"$IconId`"" } else { "" }
     $xml += "        <Shortcut"
     $xml += "          Id=`"${ComponentGroupId}StartMenuShortcut`""
     $xml += "          Directory=`"ProgramMenuFolder`""
     $xml += "          Name=`"$ShortcutName`""
     $xml += "          Target=`"[$DirectoryId]$MainExeName`""
-    $xml += "          WorkingDirectory=`"$DirectoryId`" />"
+    $xml += "          WorkingDirectory=`"$DirectoryId`"$iconAttr />"
 
     $xml += "        <RemoveFolder"
     $xml += "          Id=`"RemoveMUDDYProgramMenuFolder_$ComponentGroupId`""
@@ -148,7 +159,7 @@ function Generate-WixFileList {
     $xml += "  </Fragment>"
     $xml += "</Wix>"
 
-    $xml | Out-File -FilePath $OutputFile -Encoding UTF8
+    ($xml -join "`r`n") + "`r`n" | Set-Content -Path $OutputFile -Encoding UTF8 -NoNewline
 }
 
 # --------------------------------------------------------------------------
@@ -167,7 +178,8 @@ Generate-WixFileList `
     -WixSourceRoot "..\Client.GUI\publish" `
     -OutputFile $clientOutput `
     -MainExeName "Client.GUI.exe" `
-    -ShortcutName "MUDDY Client"
+    -ShortcutName "MUDDY Client" `
+    -IconId "ClientIcon"
 
 # Server
 Generate-WixFileList `
@@ -177,7 +189,8 @@ Generate-WixFileList `
     -WixSourceRoot "..\Server.GUI\publish" `
     -OutputFile $serverOutput `
     -MainExeName "Server.GUI.exe" `
-    -ShortcutName "MUDDY Server"
+    -ShortcutName "MUDDY Server" `
+    -IconId "ServerIcon"
 
 Write-Host ""
 Write-Host "============================================================"
