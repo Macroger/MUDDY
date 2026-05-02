@@ -36,12 +36,14 @@ public class ServerStateCommandHandlerTests
     // -------------------------------------------------------------------------
 
     [TestMethod]
-    public async Task Execute_NoArguments_ReturnsUsageError()
+    public async Task Execute_NoArguments_ReturnsCurrentState()
     {
+        _mockLifecycle.Setup(l => l.CurrentState).Returns(ServerStateEnum.ACTIVE);
+
         var result = await _handler.ExecuteAsync(BuildContext());
 
-        Assert.IsFalse(result.Success);
-        StringAssert.Contains(result.Message, "Usage");
+        Assert.IsTrue(result.Success);
+        StringAssert.Contains(result.Message, "ACTIVE");
     }
 
     [TestMethod]

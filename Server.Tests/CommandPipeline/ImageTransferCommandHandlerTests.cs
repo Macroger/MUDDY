@@ -145,7 +145,7 @@ public class ImageTransferCommandHandlerTests
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
-        Assert.IsGreaterThan(result.BinaryPayload.Length, oneMB,
+        Assert.IsGreaterThan(oneMB, result.BinaryPayload.Length,
             $"Expected payload > 1 MB, got {result.BinaryPayload.Length} bytes.");
     }
 }
