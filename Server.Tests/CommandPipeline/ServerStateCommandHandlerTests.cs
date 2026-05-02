@@ -43,7 +43,7 @@ public class ServerStateCommandHandlerTests
         var result = await _handler.ExecuteAsync(BuildContext());
 
         Assert.IsTrue(result.Success);
-        StringAssert.Contains(result.Message, "ACTIVE");
+        Assert.Contains(result.Message, "ACTIVE");
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ public class ServerStateCommandHandlerTests
         var result = await _handler.ExecuteAsync(BuildContext("flying"));
 
         Assert.IsFalse(result.Success);
-        StringAssert.Contains(result.Message, "flying");
+        Assert.Contains(result.Message, "flying");
     }
 
     // -------------------------------------------------------------------------
@@ -68,7 +68,7 @@ public class ServerStateCommandHandlerTests
 
         _mockLifecycle.Verify(l => l.SetState(ServerStateEnum.MAINTENANCE), Times.Once);
         Assert.IsTrue(result.Success);
-        StringAssert.Contains(result.Message, "MAINTENANCE");
+        Assert.Contains(result.Message, "MAINTENANCE");
     }
 
     [TestMethod]
@@ -116,6 +116,6 @@ public class ServerStateCommandHandlerTests
         var result = await _handler.ExecuteAsync(BuildContext("active"));
 
         Assert.IsFalse(result.Success);
-        StringAssert.Contains(result.Message, "Cannot transition");
+        Assert.Contains(result.Message, "Cannot transition");
     }
 }
