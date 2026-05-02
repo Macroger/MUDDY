@@ -369,3 +369,33 @@ FodyWeavers.xsd
 
 /docs/doxygen
 /MUDDY.Installer.Prerequisites/redist/WindowsAppRuntimeInstall-x64.exe
+
+# ============================================================
+# WiX / Installer build outputs
+# ============================================================
+# Compiled installer packages
+*.msi
+*.msm
+
+# WiX symbol / debug databases
+*.wixpdb
+
+# Cabinet files embedded in installers
+*.cab
+
+# WiX intermediate build artifacts
+*.wixobj
+*.wixlib
+*.wixiobj
+*.wixout
+
+# ============================================================
+# Large WinUI / WebView2 / WinRT runtime redistributables
+# ============================================================
+Microsoft.InteractiveExperiences.Projection.dll
+Microsoft.Web.WebView2.Core.dll
+Microsoft.Web.WebView2.Core.Projection.dll
+Microsoft.ML.OnnxRuntime.dll
+Microsoft.Security.Authentication.OAuth.Projection.dll
+Microsoft.Windows.AI.ContentSafety.Projection.dll
+Microsoft.Graphics.Imaging.Projection.dll
