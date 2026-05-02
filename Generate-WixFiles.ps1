@@ -20,7 +20,6 @@ Write-Host "Initializing configuration..." -ForegroundColor Cyan
 # Repository root = script location
 $repoRoot = $PSScriptRoot
 
-$installerDir = Join-Path $repoRoot "MUDDY.Installer"
 $clientSource = Join-Path $repoRoot "Client.GUI\publish"
 $serverSource = Join-Path $repoRoot "Server.GUI\publish"
 
