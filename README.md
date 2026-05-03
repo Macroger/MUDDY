@@ -126,7 +126,7 @@ Authentication
 
 Game World
 - Room‑based navigation with 3 initial locations (Tavern, City, Forest)
-- Directional movement (N / S / E / W / NE / NW / SE / SW / Up / Down)
+- Directional movement (N / S / E / W)
 - Player location tracking
 - Room descriptions and interconnected exits
 
