@@ -364,3 +364,5 @@ FodyWeavers.xsd
 /docs/doxygen
 /ARCHITECTURE.md
 /PROJECT_REQUIREMENTS.txt
+/Client.Installer/redist
+/Server.Installer/redist
