@@ -1,4 +1,5 @@
-# MUDDY - Multi-User Dungeon for Dynamic Learning
+# MUDDY — Multi‑User Dungeon for Dynamic Learning
+
 <div align="center">
 
 <table>
@@ -18,426 +19,342 @@
 
 </div>
 
-**Version:** 0.3.0
-**Framework:** .NET 10  
-**Architecture:** Event-driven pipeline with async TCP networking
+Current Version: 0.3.0  
+Framework: .NET 10  
+Platform: Windows (WinUI 3)  
+Architecture: Event‑driven client/server system over async TCP
 
-## Project Overview
+---
 
-MUDDY is a text-based multiplayer game server and client application built with modern .NET technologies. The system demonstrates advanced software engineering concepts including event-driven architecture, async I/O, command pipeline processing, and custom binary network protocols.
+## Overview
 
-**Repository:** MUDDY  
-**Purpose:** Open-source text-based multiplayer game server and client demonstrating client-server architecture and OOP design
+MUDDY is an open‑source, text‑based multiplayer game composed of a standalone server and client. It is designed both as a playable MUD experience and as a reference implementation showcasing modern .NET techniques for building scalable, event‑driven networked applications.
 
-## Architecture Summary
+The project emphasizes clarity of architecture, explicit boundaries between systems, and practical engineering trade‑offs rather than minimalism. While playable, MUDDY is intentionally structured so that developers can explore, extend, and repurpose its components.
 
-MUDDY uses a **pipeline-based command processor** with a **pub/sub event system**. Clients connect via TCP, send JSON commands, and the server processes them through a multi-stage pipeline (authentication, parsing, validation, execution) before responding with game state updates.
+Typical audiences include:
+- Players interested in classic MUD‑style gameplay
+- Developers studying client‑server architectures in .NET
+- Contributors experimenting with networking, concurrency, or game systems
 
-### Core Components
+---
 
-**Server Stack:**
-- Server.Core - Command pipeline, networking, domain logic, persistence
-- Server.GUI - WinUI 3 admin dashboard for server management
+## High‑Level Architecture
 
-**Client Stack:**
-- Client.Core - Networking layer and message routing
-- Client.GUI - WinUI 3 game client interface
+MUDDY is built around a pipeline‑based command processor combined with a centralized publish/subscribe event bus. Clients connect via TCP and communicate using a lightweight custom binary protocol with JSON payloads.
 
-**Shared Libraries:**
-- Protocol layer (TransportEnvelope, MuddyPacket serialization)
-- Event bus (BasicEventBus with 15+ channels)
+On the server, each incoming command passes through a clearly defined processing pipeline:
+
+1. Policy evaluation  
+   Authentication, session validation, and server‑state enforcement.
+
+2. Command parsing  
+   Incoming JSON payloads are parsed into verb‑argument command structures.
+
+3. Context construction  
+   Player state, world state, and request metadata are assembled.
+
+4. Command routing  
+   Commands are dispatched to the appropriate handler.
+
+5. Execution  
+   Game logic or system behavior is applied.
+
+6. Event publication  
+   Domain and system events are emitted via the event bus.
+
+7. Response dispatch  
+   Messages and state updates are serialized and sent back to clients.
+
+Each stage is isolated and testable, making the overall flow explicit and extensible.
+
+---
+
+## Solution Components
+
+### Server
+
+- Server.Core  
+  Networking, command pipeline, game logic, world state, and persistence abstractions
+
+- Server.GUI  
+  WinUI 3 administrative interface for controlling server lifecycle and monitoring activity
+
+### Client
+
+- Client.Core  
+  TCP networking, protocol handling, message routing, and session management
+
+- Client.GUI  
+  WinUI 3 client interface for gameplay interaction
+
+### Shared Libraries
+
+Shared functionality used by both client and server:
+- Protocol definitions (TransportEnvelope, MuddyPacket serialization with CRC32)
+- Event bus (BasicEventBus with publish/subscribe pattern and typed envelopes)
 - Domain models (PlayerState, RoomState, WorldState)
-- Identity types (ConnectionId, SessionId, MessageId, RoomId)
-- Logging infrastructure (PacketLogger, FileLogger, EventBusLogger)
+- Strongly‑typed identity values (ConnectionId, SessionId, MessageId, RoomId)
+- Logging infrastructure (packet, file, event‑bus logging)
 
-### Key Technologies
+---
 
-- **.NET 10** - Latest C# features and performance
-- **WinUI 3** - Modern Windows UI framework
-- **TCP/IP** - Custom binary protocol with JSON payloads
-- **Async/Await** - Non-blocking I/O throughout
-- **ConcurrentDictionary** - Thread-safe state management
-- **BlockingCollection** - Command queue with backpressure
+## Key Technologies
 
-## Features Implemented
+- .NET 10 — modern C# features and runtime performance
+- WinUI 3 — native Windows GUI framework
+- Async/Await — non‑blocking I/O throughout networking and pipelines
+- TCP/IP — custom binary wire format with JSON bodies
+- Concurrent collections — thread‑safe state management
+- CancellationTokens — controlled shutdown and lifecycle handling
+
+---
+
+## Implemented Features
 
 ### Server Features
 
-**Command Pipeline:**
-- Multi-stage processing: Policies -> Parse -> Context Building -> Routing -> Execution
-- First-pass policies (authentication)
-- Second-pass policies (player conditions, muted players)
-- Extensible handler registration
+Command Processing
+- Multi‑stage command pipeline
+- Policy checks (authentication, player state, server state)
+- Verb‑based routing with extensible handlers
 
-**Authentication:**
-- Session-based authentication with token generation
-- Login/Register commands
-- Session validation on every command
-- In-memory account storage
+Authentication
+- Session‑based login and registration
+- Token validation on every command
+- In‑memory account storage
 
-**Game World:**
-- Room-based navigation (3 rooms)
-- Directional movement (N, S, E, W)
-- Room descriptions with exits
+Game World
+- Room‑based navigation with 3 initial locations (Tavern, City, Forest)
+- Directional movement (N / S / E / W / NE / NW / SE / SW / Up / Down)
 - Player location tracking
+- Room descriptions and interconnected exits
 
-**Chat System:**
-- Broadcast messages to room occupants
-- Player muting capability
-- Chat event logging
+Chat System
+- Room‑scoped broadcast messaging
+- Player muting support
+- Event‑based logging
 
-**Server Lifecycle:**
-- State machine: LOADING -> ACTIVE -> MAINTENANCE -> SHUTTING_DOWN
-- Graceful shutdown with cancellation tokens
-- TCP listener start/stop control
-- Admin-controllable state transitions
+Server Lifecycle Management
+- Explicit state machine (LOADING, ACTIVE, MAINTENANCE, SHUTTING_DOWN)
+- Graceful startup and shutdown
+- Admin‑controlled state transitions
 
-**Networking:**
-- Custom binary protocol (header + JSON body + CRC32)
-- Packet size validation (max 4MB)
-- Per-connection worker threads
-- Connection pooling
-- Packet logging for debugging
+Networking
+- Custom binary protocol (header + JSON + CRC32)
+- Per‑connection workers
+- Packet size validation
+- Detailed packet logging
+
+---
 
 ### Client Features
 
-**User Interface:**
-- Connection management (server address/port configuration)
-- Command input with history (up/down arrow navigation)
-- Color-coded message display (chat, events, errors, responses)
-- Quick action buttons (movement pad, common commands)
-- Image rendering (binary JPEG transfer support)
-- Scrollable output window
+User Interface
+- Server connection configuration (address and port)
+- Command input with up/down arrow history navigation
+- **Color-coded output** (chat, events, errors, commands)
+- Session token management
+- Binary image rendering support
 
-**Message Handling:**
-- Handler-based message routing by type
-- Event-driven UI updates
+Message Handling
+- Handler‑based dispatch by message type
+- Event‑driven UI updates
 - Session token management
 
-### Admin Features (Server GUI)
+---
 
-**Dashboard Panels:**
-- Server status (uptime, state, listener status)
-- Active players list with mute/kick controls (not fully implemented, yet)
-- Server state controls (ACTIVE, MAINTENANCE, SHUTTING_DOWN buttons)
-- Real-time event log 
+### Server Admin GUI
 
-**Server Control:**
-- Toggle TCP listener on/off
-- Change server operational state
-- View packet logs
-- Monitor player connections
+Dashboard
+- Server runtime status (LOADING, ACTIVE, MAINTENANCE, SHUTTING_DOWN)
+- Connected player overview with player list
+- Real‑time event logs with timestamps and severity
 
-## Protocol Specification
+Controls
+- Start and stop TCP listener
+- Transition server between states (ACTIVE, MAINTENANCE, SHUTTING_DOWN)
+- Monitor packet logs and active connections
+- Mute/kick player controls (for moderation)
 
-### Transport Envelope Format
+---
 
-```csharp
-{
-    MessageId: Guid
-    ConnId: ConnectionId
-    SessionToken: SessionId?
-    CorrelationId: MessageId?
-    MessageType: TransportMessageType
-    Flags: MessageFlags
-    TimestampUtc: DateTime
-    Payload: byte[]
-}
-```
+## Protocol Overview
 
-### Wire Protocol (Binary)
+Transport Envelope
 
-```
-[Header: 28 bytes]
-  - MessageId: 16 bytes (GUID)
-  - Body Length: 4 bytes (UInt32_t)
-  - Message ID: 4 bytes (UInt32_t)  
-  - MessageType: 2 bytes (UInt16_t)
-  - BitFlags: 2 bytes (UInt16_t)
-  
-[Body: Variable]
-  - TransportEnvelope JSON
-  - Binary payload (optional, e.g. image data)
-[CRC32: 4 bytes]
-  - Integrity checksum
-```
+    {
+        MessageId: Guid,
+        ConnId: ConnectionId,
+        SessionToken: SessionId?,
+        CorrelationId: MessageId?,
+        MessageType: TransportMessageType,
+        Flags: MessageFlags,
+        TimestampUtc: DateTime,
+        Payload: byte[]
+    }
 
-### Command Format (JSON)
+Wire Format
 
-```json
-{
-    "verb": "say",
-    "args": ["Hello", "World"]
-}
-```
+    [Header | 28 bytes]
+    [Body   | JSON + optional binary payload]
+    [CRC32  | 4 bytes]
 
-### Supported Commands
+Commands
 
-- `login [username] [password]` - Authenticate
-- `register [username] [password]` - Create account
-- `say [message]` - Send chat message
-- `move [direction]` - Navigate rooms
-- `north/south/east/west` - Directional shortcuts
-- `look` - Describe current room
-- `status` - View player information
-- `who` - List online players
-- `serverstate [active|maintenance|shutdown]` - Change server state
-- `logout` - Disconnect session
+    {
+      "verb": "say",
+      "args": ["Hello, world"]
+    }
 
-## Event Bus Architecture
+Supported verbs include:
+- **Authentication**: login, register
+- **Chat**: say
+- **Movement**: move, go, look, north, south, east, west, northeast, northwest, southeast, southwest, up, down
+- **Player Info**: status, who, player
+- **Server Admin**: serverstate
+- **System**: sendimage, logout
 
-The system uses a centralized event bus with 15+ typed channels for loose coupling:
+---
 
-- **Authentication** - Login/logout events
-- **System** - Server lifecycle and state changes
-- **Network** - Connection management (server-side)
-- **ClientNetwork** - Connection management (client-side)
-- **Protocol** - Protocol-level processing
-- **Command** - Command parsing and execution
-- **Domain** - Game-world events
-- **World** - World state changes
-- **Player** - Player-specific events
-- **Chat** - Chat messages
-- **Error** - Error reporting
-- **PacketLog** - Packet transmission logging
-- **Log** - Structured application logging
-- **GUI** - UI updates
-- **Persistence** - Database operations
+## Event Bus Design
+
+A centralized event bus decouples systems using a publish/subscribe pattern with typed event envelopes and subscriptions. The following event message types enable loose coupling across subsystems:
+
+- **Authentication** — Login/logout, session creation and validation
+- **Network** — Server-side connection events (clients joining/leaving)
+- **ClientNetwork** — Client-side network events (connection status)
+- **Command** — Command parsing and execution pipeline events
+- **Domain** — Game-world domain events (rooms, players, items)
+- **World** — World state changes (room transitions, environmental updates)
+- **Player** — Player-specific events (status, condition changes)
+- **Chat** — In-game chat messages and broadcasting
+- **System** — Server/process lifecycle and global state transitions
+- **Protocol** — Protocol-level processing (parsing, validation, serialization)
+- **Gui** — GUI updates and notifications (client and admin UI)
+- **Persistence** — Save/load operations and storage events
+- **Log** — Structured logging events from across the system
+- **Error** — Cross-cutting error reporting and recovery
+- **PacketLog** — Special diagnostic channel for packet transmission events
+
+---
 
 ## Project Structure
 
-```
-Solution Root
-├── Server.Core/          Core server logic
-│   ├── Application/      SystemInitializer (bootstrapping)
-│   ├── CommandPipeline/  Orchestrator, handlers, policies, parsers
-│   ├── Domain/           Services (chat, movement, player query)
-│   ├── Infrastructure/   Lifecycle, identity generators
-│   ├── Network/          Supervisor, listener, worker, protocol
-│   └── Persistence/      In-memory repositories
-├── Server.GUI/           WinUI 3 admin dashboard
-├── Client.Core/          Client networking and message routing
-├── Client.GUI/           WinUI 3 game client
-├── Shared/               Common components
-│   ├── Domain/           PlayerState, RoomState, WorldState
-│   ├── EventBus/         BasicEventBus, domain events
-│   ├── Identity/         Strong-typed IDs
-│   ├── Logging/          PacketLogger, FileLogger, EventBusLogger
-│   └── Protocol/         TransportEnvelope, MuddyPacket, serialization
-├── Server.Tests/         Server unit/integration tests
-└── Client.Tests/         Client unit tests
-```
+    Solution Root
+    ├── Server.Core
+    ├── Server.GUI
+    ├── Client.Core
+    ├── Client.GUI
+    ├── Shared
+    │   ├── Domain
+    │   ├── EventBus
+    │   ├── Identity
+    │   ├── Logging
+    │   └── Protocol
+    ├── Server.Tests
+    └── Client.Tests
 
-## Design Patterns Used
+---
 
-- **Pipeline Pattern**   - Command processing flow
-- **Strategy Pattern**   - Pluggable handlers and policies
-- **Observer Pattern**   - EventBus pub/sub
-- **Repository Pattern** - Data access abstraction
-- **Factory Pattern**    - Packet creation
-- **Command Pattern**    - ICommandHandler interface
-- **State Pattern**      - Server lifecycle states
-- **Mediator Pattern**   - EventBus as central mediator
+## Design Patterns
+
+- Pipeline
+- Strategy
+- Observer (pub/sub)
+- Repository
+- Factory
+- Command
+- State
+- Mediator
+
+Patterns are applied pragmatically rather than dogmatically, with an emphasis on readability and explicit flow.
+
+---
 
 ## Getting Started
 
-### Prerequisites
+Using the Installer (Recommended)
 
-- Windows 10/11 (for WinUI 3)
-- .NET 10 SDK (for building from source)
-- Visual Studio 2026 (or VS Code with C# extension) (for building from source)
-- Graphviz (optional, for Doxygen documentation)
+Server
+1. Run Server.Installer.exe
+2. Complete the setup wizard
+3. Launch MUDDY Server from the Start Menu
 
-### Installing via Installer (Recommended)
+Client
+1. Run Client.Installer.exe
+2. Complete the setup wizard
+3. Launch MUDDY Client from the Start Menu
 
-Pre-built installers are provided for both the server and client. Each is a bootstrapper that silently installs the Windows App Runtime if not already present, then installs the application.
+---
 
-**Server:**
-1. Run `Server.Installer.exe`
-2. Accept the licence and complete the wizard
-3. Launch **MUDDY Server** from the Start Menu
+Building from Source
 
-**Client:**
-1. Run `Client.Installer.exe`
-2. Accept the licence and complete the wizard
-3. Launch **MUDDY Client** from the Start Menu
+    git clone https://github.com/Macroger/MUDDY.git
+    cd MUDDY
+    dotnet restore
+    dotnet build
+    dotnet test
 
-### Building from Source
+---
 
-```powershell
-# Clone repository
-git clone https://github.com/Macroger/MUDDY.git
-cd "Project IV"
+## Logging and Diagnostics
 
-# Restore dependencies
-dotnet restore
+- Full packet logs for client and server
+- Timestamped log files
+- Real‑time event tracing in the Server GUI
 
-# Build solution
-dotnet build
+---
 
-# Run tests
-dotnet test
-```
+## Limitations and Scope
 
-### Running the Server (from source)
+- In‑memory persistence only
+- Plain‑text TCP (no TLS)
+- Single server instance
+- No inventory, combat, or NPC systems
 
-1. Set `Server.GUI` as startup project
-2. Press F5 or click "Start"
-3. Server dashboard will open
-4. Click "Toggle Listener" to start accepting connections
-5. Default port: 30333 (configurable in code)
+These limitations are intentional to keep the core architecture approachable.
 
-### Running the Client (from source)
+---
 
-1. Set `Client.GUI` as startup project
-2. Press F5 or click "Start"
-3. Enter server address
-4. Enter port (default: 30333)
-5. Click "Connect"
-6. Use `register` or `login` commands to authenticate
-7. Explore the game world with movement commands
+## Evolution Notes
 
-### Multiple Clients
+MUDDY is an actively evolving project. Development is guided by experimentation, refactoring, and architectural exploration rather than a fixed roadmap.
 
-Run multiple instances of Client.GUI (or installed client) to test multiplayer functionality. Each client needs its own session.
-
-## Testing
-
-### Unit Tests
-
-```powershell
-# Run all tests
-dotnet test
-
-# Run specific test project
-dotnet test Server.Tests
-dotnet test Client.Tests
-```
-
-### Test Coverage
-
-- Command pipeline processing
-- Authentication flow
-- Movement validation
-- Chat broadcasting
-- Server state transitions
-- Network packet serialization
-- Policy enforcement
-
-## Documentation
-
-### Doxygen
-
-Generate code documentation:
-
-```powershell
-# Install Doxygen (if not installed)
-choco install doxygen.install graphviz
-
-# Generate docs
-doxygen Doxyfile
-
-# Open documentation
-start docs/doxygen/html/index.html
-```
-
-### Code Documentation
-
-The codebase includes comprehensive inline documentation and XML comments for all public APIs. Use Visual Studio IntelliSense or generate Doxygen documentation to explore the architecture.
-
-## Logging
-
-### Packet Logs
-
-All network packets are logged to timestamped files:
-- `server_packets_YYYY-MM-DD_HH-mm-ss.log`
-- `client_packets_YYYY-MM-DD_HH-mm-ss.log`
-
-Format: `[timestamp] direction | Data: { envelope details }`
-
-### Event Logs
-
-Server GUI displays real-time event log with filtering by channel.
-
-## Performance Characteristics
-
-- **Async I/O** - Zero blocking operations
-- **Lock-free operations** - ConcurrentDictionary for hot paths
-- **Bounded resources** - Max packet size limits, optional queue capacity
-- **Memory efficient** - Structs for IDs, value semantics
-- **Scalable** - No thread-per-connection model
-
-## Security Features
-
-- Session-based authentication
-- Token validation on every command
-- Input validation (JSON schema, command arguments)
-- Packet integrity checks (CRC32)
-- Policy-based authorization
-- Server state enforcement (maintenance mode)
-
-## Known Limitations
-
-- In-memory persistence (data lost on server restart)
-- No database integration
-- No encryption (plaintext TCP)
-- No load balancing (single server instance)
-- No item/inventory system (planned)
-- No combat system (planned)
-- No NPC AI (planned)
-
-## Future Enhancements
-
-**Planned Features:**
-- Database persistence (SQL Server/PostgreSQL)
-- Item and inventory system
-- Combat mechanics
-- NPC AI and quests
-- Skill/leveling system
-- OAuth authentication
-- TLS/SSL encryption
-- Server clustering
-- Admin role-based permissions
+---
 
 ## Contributing
 
-Contributions are welcome! If you spot a bug, have an idea, or want to improve
-something, feel free to get involved.
+Contributions are welcome. Bug fixes, improvements, and focused feature additions are encouraged.
 
-### How to contribute
+Workflow
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-change`)
+2. Create a feature branch
 3. Make your changes with clear, descriptive commit messages
-4. Push your branch to your fork
+4. Push to your fork
 5. Open a Pull Request
 
-All Pull Requests are reviewed by the maintainer. PRs may be accepted, modified,
-or declined depending on scope, design direction, and project goals.
+Pull Requests are reviewed by the maintainer and may be accepted, revised, or declined depending on scope and direction.  
+For significant changes, opening an Issue first is recommended.
 
-### Guidelines
-- Small, focused changes are preferred over large refactors
-- Please try to follow existing code style and architectural patterns
-- Tests are appreciated where applicable, but not required for all contributions
-- For significant changes, opening an Issue first to discuss the idea is encouraged
-
-Thank you for your interest in improving MUDDY!
-
+---
 
 ## License
 
-This project is licensed under the [Apache License 2.0](LICENSE).
+Licensed under the Apache License 2.0. See LICENSE for details.
 
-You are free to use, modify, and distribute this software in accordance with the terms of the Apache 2.0 licence. See the `LICENSE` file in the repository root for the full licence text.
+---
 
-## Authors
+## Author
 
-- **Matthew Schatz** ([@Macroger](https://github.com/Macroger)) - Original author
+Matthew Schatz  
+https://github.com/Macroger
+
+---
 
 ## Acknowledgments
 
-- .NET team for excellent async/await primitives
-- WinUI 3 team for modern UI framework
-- Community ToolKit for WinUI controls
-- Doxygen for documentation generation
-- Claude Sonnet 4.5 for code review, feedback, and disussions on architecture and design decisions
-
+- .NET and WinUI teams
+- Community Toolkit contributors
+- Doxygen
+- Claude Sonnet for architectural discussion and review
