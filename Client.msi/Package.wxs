@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Package
+      Name="MUDDY Client"
+      Manufacturer="Matthew Schatz"
+      Version="0.3.0"
+      UpgradeCode="{A1B2C3D4-0001-4001-8001-000000000001}"
+      InstallerVersion="500"
+      Compressed="yes">
+
+        <!-- Bind the install directory dialog to INSTALLFOLDER -->
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+        <!-- Suppress ARP entry — the bundle is the user-facing installer -->
+        <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
+
+        <!-- Allow upgrades -->
+        <MajorUpgrade DowngradeErrorMessage="A newer version of MUDDY Client is already installed." />
+
+        <MediaTemplate />
+
+        <Icon Id="ClientIcon" SourceFile="Icons\client.ico" />
+
+        <Feature Id="ClientFeature" Title="MUDDY Client" Level="1">
+            <ComponentGroupRef Id="ClientFiles" />
+        </Feature>
+    </Package>
+</Wix>

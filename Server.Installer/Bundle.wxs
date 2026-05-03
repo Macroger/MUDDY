@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+
+    <Bundle
+      Name="MUDDY Server"
+      Version="0.3.0"
+      Manufacturer="Matthew Schatz"
+      UpgradeCode="{C1D2E3F4-0002-4002-8002-000000000002}"
+      IconSourceFile="..\Server.msi\Icons\server.ico">
+
+        <BootstrapperApplication>
+            <bal:WixStandardBootstrapperApplication
+              LicenseFile="License.rtf"
+              Theme="rtfLicense"
+              LogoFile="..\Server.msi\Images\server-logo.png" />
+        </BootstrapperApplication>
+
+        <!-- Default install location; updated if the user changes it in the UI -->
+        <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]MUDDY\Server\" />
+
+        <Chain>
+
+            <!-- .NET 10 Desktop Runtime (silent, skips if already installed) -->
+            <ExePackage
+              Id="DotNetDesktopRuntime"
+              SourceFile=".\redist\windowsdesktop-runtime-10.0.7-win-x64.exe"
+              InstallArguments="/install /quiet /norestart"
+              Vital="yes"
+              Permanent="yes">
+
+                <!-- Detect via ARP so the package is skipped if already installed -->
+                <ArpEntry Id="Microsoft.WindowsDesktop.App.Runtime.win-x64 10.0.7" Version="10.0.7" Win64="yes" />
+
+                <!-- Normal success -->
+                <ExitCode Value="0" Behavior="success" />
+
+                <!-- Already installed is also success -->
+                <ExitCode Value="1638" Behavior="success" />
+
+            </ExePackage>
+
+            <!-- Windows App Runtime (silent, skips if already installed) -->
+            <ExePackage
+              Id="WindowsAppRuntime"
+              SourceFile=".\redist\WindowsAppRuntimeInstall-x64.exe"
+              InstallArguments="/install /quiet /norestart"
+              Vital="yes"
+              Permanent="yes">
+
+                <!-- Detect via ARP so the package is skipped if already installed -->
+                <ArpEntry Id="Microsoft.WindowsAppRuntime.1.8" Version="1.8.0" Win64="yes" />
+
+                <!-- Normal success -->
+                <ExitCode Value="0" Behavior="success" />
+
+                <!-- Already installed is also success -->
+                <ExitCode Value="-2147024736" Behavior="success" />
+
+            </ExePackage>
+
+            <!-- MUDDY Server MSI -->
+            <MsiPackage
+              SourceFile="..\Server.msi\bin\x64\Release\en-US\Server.Installer.msi"
+              Vital="yes">
+                <!-- Pass the user-chosen install folder into the MSI -->
+                <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+            </MsiPackage>
+
+        </Chain>
+
+    </Bundle>
+</Wix>

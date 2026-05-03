@@ -1,0 +1,19 @@
+﻿<Project Sdk="WixToolset.Sdk/7.0.0">
+  <PropertyGroup>
+    <WixUI>WixUI_InstallDir</WixUI>
+    <OutputName>Server.Installer</OutputName>
+  </PropertyGroup>
+  <!-- Bind paths for file harvesting -->
+  <ItemGroup>
+    <BindPath Include="$(SolutionDir)Server.GUI\publish" Name="ServerPublishDir" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Images\server-logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\server.ico" />
+  </ItemGroup>
+</Project>
