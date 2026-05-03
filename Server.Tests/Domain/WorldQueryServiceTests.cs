@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.Services.WorldQueryService;
 using Server.Core.Domain.World;
@@ -13,7 +15,7 @@ namespace Server.Tests.Domain;
 [TestClass]
 public class WorldQueryServiceTests
 {
-    private WorldQueryService _service;
+    private WorldQueryService _service = null!;
 
     [TestInitialize]
     public void TestInitialize()
@@ -22,7 +24,7 @@ public class WorldQueryServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // LookAtRoom — known room
+    // LookAtRoom â€” known room
     // -------------------------------------------------------------------------
 
     [TestMethod]

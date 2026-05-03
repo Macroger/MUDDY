@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.Services.PlayerQueryService;
 using Server.Core.Domain.World;
@@ -13,7 +15,7 @@ namespace Server.Tests.Domain;
 [TestClass]
 public class PlayerQueryServiceTests
 {
-    private PlayerQueryService _service;
+    private PlayerQueryService _service = null!;
     private ConnectionId _connectionId;
     private RoomId _roomId;
 
@@ -51,7 +53,7 @@ public class PlayerQueryServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // ListPlayersInRoom — empty room
+    // ListPlayersInRoom â€” empty room
     // -------------------------------------------------------------------------
 
     [TestMethod]

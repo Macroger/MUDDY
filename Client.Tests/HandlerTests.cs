@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Client.Core.CommandPipeline;
 using Shared.Protocol.Transport;
 
@@ -9,7 +11,7 @@ namespace Tests.Client
         [TestMethod]
         public async Task ChatMessageHandler_RaisesEvent()
         {
-            string received = null;
+            string? received = null;
             var handler = new ChatMessageHandler();
             ChatMessageHandler.OnChatMessageReceived += msg => received = msg;
             var envelope = new TransportEnvelope(

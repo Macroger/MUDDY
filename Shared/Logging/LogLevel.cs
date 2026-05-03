@@ -1,4 +1,6 @@
-﻿namespace Shared.Logging
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.Logging
 {
     public enum LogLevel
     {

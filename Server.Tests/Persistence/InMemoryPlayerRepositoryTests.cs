@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.Persistence;
 using Shared.Domain.Player;
@@ -15,10 +17,10 @@ namespace Server.Tests.Persistence;
 [TestClass]
 public class InMemoryPlayerRepositoryTests
 {
-    private InMemoryPlayerRepository _repository;
-    private Mock<IEventBus> _mockEventBus;
+    private InMemoryPlayerRepository _repository = null!;
+    private Mock<IEventBus> _mockEventBus = null!;
     private ConnectionId _connectionId;
-    private PlayerState _testPlayer;
+    private PlayerState _testPlayer = null!;
 
     [TestInitialize]
     public void TestInitialize()

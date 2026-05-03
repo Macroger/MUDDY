@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline;
 using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Network.Model;
@@ -70,11 +72,11 @@ namespace Server.Core.Network.Listener.Tests
         }
 
 
-        private IPEndPoint _localEndPoint;
-        private DummySupervisor _supervisor;
-        private DummyConnectionIdGenerator _connIdGen;
-        private DummyListenerErrorHandler _listenerErrorHandler;
-        private DummyListenerNewConnectionHandler _listenerNewConnectionHandler;
+        private IPEndPoint _localEndPoint = null!;
+        private DummySupervisor _supervisor = null!;
+        private DummyConnectionIdGenerator _connIdGen = null!;
+        private DummyListenerErrorHandler _listenerErrorHandler = null!;
+        private DummyListenerNewConnectionHandler _listenerNewConnectionHandler = null!;
 
         [TestInitialize]
         public void Setup()

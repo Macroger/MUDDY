@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.CommandRouter;
@@ -13,7 +15,7 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class StandardCommandRouterTests
 {
-    private StandardCommandRouter _router;
+    private StandardCommandRouter _router = null!;
 
     [TestInitialize]
     public void TestInitialize()
@@ -25,7 +27,7 @@ public class StandardCommandRouterTests
         => new ParsedCommand { CommandType = verb, Arguments = Array.Empty<string>(), MsgId = new MessageId(1) };
 
     // -------------------------------------------------------------------------
-    // Route — registered verb
+    // Route â€” registered verb
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -40,7 +42,7 @@ public class StandardCommandRouterTests
     }
 
     // -------------------------------------------------------------------------
-    // Route — unknown verb
+    // Route â€” unknown verb
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -52,7 +54,7 @@ public class StandardCommandRouterTests
     }
 
     // -------------------------------------------------------------------------
-    // RegisterHandler — guard clauses
+    // RegisterHandler â€” guard clauses
     // -------------------------------------------------------------------------
 
     [TestMethod]

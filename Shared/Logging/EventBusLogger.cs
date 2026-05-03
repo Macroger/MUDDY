@@ -1,4 +1,6 @@
-﻿using Shared.EventBus;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Shared.EventBus;
 
 namespace Shared.Logging
 {

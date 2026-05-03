@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
 using System.Net;
 using System.Net.Sockets;
@@ -7,7 +9,7 @@ namespace Server.Core.Network.Model.Tests
     [TestClass]
     public class AcceptedConnectionTests
     {
-        private Socket _socket;
+        private Socket _socket = null!;
 
         [TestInitialize]
         public void Setup()

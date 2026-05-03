@@ -1,4 +1,6 @@
-﻿namespace Shared.EventBus
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+namespace Shared.EventBus
 {
     /// <summary>
     /// A container for an event message, including its type, payload, and metadata such as creation time and a unique identifier.

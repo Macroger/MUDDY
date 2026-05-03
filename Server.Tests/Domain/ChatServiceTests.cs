@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.Services.ChatService;
@@ -16,14 +18,14 @@ namespace Server.Tests.Domain;
 [TestClass]
 public class ChatServiceTests
 {
-    private Mock<IEventBus> _mockEventBus;
-    private Mock<IMessageIdGenerator> _mockMessageIdGenerator;
-    private ChatService _service;
+    private Mock<IEventBus> _mockEventBus = null!;
+    private Mock<IMessageIdGenerator> _mockMessageIdGenerator = null!;
+    private ChatService _service = null!;
 
     private ConnectionId _connectionId;
     private RoomId _roomId;
-    private PlayerState _player;
-    private WorldState _world;
+    private PlayerState _player = null!;
+    private WorldState _world = null!;
 
     [TestInitialize]
     public void TestInitialize()
@@ -57,7 +59,7 @@ public class ChatServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // BroadcastMessageAsync — empty message
+    // BroadcastMessageAsync â€” empty message
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -69,7 +71,7 @@ public class ChatServiceTests
     }
 
     // -------------------------------------------------------------------------
-    // BroadcastMessageAsync — valid message
+    // BroadcastMessageAsync â€” valid message
     // -------------------------------------------------------------------------
 
     [TestMethod]

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.Parser;
 using Server.Core.CommandPipeline.Types;
 using Shared.Identity;
@@ -14,7 +16,7 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class StandardCommandParserTests
 {
-    private StandardCommandParser _parser;
+    private StandardCommandParser _parser = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]
@@ -37,7 +39,7 @@ public class StandardCommandParserTests
     }
 
     // -------------------------------------------------------------------------
-    // Parse — success
+    // Parse â€” success
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -54,7 +56,7 @@ public class StandardCommandParserTests
     }
 
     // -------------------------------------------------------------------------
-    // Parse — missing verb
+    // Parse â€” missing verb
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -69,7 +71,7 @@ public class StandardCommandParserTests
     }
 
     // -------------------------------------------------------------------------
-    // Parse — invalid JSON
+    // Parse â€” invalid JSON
     // -------------------------------------------------------------------------
 
     [TestMethod]

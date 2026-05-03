@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
@@ -48,7 +50,7 @@ public class ImageTransferCommandHandlerTests
             errorMessage: null);
 
     /// <summary>Creates a JPEG file in the Images folder with the correct magic bytes.
-    /// Returns the bare filename without extension — pass this directly to the handler.</summary>
+    /// Returns the bare filename without extension â€” pass this directly to the handler.</summary>
     private string CreateFakeJpeg(int sizeBytes)
     {
         string name = Guid.NewGuid().ToString("N");
@@ -128,7 +130,7 @@ public class ImageTransferCommandHandlerTests
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
-        Assert.AreEqual(1024, result.BinaryPayload.Length);
+        Assert.HasCount(1024, result.BinaryPayload);
         // Confirm BinaryPayload carries the correct magic bytes
         Assert.AreEqual(0xFF, result.BinaryPayload[0]);
         Assert.AreEqual(0xD8, result.BinaryPayload[1]);
@@ -145,7 +147,7 @@ public class ImageTransferCommandHandlerTests
 
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.BinaryPayload);
-        Assert.IsTrue(result.BinaryPayload.Length > oneMB,
+        Assert.IsGreaterThan(oneMB, result.BinaryPayload.Length,
             $"Expected payload > 1 MB, got {result.BinaryPayload.Length} bytes.");
     }
 }

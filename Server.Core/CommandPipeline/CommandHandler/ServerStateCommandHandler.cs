@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Infrastructure.Lifecycle;

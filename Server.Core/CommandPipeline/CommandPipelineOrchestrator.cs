@@ -1,4 +1,6 @@
-﻿using Server.Core.CommandPipeline.Authentication;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.CommandPipeline.Authentication;
 using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Parser;

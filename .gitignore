@@ -16,6 +16,9 @@
 # Mono auto generated files
 mono_crash.*
 
+# Ignore any files in any redist folder
+*.redist/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -32,6 +35,7 @@ bld/
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+[Pp]ublish/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -361,8 +365,40 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
 /docs/doxygen
-/ARCHITECTURE.md
-/PROJECT_REQUIREMENTS.txt
-/Client.Installer/redist
-/Server.Installer/redist
+/MUDDY.Installer.Prerequisites/redist/WindowsAppRuntimeInstall-x64.exe
+**/redist/*.exe
+
+# ============================================================
+# WiX / Installer build outputs
+# ============================================================
+# Compiled installer packages
+*.msi
+*.msm
+
+# WiX symbol / debug databases
+*.wixpdb
+
+# Cabinet files embedded in installers
+*.cab
+
+# WiX intermediate build artifacts
+*.wixobj
+*.wixlib
+*.wixiobj
+*.wixout
+
+# ============================================================
+# Large WinUI / WebView2 / WinRT runtime redistributables
+# ============================================================
+Microsoft.InteractiveExperiences.Projection.dll
+Microsoft.Web.WebView2.Core.dll
+Microsoft.Web.WebView2.Core.Projection.dll
+Microsoft.ML.OnnxRuntime.dll
+Microsoft.Security.Authentication.OAuth.Projection.dll
+Microsoft.Windows.AI.ContentSafety.Projection.dll
+Microsoft.Graphics.Imaging.Projection.dll
+/Client.Installer/redist/WindowsAppRuntimeInstall-x64.exe
+/Server.Installer/redist/WindowsAppRuntimeInstall-x64.exe

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 namespace Muddy.Tests
 {
     [TestClass]
@@ -15,8 +17,8 @@ namespace Muddy.Tests
 
     public class Command
     {
-        public string Verb { get; set; }
-        public string Arg { get; set; }
+        public string Verb { get; set; } = string.Empty;
+        public string Arg { get; set; } = string.Empty;
     }
 
     public class CommandParser

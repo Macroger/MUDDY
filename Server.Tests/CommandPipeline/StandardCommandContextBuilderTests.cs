@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Types;
@@ -15,11 +17,11 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class StandardCommandContextBuilderTests
 {
-    private Mock<IPlayerRepository> _mockPlayerRepo;
-    private Mock<IWorldRepository> _mockWorldRepo;
-    private StandardCommandContextBuilder _builder;
+    private Mock<IPlayerRepository> _mockPlayerRepo = null!;
+    private Mock<IWorldRepository> _mockWorldRepo = null!;
+    private StandardCommandContextBuilder _builder = null!;
     private ConnectionId _connectionId;
-    private ParsedCommand _command;
+    private ParsedCommand _command = null!;
 
     [TestInitialize]
     public void TestInitialize()
@@ -37,7 +39,7 @@ public class StandardCommandContextBuilderTests
     }
 
     // -------------------------------------------------------------------------
-    // No player found — error context
+    // No player found â€” error context
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -55,7 +57,7 @@ public class StandardCommandContextBuilderTests
     }
 
     // -------------------------------------------------------------------------
-    // Player found — success context
+    // Player found â€” success context
     // -------------------------------------------------------------------------
 
     [TestMethod]

@@ -1,4 +1,6 @@
-﻿using Shared.Identity;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Shared.Identity;
 using Shared.Protocol.Types;
 
 namespace Shared.Protocol.Transport

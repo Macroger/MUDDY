@@ -1,4 +1,6 @@
-﻿using Server.Core.Network.Worker;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.Network.Worker;
 
 namespace Server.Core.Network.Model
 {

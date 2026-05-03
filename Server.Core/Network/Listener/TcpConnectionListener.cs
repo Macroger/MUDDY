@@ -1,4 +1,6 @@
-﻿using Server.Core.Infrastructure.Identity.ConnectionId;
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
+using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Network.Model;
 using Server.Core.Network.Supervisor;
 using Shared.Identity;

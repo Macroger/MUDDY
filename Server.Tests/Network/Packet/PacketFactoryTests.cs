@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
 using Shared.Protocol.Transport;
 using Shared.Protocol.Types;
@@ -7,7 +9,7 @@ namespace Server.Tests.Network.Packet;
 [TestClass]
 public class PacketFactoryTests
 {
-    private MuddyPacketFactory _packetFactory;
+    private MuddyPacketFactory _packetFactory = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]

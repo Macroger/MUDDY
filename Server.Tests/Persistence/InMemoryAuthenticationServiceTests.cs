@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Moq;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Server.Core.Persistence;
@@ -16,9 +18,9 @@ namespace Server.Tests.Persistence;
 [TestClass]
 public class InMemoryAuthenticationServiceTests
 {
-    private InMemoryAuthenticationService _service;
-    private Mock<IEventBus> _mockEventBus;
-    private Mock<ISessionIdGenerator> _mockSessionIdGenerator;
+    private InMemoryAuthenticationService _service = null!;
+    private Mock<IEventBus> _mockEventBus = null!;
+    private Mock<ISessionIdGenerator> _mockSessionIdGenerator = null!;
     private ConnectionId _connectionId;
 
     [TestInitialize]
@@ -126,13 +128,13 @@ public class InMemoryAuthenticationServiceTests
     [TestMethod]
     public async Task RemoveSession_ThenValidate_ReturnsFalse()
     {
-        // Arrange — create a valid session
+        // Arrange â€” create a valid session
         var sessionId = await _service.CreateSessionAsync(_connectionId, "Alice");
 
-        // Act — remove it
+        // Act â€” remove it
         await _service.RemoveSession(sessionId);
 
-        // Assert — the removed session should no longer validate
+        // Assert â€” the removed session should no longer validate
         bool isValid = await _service.ValidateSessionAsync(sessionId, _connectionId);
         Assert.IsFalse(isValid);
     }

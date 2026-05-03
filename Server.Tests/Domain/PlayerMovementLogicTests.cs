@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 namespace Muddy.Tests
 {
     [TestClass]
@@ -29,7 +31,7 @@ namespace Muddy.Tests
 
     public class Player
     {
-        public Room CurrentRoom;
+        public Room CurrentRoom = null!;
         public bool Move(string direction)
         {
             if (CurrentRoom.Exits.ContainsKey(direction))

@@ -1,3 +1,5 @@
+﻿// Copyright 2026 Matthew Schatz
+// SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Policies;
 using Server.Core.CommandPipeline.Types;
@@ -13,7 +15,7 @@ namespace Server.Tests.CommandPipeline;
 [TestClass]
 public class MutedPlayerPolicyTests
 {
-    private MutedPlayerPolicy _policy;
+    private MutedPlayerPolicy _policy = null!;
 
     [TestInitialize]
     public void TestInitialize()
@@ -47,7 +49,7 @@ public class MutedPlayerPolicyTests
     }
 
     // -------------------------------------------------------------------------
-    // Muted player — say command blocked
+    // Muted player â€” say command blocked
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -62,7 +64,7 @@ public class MutedPlayerPolicyTests
     }
 
     // -------------------------------------------------------------------------
-    // Unmuted player — say command allowed
+    // Unmuted player â€” say command allowed
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -76,7 +78,7 @@ public class MutedPlayerPolicyTests
     }
 
     // -------------------------------------------------------------------------
-    // Muted player — non-say command still allowed
+    // Muted player â€” non-say command still allowed
     // -------------------------------------------------------------------------
 
     [TestMethod]
