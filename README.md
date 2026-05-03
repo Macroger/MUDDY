@@ -401,15 +401,27 @@ Server GUI displays real-time event log with filtering by channel.
 
 ## Contributing
 
-Contributions are welcome from anyone. To contribute:
+Contributions are welcome! If you spot a bug, have an idea, or want to improve
+something, feel free to get involved.
 
+### How to contribute
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes with meaningful messages
-4. Push to your fork and open a Pull Request
-5. All PRs are reviewed and approved by the maintainer before merging
+2. Create a feature branch (`git checkout -b feature/my-change`)
+3. Make your changes with clear, descriptive commit messages
+4. Push your branch to your fork
+5. Open a Pull Request
 
-Please follow the existing code style and patterns, and include unit tests for any new functionality.
+All Pull Requests are reviewed by the maintainer. PRs may be accepted, modified,
+or declined depending on scope, design direction, and project goals.
+
+### Guidelines
+- Small, focused changes are preferred over large refactors
+- Please try to follow existing code style and architectural patterns
+- Tests are appreciated where applicable, but not required for all contributions
+- For significant changes, opening an Issue first to discuss the idea is encouraged
+
+Thank you for your interest in improving MUDDY!
+
 
 ## License
 
