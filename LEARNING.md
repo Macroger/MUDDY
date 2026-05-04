@@ -87,20 +87,31 @@ MUDDY uses a **layered, client-server architecture** with clear separation of co
 ```
 1. Player types: "say hello everyone"
    ↓
-2. CommandPipelineOrchestrator parses into:
-   - CommandType: "say"
-   - Arguments: ["hello", "everyone"]
+2. Policy Evaluation (CommandPipelineOrchestrator)
+   - Verify session token is valid
+   - Check if player is authenticated
+   - Verify server is in ACTIVE state
+   - Load PlayerState and WorldState from session
+   ↓ (if policies pass)
+3. Command Parsing (CommandPipelineOrchestrator)
+   - Parse into structured format:
+     • CommandType: "say"
+     • Arguments: ["hello", "everyone"]
    ↓
-3. StandardCommandRouter finds matching handler:
+4. StandardCommandRouter finds matching handler:
    - Looks up "say" → ChatCommandHandler
    ↓
-4. ChatCommandHandler executes:
-   - Validates player state
+5. ChatCommandHandler executes:
+   - Validates context (player/world state not null)
    - Calls ChatService.BroadcastMessageAsync()
    ↓
-5. ChatService broadcasts to all players in room
+6. ChatService broadcasts to all players in room:
+   - Publishes PlayerChatEvent via EventBus
+   - Updates client sessions with message
    ↓
-6. CommandResult returned to player
+7. CommandResult returned to player
+   - Success: true/false
+   - Message: "Your message was heard..." or error
 ```
 
 ### Key Components
