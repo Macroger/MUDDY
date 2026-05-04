@@ -6,7 +6,7 @@ Thank you for your interest in contributing to MUDDY! This is a learning-focused
 
 ## Welcome, Contributors!
 
-MUDDY is an **educational project** — we're excited to have contributions that improve:
+MUDDY is an **educational project** and I am excited to have contributors that can help improve:
 
 - Code quality and clarity
 - Documentation and examples
@@ -45,6 +45,64 @@ MUDDY is an **educational project** — we're excited to have contributions that
    dotnet test
    ```
 
+### Understanding the Fork Workflow
+
+This project uses the **fork workflow**, which is the standard for open-source collaboration on GitHub. If this is your first time using it, don't worry — we'll break it down.
+
+#### What is a Fork?
+
+A **fork** is your own copy of the entire MUDDY project on GitHub. When you fork MUDDY:
+- You get a complete copy: `github.com/YOUR-USERNAME/MUDDY`
+- You can make changes without affecting the original project
+- You can push code directly to your fork (since you own it)
+- The original project remains untouched until you submit a pull request
+
+#### How Origin and Upstream Work
+
+When you clone your fork with the commands above, you're setting up two connections:
+
+1. **`origin`** — Points to *your fork* (`YOUR-USERNAME/MUDDY`)
+   - You can push to this freely
+   - This is where you upload your feature branches
+   - Think of it as "my copy on GitHub"
+
+2. **`upstream`** — Points to *the main project* (`Macroger/MUDDY`)
+   - You have read access (can pull updates)
+   - You cannot push directly to this (safety feature)
+   - Think of it as "the official project"
+
+#### The Workflow in Action
+
+Here's how a typical contribution flows:
+
+```
+1. Pull latest from upstream (stay current with other work)
+   git fetch upstream
+
+2. Create a feature branch and make your changes
+   git checkout -b feature/my-change
+   [make code changes]
+   git commit -m "feat: describe what I did"
+
+3. Push to your fork (origin)
+   git push origin feature/my-change
+
+4. Open a pull request on GitHub
+   GitHub lets you say: "Hey Macroger, can you review my changes?"
+
+5. Maintainer reviews and merges
+   If approved, your code joins the main project!
+```
+
+#### Why This Matters
+
+- **Safety** — You can't break the main project because you don't have write access to it
+- **Organization** — Pull requests create a formal review process and discussion space
+- **Collaboration** — Multiple people can work on different features simultaneously without conflicts
+- **Learning** — You see exactly what professional open-source looks like
+
+This is how millions of developers collaborate on GitHub projects every day.
+
 ---
 
 ## Before You Start
@@ -55,9 +113,16 @@ MUDDY is an **educational project** — we're excited to have contributions that
 - **[LEARNING.md](./LEARNING.md)** (if available) — Architecture overview
 - **Existing code** — Look at similar implementations for patterns
 
-### Check Existing Issues
+### Check Existing Issues (Recommended)
 
-Review [open issues](https://github.com/Macroger/MUDDY/issues) to see if someone is already working on your idea or if there's guidance on what's needed.
+Browse [open issues](https://github.com/Macroger/MUDDY/issues) to see if someone is already working on your idea or if there's guidance on what's needed. **It's also helpful to comment on an issue before you start** — this way:
+
+- You avoid duplicating work someone else is already doing
+- Maintainers can give feedback on your approach upfront (saves you time later)
+- You can discuss design decisions before investing effort
+- Others know you're planning to work on it
+
+Of course, if you want to just jump in and open a pull request, that's fine too! We'll discuss everything in the review.
 
 ---
 
@@ -291,3 +356,9 @@ By contributing, you agree your contributions are licensed under the Apache Lice
 ---
 
 **Thank you for contributing to MUDDY!** Your work helps make this a better learning resource for the community.
+
+---
+
+## About This Document
+
+This contributing guide was created with the assistance of Claude (Anthropic's AI assistant) under the guidance of Matthew Schatz (Macroger). The document was designed to be welcoming and educational while maintaining professional open-source standards. All processes and guidelines reflect the project maintainers' vision for how MUDDY should grow as a community learning resource.

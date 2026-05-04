@@ -276,12 +276,13 @@ if (condition)
 
 ### Copyright Header
 
-All `.cs` files must include:
+All `.cs` files must include the SPDX license identifier:
 
 ```
-// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 ```
+
+This declares that the code is licensed under Apache 2.0. Contributors automatically grant rights to the project through the Apache 2.0 license agreement when submitting contributions.
 
 ### Using Statements
 
@@ -359,7 +360,7 @@ if (_commands.TryGetValue(verb, out var handler))
 
 ## Dependency Injection
 
-- Use constructor injection exclusively
+- Use constructor injection where possible (for exceptions see `SystemInitializer` and `StandardCommandRouter`)
 - Services are resolved at application startup in `SystemInitializer`
 - All handlers registered with `StandardCommandRouter` during initialization
 - Prefer interface types in constructor parameters
@@ -373,3 +374,9 @@ if (_commands.TryGetValue(verb, out var handler))
 3. **Immutability over mutability** — use `readonly`, `sealed`, and `init`
 4. **Document the why, not the what** — code shows what it does, comments explain why
 5. **Ask in issues** — this is a learning project; questions are welcome!
+
+---
+
+## About This Document
+
+This coding style guide was created with the assistance of Claude (Anthropic's AI assistant) under the guidance of Matthew Schatz (Macroger). The guide was curated and refined by the project maintainers to reflect the actual coding patterns used throughout MUDDY. All style recommendations are based on observed practices in the existing codebase.

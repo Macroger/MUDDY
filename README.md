@@ -357,4 +357,10 @@ https://github.com/Macroger
 - .NET and WinUI teams
 - Community Toolkit contributors
 - Doxygen
-- Claude Sonnet for architectural discussion and review
+- Claude (Anthropic's AI assistant) for architectural discussion, documentation assistance, and project organization
+
+---
+
+## About This Project
+
+This project leverages modern .NET practices with intentional architecture for learning. Key documentation (LEARNING.md, CODING_STYLE.md, CONTRIBUTING.md) was created with the assistance of Claude under the guidance of Matthew Schatz to ensure clarity and consistency. The project represents both a functional MUD implementation and a teaching resource for .NET developers interested in networked, event-driven architectures.
