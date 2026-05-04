@@ -146,7 +146,7 @@ MUDDY uses a **layered, client-server architecture** with clear separation of co
 - Sends structured commands to server
 - Receives and displays responses
 
-**Server Command Pipeline** (previously shown as just "Command Pipeline")
+**Server Command Pipeline** 
 - Parses raw text input into structured `ParsedCommand`
 - Enriches context with player/world state
 - Passes to router
