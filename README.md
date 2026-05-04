@@ -30,7 +30,7 @@ Architecture: Event‑driven client/server system over async TCP
 
 MUDDY is an open‑source, text‑based multiplayer game composed of a standalone server and client. It is designed both as a playable MUD experience and as a reference implementation showcasing modern .NET techniques for building scalable, event‑driven networked applications.
 
-The project emphasizes clarity of architecture, explicit boundaries between systems, and practical engineering trade‑offs rather than minimalism. While playable, MUDDY is intentionally structured so that developers can explore, extend, and repurpose its components.
+While playable, MUDDY is intentionally structured so that developers can explore, extend, and repurpose its components.
 
 Typical audiences include:
 - Players interested in classic MUD‑style gameplay
