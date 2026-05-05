@@ -19,7 +19,7 @@
 
 </div>
 
-Current Version: 0.1.0  
+Current Version: 0.1.1  
 Framework: .NET 10  
 Platform: Windows (WinUI 3)  
 Architecture: Event‑driven client/server system over async TCP
@@ -33,6 +33,7 @@ Start here to understand MUDDY:
 - **[LEARNING.md](./LEARNING.md)** — Architecture overview, core concepts, and step-by-step guide to adding new commands
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** — How to contribute, GitHub workflow, and community guidelines
 - **[CODING_STYLE.md](./CODING_STYLE.md)** — Code conventions, naming rules, and patterns used throughout MUDDY
+- **[CHANGELOG.md](./CHANGELOG.md)** — Version history and release notes
 
 ---
 
