@@ -3,8 +3,8 @@
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
 
     <Bundle
-      Name="MUDDY Client"
-      Version="0.3.0"
+      Name="MUDDY Client v0.1.1"
+      Version="0.1.1"
       Manufacturer="Matthew Schatz"
       UpgradeCode="{C1D2E3F4-0001-4001-8001-000000000001}"
       IconSourceFile="..\Client.msi\Icons\client.ico">
@@ -17,7 +17,7 @@
         </BootstrapperApplication>
 
         <!-- Default install location; updated if the user changes it in the UI -->
-        <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]MUDDY\Client\" />
+        <Variable Name="InstallFolder" Type="string" Value="C:\Program Files\MUDDY\Client\" />
 
         <Chain>
 

@@ -184,7 +184,7 @@ Generate-WixFileList `
 Generate-WixFileList `
     -SourceDir $serverSource `
     -ComponentGroupId "ServerFiles" `
-    -DirectoryId "ServerFolder" `
+    -DirectoryId "INSTALLFOLDER" `
     -WixSourceRoot "..\Server.GUI\publish" `
     -OutputFile $serverOutput `
     -MainExeName "Server.GUI.exe" `
