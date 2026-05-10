@@ -1,7 +1,7 @@
 # 🗺️ MUDDY Development Roadmap
 
 Current Version: **0.1.1**  
-Last Updated: January 2026
+Last Updated: May 10, 2026
 
 ---
 
