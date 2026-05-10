@@ -34,7 +34,7 @@ Start here to understand MUDDY:
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** — How to contribute, GitHub workflow, and community guidelines
 - **[CODING_STYLE.md](./CODING_STYLE.md)** — Code conventions, naming rules, and patterns used throughout MUDDY
 - **[CHANGELOG.md](./CHANGELOG.md)** — Version history and release notes
-- **[ROADMAP.md](./ROADMAP.md)** — 🗺️ Development roadmap, prioritized features, and v0.2/v0.3 plans
+- **[ROADMAP.md](./ROADMAP.md)** — Development roadmap, prioritized features, and v0.2/v0.3 plans
 
 ---
 
