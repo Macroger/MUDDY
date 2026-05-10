@@ -47,7 +47,7 @@ This roadmap outlines planned improvements and feature additions for MUDDY. Item
 | Priority | Item | Description | Impact | Effort | Complexity | Files | Status |
 |:--------:|------|-------------|--------|:------:|:----------:|:------|:------:|
 | 🟡 Medium | Comprehensive Test Coverage | Add integration tests, end-to-end tests, and edge case coverage | Quality | ⭐⭐ | 🟢 Low-Medium | `*Tests/` | 📋 Backlog |
-| 🟡 Medium | Admin Panel Enhancements | Add world reload, room state viewer, NPC management, and item spawning controls | Operations | ⭐⭐ | 🟢 Low-Medium | `Server.GUI/` | 📋 Backlog |
+| 🟡 Medium | Admin Panel Enhancements | Add world reload, room state viewer | Operations | ⭐⭐ | 🟢 Low-Medium | `Server.GUI/` | 📋 Backlog |
 | 🟡 Medium | Logging & Diagnostics | Implement structured logging with levels, performance metrics, and audit trails | Operations | ⭐⭐ | 🟢 Low | `Shared/Logging/` | 📋 Backlog |
 | 🟢 Low | Command Help System | Create help command with command discovery, syntax hints, and examples | UX | ⭐ | 🟢 Low | `CommandPipeline/Types/`, `CommandPipeline/CommandHandler/` | 📋 Backlog |
 
@@ -116,9 +116,9 @@ Community contributions are welcome! If you'd like to work on any of these items
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.1.1 | Jan 2026 | Initial roadmap created with 14 prioritized items |
+| 0.1.1 | May 2026 | Initial roadmap created with 14 prioritized items |
 
 ---
 
-*Last reviewed: January 2026*  
+*Last reviewed: May 2026*  
 *Next review: After v0.2 completion*
