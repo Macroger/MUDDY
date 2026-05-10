@@ -1,0 +1,15 @@
+Priority,Phase,Item,Description,Impact,Effort,Complexity,Files,Status,GitHubIssue,Notes
+High,v0.2,SQL Persistence Layer,Replace in-memory storage with SQLite for data persistence across server restarts,Critical,⭐⭐⭐,Medium,Persistence/SqlLite/,Planned,,Create ISqlWorldRepository interface with SQLite implementation
+High,v0.2,Enhanced Error Handling,Implement detailed error messages and error codes in command responses for better debugging,Important,⭐⭐,Low,CommandPipeline/Types/,Planned,,Add ErrorCode enum to CommandResult
+High,v0.2,Room Descriptions Enhancement,Upgrade room descriptions to multi-line immersive text with atmospheric details and object lists,Quality,⭐⭐,Low,Domain/World/,Planned,,Add DetailedDescription and RoomObjects to RoomState
+Med-High,v0.3,Inventory System,Enable players to pick up drop and manage items; foundational for trading and quests,Gameplay,⭐⭐⭐,Medium,Domain/Items/ CommandPipeline/CommandHandler/,Backlog,,Create Item model and InventoryCommandHandler
+Med-High,v0.3,NPC System,Add NPCs to the world with dialogue trees and interaction; enable quest givers and shopkeepers,Gameplay,⭐⭐⭐,Medium-High,Domain/Npcs/ CommandPipeline/CommandHandler/,Backlog,,Create NpcState and TalkCommandHandler
+Medium,v0.3,Extended Commands,Implement additional commands: examine take drop give emote help,Gameplay,⭐⭐,Low,CommandPipeline/CommandHandler/,Backlog,,3-4 new command handlers
+Medium,v0.3,Authentication Enhancements,Add password hashing (bcrypt) token expiry session refresh and login rate-limiting,Security,⭐⭐,Medium,Persistence/ CommandPipeline/Authentication/,Backlog,,Add BCrypt.Net NuGet package
+Medium,v0.4,Comprehensive Test Coverage,Add integration tests end-to-end tests and edge case coverage,Quality,⭐⭐,Low-Medium,*Tests/,Backlog,,Focus on new features (inventory NPCs commands)
+Medium,v0.4,Admin Panel Enhancements,Add world reload room state viewer NPC management and item spawning controls,Operations,⭐⭐,Low-Medium,Server.GUI/,Backlog,,Requires other features to be implemented first
+Medium,v0.4,Logging & Diagnostics,Implement structured logging with levels performance metrics and audit trails,Operations,⭐⭐,Low,Shared/Logging/,Backlog,,Consider Serilog integration
+Low,v0.4,Command Help System,Create help command with command discovery syntax hints and examples,UX,⭐,Low,CommandPipeline/Types/ CommandPipeline/CommandHandler/,Backlog,,Add CommandHelp metadata to handlers
+Low,Future,Room Conditions & Environmental Effects,Implement active condition logic (e.g. Raining affects movement visibility),Gameplay,⭐⭐,Medium,CommandPipeline/ Domain/World/,Backlog,,RoomCondition enum exists but is unused
+Future,Future,Guild & Player Grouping,Social/cooperative gameplay: guilds parties shared goals,Gameplay,⭐⭐⭐,High,Domain/Social/,Backlog,,Major feature - defer until core systems stable
+Future,Future,Combat System,Basic combat: attack mechanics health/mana spells NPC combat,Gameplay,⭐⭐⭐⭐,Very High,Domain/Combat/,Backlog,,Major feature - long-term vision
