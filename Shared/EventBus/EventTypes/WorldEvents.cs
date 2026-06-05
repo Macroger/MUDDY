@@ -1,8 +1,8 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-namespace Shared.EventBus.DomainEvents
+namespace Shared.EventBus.EventTypes
 {
-    internal class WorldEvents
+    public class WorldEvents
     {
     }
 }

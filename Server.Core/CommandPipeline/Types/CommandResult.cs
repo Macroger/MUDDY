@@ -1,7 +1,7 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 using Shared.Protocol.Types;
 
 namespace Server.Core.CommandPipeline.Types

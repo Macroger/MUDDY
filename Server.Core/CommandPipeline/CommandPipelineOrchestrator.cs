@@ -10,9 +10,10 @@ using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Supervisor;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Collections.Concurrent;
 using System.Text;
 
@@ -126,10 +127,11 @@ namespace Server.Core.CommandPipeline
                     }
                     catch (Exception ex)
                     {
-                        EventBusHelper.PublishEvent(
-                            _eventBus,
-                            EventMessageType.Error,
-                            new EventReason($"Exception during message handling: {ex.Message}, MessageID: {envelope.MessageId}")
+                        _eventBus.Publish(
+                            EventMessageType.CmdPipeline,
+                            new CmdPipelineEvents.Errors.CmdPipeLineError(
+                                ErrorMessage: $"Exception during message handling: {ex.Message}, MessageID: {envelope.MessageId}",
+                                Exception: ex)
                         );
                     }
                 }
@@ -141,10 +143,11 @@ namespace Server.Core.CommandPipeline
             catch (Exception ex)
             {
                 // Log or handle unexpected exceptions that occur during message processing.
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason($"Unexpected exception in message processing loop: {ex.Message}")
+                _eventBus.Publish(
+                    EventMessageType.CmdPipeline,
+                    new CmdPipelineEvents.Errors.CmdPipeLineError(
+                        ErrorMessage: $"Unexpected exception in message processing loop: {ex.Message}",
+                        Exception: ex)
                 );
             }
         }
@@ -154,10 +157,9 @@ namespace Server.Core.CommandPipeline
             // Validate that the msg is not null.
             if (msg == null)
             {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason(
+                _eventBus.Publish(
+                    EventMessageType.CmdPipeline,
+                    new CmdPipelineEvents.Errors.CmdPipeLineError(
                         "Received null message envelope",
                         null
                     )
@@ -172,10 +174,10 @@ namespace Server.Core.CommandPipeline
                 if (!result.IsValid)
                 {
                     // Log the policy failure event
-                    EventBusHelper.PublishEvent(
-                        _eventBus,
-                        EventMessageType.Error,
-                        new EventReason($"{result.ErrorMessage ?? "Authentication failed"} (Policy: {policy.GetType().Name}, MessageID: {msg.MessageId})")
+                    _eventBus.Publish(
+                        EventMessageType.CmdPipeline,
+                        new CmdPipelineEvents.Errors.CmdPipeLineError(
+                            $"{result.ErrorMessage ?? "Authentication failed"} (Policy: {policy.GetType().Name}, MessageID: {msg.MessageId})")
                     );
 
                     TransportEnvelope response = CreateErrorResponse(

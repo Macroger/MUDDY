@@ -1,6 +1,4 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-namespace Shared.EventBus.SubscriptionToken
+﻿namespace Shared.EventBus.SubscriptionToken
 {
     internal sealed class BasicSubscriptionToken : ISubscriptionToken
     {

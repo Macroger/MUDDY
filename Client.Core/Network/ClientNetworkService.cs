@@ -1,9 +1,10 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Net.Sockets;
 
 namespace Client.Core.Network
@@ -145,10 +146,7 @@ namespace Client.Core.Network
         /// </summary>
         public bool IsConnected { get; private set; } = false;
 
-        /// <summary>
-        /// Connects to the server at the given host and port.
-        /// Starts the receive loop and publishes a connected event.
-        /// </summary>
+   
         /// <summary>
         /// Connects to the server using the current ServerAddress and ServerPort.
         /// Starts the receive loop and publishes a connected event.
@@ -164,25 +162,28 @@ namespace Client.Core.Network
 
                 IsConnected = true;
 
-                // Notify listeners that we are connected
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.ClientNetwork,
-                    new EventReason($"Connected to server {ServerAddress}:{ServerPort}")
-                );
+                // Emit an event to notify listeners that we are connected
+                _eventBus.Publish<ConnectionStatusChangedEvent>(
+                    EventMessageType.Network,
+                    new Client.Core.Network.ConnectionStatusChangedEvent
+                    (
+                        true,
+                        $"Connected to server {ServerAddress}:{ServerPort}"
+                    ));
 
                 // Start listening for incoming packets
                 _ = ReceiveLoopAsync();
             }
             catch (Exception ex)
-            {
+            {               
                 IsConnected = false;
-                // Notify listeners of connection failure
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason($"Failed to connect to server {ServerAddress}:{ServerPort}", ex.Message)
-                );
+                var connectionStatusEvent = new Client.Core.Network.ConnectionStatusChangedEvent
+               (
+                   false,
+                   $"Failed to connect to server {ServerAddress}:{ServerPort}: {ex.Message}"
+               );
+                _eventBus.Publish<ConnectionStatusChangedEvent>(EventMessageType.Network, connectionStatusEvent);
+
                 throw;
             }
         }
@@ -202,20 +203,19 @@ namespace Client.Core.Network
                 IsConnected = false;
 
                 // Notify listeners that we are disconnected
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.ClientNetwork,
-                    new EventReason("Disconnected from server")
+                _eventBus.Publish<Client.Core.Network.ConnectionStatusChangedEvent>(
+                    EventMessageType.Network,
+                    new ConnectionStatusChangedEvent(false, "Disconnected from server")
                 );
             }
             catch (Exception ex)
             {
                 IsConnected = false;
+
                 // Notify listeners of disconnect error
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason("Error during disconnect", ex.Message)
+                _eventBus.Publish<ConnectionStatusChangedEvent>(
+                    EventMessageType.Network,
+                    new ConnectionStatusChangedEvent(false, $"Disconnected from server with errors: {ex.Message}")
                 );
             }
         }
@@ -237,20 +237,23 @@ namespace Client.Core.Network
                 await _networkStream.WriteAsync(bytes, 0, bytes.Length);
 
                 // Only publish to PacketLog channel for specialized logging
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.PacketLog,
-                    new EventReason("Packet sent", new { envelope.MessageId, envelope.MessageType, Direction = "Outbound", Envelope = envelope })
-                );
+                _eventBus.Publish<NetworkEvents.Packets.PacketSent>(
+                    EventMessageType.Network,
+                    new NetworkEvents.Packets.PacketSent(envelope)
+                    );
             }
             catch (Exception ex)
             {
                 // Notify listeners of send error
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason("Failed to send packet", ex.Message)
+                _eventBus.Publish<NetworkEvents.Errors.NetworkError>(
+                    EventMessageType.Network,
+                    new NetworkEvents.Errors.NetworkError
+                    (
+                       ErrorMessage: "Failed to send packet",
+                       Exception: ex
+                    )
                 );
+
                 throw;
             }
         }
@@ -301,11 +304,10 @@ namespace Client.Core.Network
                     // Convert to higher-level envelope
                     var envelope = ConvertPacketToEnvelope(packet);
 
-                    // Only publish to PacketLog channel for specialized logging
-                    EventBusHelper.PublishEvent(
-                        _eventBus,
-                        EventMessageType.PacketLog,
-                        new EventReason("Packet received", new { envelope.MessageId, envelope.MessageType, Direction = "Inbound", Envelope = envelope })
+                    // Publish the received packet event
+                    _eventBus.Publish<NetworkEvents.Packets.PacketReceived>(
+                        EventMessageType.Network,
+                        new NetworkEvents.Packets.PacketReceived(envelope)
                     );
                 }
             }
@@ -316,11 +318,15 @@ namespace Client.Core.Network
             catch (Exception ex)
             {
                 // Notify listeners of receive loop error
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason("Error in receive loop", ex.Message)
+                _eventBus.Publish<NetworkEvents.Errors.NetworkError>(
+                    EventMessageType.Network,
+                    new NetworkEvents.Errors.NetworkError
+                    (
+                       ErrorMessage: "Error in receive loop",
+                       Exception: ex
+                    )
                 );
+
                 await DisconnectAsync();
             }
         }

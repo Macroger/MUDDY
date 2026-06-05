@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logger Manager — Implementation Plan</title>
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e334d;
+      --accent:    #5b8dee;
+      --accent2:   #a78bfa;
+      --green:     #4ade80;
+      --yellow:    #facc15;
+      --red:       #f87171;
+      --orange:    #fb923c;
+      --teal:      #2dd4bf;
+      --text:      #e2e8f0;
+      --muted:     #8892aa;
+      --code-bg:   #12151f;
+      --radius:    10px;
+      --mono:      'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .page-wrap { max-width: 960px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .project-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: rgba(45,212,191,.1);
+      border: 1px solid rgba(45,212,191,.3);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-bottom: .75rem;
+    }
+
+    header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: .35rem; }
+    header p.subtitle { color: var(--muted); font-size: .95rem; }
+
+    .meta-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .meta-badge {
+      font-size: 12px; color: var(--muted);
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 10px;
+    }
+
+    /* ── Phase tabs ── */
+    .phase-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 600;
+      padding: .6rem 1.2rem;
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .phase-panel { display: none; }
+    .phase-panel.active { display: block; }
+
+    /* ── Progress ── */
+    .progress-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: .6rem;
+    }
+
+    .progress-label span:last-child { color: var(--accent); font-weight: 600; }
+
+    .progress-bar-outer {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--accent2));
+      border-radius: 99px;
+      width: 0%;
+      transition: width .4s ease;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Rationale card ── */
+    .rationale-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 2rem;
+      font-size: .93rem;
+    }
+
+    .rationale-card p + p { margin-top: .7rem; }
+
+    /* ── Architecture diagram ── */
+    .arch-diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      font-family: var(--mono);
+      font-size: .82rem;
+      color: #a5d6ff;
+      margin-bottom: 2rem;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.6;
+    }
+
+    /* ── Steps ── */
+    .steps-list { list-style: none; margin-bottom: 2rem; }
+
+    .step-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: .75rem;
+      align-items: flex-start;
+    }
+
+    .step-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px; height: 20px; min-width: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      margin-top: 3px;
+      position: relative;
+    }
+
+    .step-checkbox:checked { background: var(--teal); border-color: var(--teal); }
+
+    .step-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px; top: 1px;
+      width: 6px; height: 10px;
+      border: 2px solid #0f1117;
+      border-top: none; border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .step-body { flex: 1; }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .step-item:has(.step-checkbox:checked) .step-card {
+      border-color: rgba(45,212,191,.25);
+      opacity: .7;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .8rem 1.1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .step-header:hover { background: var(--surface2); }
+
+    .step-num {
+      font-size: 11px; font-weight: 700;
+      color: var(--teal);
+      background: rgba(45,212,191,.1);
+      border: 1px solid rgba(45,212,191,.25);
+      border-radius: 4px;
+      padding: 1px 7px;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .step-title { font-weight: 600; font-size: .95rem; flex: 1; }
+
+    .step-action-badge {
+      font-size: 11px; font-weight: 600;
+      border-radius: 4px; padding: 1px 7px;
+    }
+
+    .badge-modify   { background: rgba(250,204,21,.12);  color: var(--yellow); border: 1px solid rgba(250,204,21,.3); }
+    .badge-create   { background: rgba(74,222,128,.1);   color: var(--green);  border: 1px solid rgba(74,222,128,.3); }
+    .badge-delete   { background: rgba(248,113,113,.1);  color: var(--red);    border: 1px solid rgba(248,113,113,.3); }
+    .badge-register { background: rgba(167,139,250,.12); color: var(--accent2);border: 1px solid rgba(167,139,250,.3); }
+    .badge-commit   { background: rgba(45,212,191,.1);   color: var(--teal);   border: 1px solid rgba(45,212,191,.3); }
+
+    .step-toggle { color: var(--muted); font-size: .8rem; transition: transform .25s; }
+
+    .step-detail {
+      padding: 0 1.1rem;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .35s ease, padding .3s ease;
+    }
+
+    .step-detail.open { max-height: 800px; padding: 0 1.1rem .9rem; }
+
+    .step-detail p { font-size: .88rem; color: var(--muted); margin-bottom: .5rem; }
+
+    .step-detail ul {
+      list-style: none;
+      font-size: .87rem;
+      color: var(--muted);
+      margin-bottom: .6rem;
+    }
+
+    .step-detail ul li { padding: .18rem 0; }
+    .step-detail ul li::before { content: '· '; color: var(--teal); font-weight: 700; }
+
+    .step-detail .note {
+      background: rgba(251,146,60,.07);
+      border: 1px solid rgba(251,146,60,.25);
+      border-radius: 6px;
+      padding: .6rem .9rem;
+      font-size: .83rem;
+      color: var(--orange);
+      margin-top: .5rem;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: .85em;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #a5d6ff;
+    }
+
+    /* ── File table ── */
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+      margin-bottom: 2rem;
+    }
+
+    .file-table th {
+      text-align: left;
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted);
+      padding: .5rem .9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .file-table td {
+      padding: .55rem .9rem;
+      border-bottom: 1px solid rgba(46,51,77,.5);
+      vertical-align: top;
+    }
+
+    .file-table tr:last-child td { border-bottom: none; }
+    .file-table td:first-child { min-width: 90px; }
+    .file-table td:last-child { color: var(--muted); font-size: .83rem; }
+
+    /* ── Key decisions ── */
+    .decision-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 620px) { .decision-grid { grid-template-columns: 1fr; } }
+
+    .decision-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+    }
+
+    .decision-card h3 {
+      font-size: .83rem; font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: .5rem;
+    }
+
+    .decision-card p { font-size: .85rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1.2rem;
+      font-size: .8rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="project-tag">Project IV · MUDDY Server</div>
+    <h1>Logger Manager — Implementation Plan</h1>
+    <p class="subtitle">Runtime-reconfigurable logging architecture: dumb loggers, a central manager, GUI control panel, and EventBus cleanup.</p>
+    <div class="meta-row">
+      <span class="meta-badge">Phase 1 Branch: eventBus-strongly-typed-events-only</span>
+      <span class="meta-badge">Phase 2 Branch: new (logger-manager)</span>
+      <span class="meta-badge">Target: .NET 10 · C# 14</span>
+      <span class="meta-badge">Scope: Shared · Server.Core · Server.GUI</span>
+      <span class="meta-badge">Generated: 2026</span>
+    </div>
+  </header>
+
+  <!-- ── Phase tabs ── -->
+  <div class="phase-tabs">
+    <button class="tab-btn active" onclick="switchTab('phase1', this)">Phase 1 — Finish Current Branch</button>
+    <button class="tab-btn" onclick="switchTab('phase2', this)">Phase 2 — Logger Manager (New Branch)</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PHASE 1
+  ══════════════════════════════════════════ -->
+  <div class="phase-panel active" id="phase1">
+
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>Phase 1 progress</span>
+        <span id="p1-text">0 / 5 steps complete</span>
+      </div>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="p1-bar"></div>
+      </div>
+    </div>
+
+    <div class="section-title">What this phase finishes</div>
+    <div class="rationale-card">
+      <p>
+        The current branch set out to remove all non-strongly-typed event dispatch from the bus. Two things remain:
+        <code>EventEnvelope</code> (a wrapper class that was used to tag events with metadata before publishing) still exists and is
+        still referenced by <code>PacketLogger</code> and <code>FileLogger</code>. <code>SubscribeAll</code> was removed
+        but needs to come back — correctly this time — as a separate <code>_observers</code> collection with no
+        <code>EventMessageType</code> parameter, used exclusively by loggers.
+      </p>
+      <p>
+        This phase cleans those up so the branch is in a consistent state before committing: <code>EventEnvelope</code>
+        gone, <code>SubscribeAll</code> back with the right signature, all loggers updated to use direct
+        <code>is</code>-pattern matching on the raw event object.
+      </p>
+    </div>
+
+    <div class="section-title">Steps</div>
+    <ul class="steps-list" id="p1-steps">
+
+      <!-- P1 Step 1 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p1-cb" id="p1cb1" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p1d1', this)">
+              <span class="step-num">01</span>
+              <span class="step-title">Add <code>SubscribeAll</code> to <code>BasicEventBus</code></span>
+              <span class="step-action-badge badge-modify">Modify</span>
+              <span class="step-toggle" id="arrow-p1d1">▼</span>
+            </div>
+            <div class="step-detail" id="p1d1">
+              <p><strong>File:</strong> <code>Shared/EventBus/BasicEventBus.cs</code></p>
+              <p>Add a dedicated observer collection separate from the typed subscriber dictionary. This is the correct implementation — not a special sentinel in the category enum, not a magic type key.</p>
+              <ul>
+                <li>Add field: <code>private readonly HashSet&lt;Action&lt;object&gt;&gt; _observers = new();</code></li>
+                <li>Implement <code>SubscribeAll(Action&lt;object&gt; handler)</code>: add handler to <code>_observers</code>, return a <code>BasicSubscriptionToken</code> that removes it</li>
+                <li>Inside <code>Publish&lt;T&gt;</code>, after the typed dispatch loop completes, iterate <code>_observers</code> and call each with <code>newEvent</code></li>
+                <li>Wrap observer calls in their own <code>try/catch</code> matching the existing handler exception pattern</li>
+              </ul>
+              <div class="note">⚠ Observer calls go AFTER typed dispatch — observers are passive and must never delay typed subscribers.</div>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P1 Step 2 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p1-cb" id="p1cb2" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p1d2', this)">
+              <span class="step-num">02</span>
+              <span class="step-title">Update <code>FileLogger</code> — remove <code>EventEnvelope</code> dependency</span>
+              <span class="step-action-badge badge-modify">Modify</span>
+              <span class="step-toggle" id="arrow-p1d2">▼</span>
+            </div>
+            <div class="step-detail" id="p1d2">
+              <p><strong>File:</strong> <code>Shared/Logging/FileLogger.cs</code></p>
+              <p>The constructor currently calls <code>bus.SubscribeAll(HandleLog)</code> and <code>HandleLog</code> unwraps an <code>EventEnvelope</code>. Replace with direct event capture.</p>
+              <ul>
+                <li>Keep <code>_subscription = bus.SubscribeAll(HandleEvent)</code> in the constructor — same single token, same <code>Dispose()</code> path</li>
+                <li>Rename handler to <code>HandleEvent(object evt)</code></li>
+                <li>Replace the <code>EventEnvelope</code> unwrap with: <code>string line = $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff} UTC] {evt.GetType().Name}: {evt}";</code></li>
+                <li>Remove all <code>EventEnvelope</code> and <code>LogRecord</code> references from this file</li>
+                <li><code>evt.ToString()</code> on a <code>sealed record</code> produces a compiler-generated property dump — no reflection, WinUI 3 safe</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P1 Step 3 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p1-cb" id="p1cb3" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p1d3', this)">
+              <span class="step-num">03</span>
+              <span class="step-title">Update <code>EventBusLogger</code> — remove <code>EventEnvelope</code> dependency</span>
+              <span class="step-action-badge badge-modify">Modify</span>
+              <span class="step-toggle" id="arrow-p1d3">▼</span>
+            </div>
+            <div class="step-detail" id="p1d3">
+              <p><strong>File:</strong> <code>Shared/Logging/EventBusLogger.cs</code></p>
+              <p>Same pattern as <code>FileLogger</code>. Currently calls <code>bus.SubscribeAll(HandleLog)</code> and filters to <code>LogRecord</code>.</p>
+              <ul>
+                <li>Replace <code>HandleLog</code> body: write <code>$"[{DateTime.UtcNow:...}] {evt.GetType().Name}: {evt}"</code> to console</li>
+                <li>Remove <code>LogRecord</code> minimum-level check — the logger sees all events now; severity filtering moves to the manager in Phase 2</li>
+                <li>Remove <code>EventEnvelope</code> and <code>LogRecord</code> using references</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P1 Step 4 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p1-cb" id="p1cb4" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p1d4', this)">
+              <span class="step-num">04</span>
+              <span class="step-title">Update <code>PacketLogger</code> — remove <code>EventEnvelope</code> dependency</span>
+              <span class="step-action-badge badge-modify">Modify</span>
+              <span class="step-toggle" id="arrow-p1d4">▼</span>
+            </div>
+            <div class="step-detail" id="p1d4">
+              <p><strong>File:</strong> <code>Shared/Logging/PacketLogger.cs</code></p>
+              <p><code>PacketLogger</code> subscribes as <code>Subscribe&lt;EventEnvelope&gt;(EventMessageType.PacketLog, ...)</code> and unwraps <code>EventReason</code> from the envelope. This is the last remaining typed use of <code>EventEnvelope</code>.</p>
+              <ul>
+                <li>Replace with <code>Subscribe&lt;EventReason&gt;(EventMessageType.PacketLog, OnPacketEvent)</code></li>
+                <li>Update <code>OnPacketEvent</code> to accept <code>EventReason reason</code> directly — no unwrap needed</li>
+                <li>Replace <code>envelope.CreatedAt</code> with <code>DateTime.UtcNow</code></li>
+                <li>Remove all <code>EventEnvelope</code> references</li>
+              </ul>
+              <div class="note">⚠ Publishers of <code>PacketLog</code> events will also need to be updated — they must now publish <code>EventReason</code> directly instead of wrapping it in an <code>EventEnvelope</code> first. Search the solution for <code>Publish&lt;EventEnvelope&gt;</code> or <code>EventMessageType.PacketLog</code> to find all call sites.</div>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P1 Step 5 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p1-cb" id="p1cb5" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p1d5', this)">
+              <span class="step-num">05</span>
+              <span class="step-title">Delete <code>EventEnvelope</code> · build · commit · close branch</span>
+              <span class="step-action-badge badge-commit">Commit</span>
+              <span class="step-toggle" id="arrow-p1d5">▼</span>
+            </div>
+            <div class="step-detail" id="p1d5">
+              <p>Once all references are removed, delete the class and verify a clean build before committing.</p>
+              <ul>
+                <li>Delete <code>Shared/EventBus/EventEnvelope.cs</code></li>
+                <li>Delete <code>Shared/EventBus/EventBusHelper.cs</code> if it existed only to wrap <code>EventEnvelope</code> creation</li>
+                <li>Build the solution — resolve any remaining <code>EventEnvelope</code> reference errors</li>
+                <li>Run existing tests to confirm no regressions</li>
+                <li>Commit with message such as: <em>"Remove EventEnvelope, restore SubscribeAll as untyped observer tap"</em></li>
+                <li>Merge / close <code>eventBus-strongly-typed-events-only</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+    </ul>
+
+    <div class="section-title">Phase 1 file change summary</div>
+    <table class="file-table">
+      <thead>
+        <tr><th>Action</th><th>File</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/EventBus/BasicEventBus.cs</code></td>
+          <td>Add <code>_observers</code> field + <code>SubscribeAll</code> + observer loop in <code>Publish</code></td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/Logging/FileLogger.cs</code></td>
+          <td>Direct event capture, remove <code>EventEnvelope</code> unwrap</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/Logging/EventBusLogger.cs</code></td>
+          <td>Direct event capture, remove <code>EventEnvelope</code> unwrap</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/Logging/PacketLogger.cs</code></td>
+          <td>Change to <code>Subscribe&lt;EventReason&gt;</code>, remove envelope</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-delete">Delete</span></td>
+          <td><code>Shared/EventBus/EventEnvelope.cs</code></td>
+          <td>No longer needed</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-delete">Delete</span></td>
+          <td><code>Shared/EventBus/EventBusHelper.cs</code></td>
+          <td>Only existed to support <code>EventEnvelope</code> creation</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td>PacketLog publisher(s) in Server.Core</td>
+          <td>Publish <code>EventReason</code> directly instead of wrapped in <code>EventEnvelope</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div><!-- end phase1 -->
+
+  <!-- ══════════════════════════════════════════
+       PHASE 2
+  ══════════════════════════════════════════ -->
+  <div class="phase-panel" id="phase2">
+
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>Phase 2 progress</span>
+        <span id="p2-text">0 / 9 steps complete</span>
+      </div>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="p2-bar"></div>
+      </div>
+    </div>
+
+    <div class="section-title">What this phase builds</div>
+    <div class="rationale-card">
+      <p>
+        After Phase 1 the loggers are passive full-event observers — they see everything but have no intelligence about
+        what to do with it. At scale (many players, high event volume) this is wasteful and noisy. This phase introduces
+        a <strong>LoggerManager</strong> that owns all logger instances, controls their capture scope at runtime, and
+        exposes its state to the GUI.
+      </p>
+      <p>
+        The key design decisions made in the design discussion: loggers become <strong>dumb writers</strong> —
+        they receive an event and write it, nothing more. All decisions about <em>what</em> to capture live
+        in the manager. The GUI sends a <code>SetLoggerModeEvent</code> on the bus; the manager responds by
+        disposing the old subscription token and registering a new one on the affected logger. A
+        <code>LoggerModeChangedEvent</code> is published back so the GUI can update its status display without
+        polling.
+      </p>
+    </div>
+
+    <div class="section-title">Target architecture</div>
+    <div class="arch-diagram">
+GUI (toggle/button)
+  │
+  │  Publish SetLoggerModeEvent(LoggerName, LoggerMode, Category?)
+  ▼
+EventBus ──────────────────────────────────────────────────────────▶ LoggerManager
+                                                                          │
+                                                   ┌──────────────────────┼────────────────────┐
+                                                   ▼                      ▼                    ▼
+                                             FileLogger           EventBusLogger          (future)
+                                          (dumb writer)          (dumb writer)
+                                          token replaced          token replaced
+                                          on mode change          on mode change
+                                                   │
+                                                   │  Publish LoggerModeChangedEvent(Name, Mode)
+                                                   ▼
+                                                  GUI (status panel updates)
+
+
+LoggerMode enum:
+  Off           →  no subscription, no output
+  AllEvents     →  SubscribeAll(...)         high volume, full audit
+  Category      →  SubscribeCategory(cat)    medium volume, per-subsystem  ← requires Phase 2 bus addition
+  (future: filtered modes)
+    </div>
+
+    <div class="section-title">Key design decisions</div>
+    <div class="decision-grid">
+      <div class="decision-card">
+        <h3>Why loggers are dumb writers</h3>
+        <p>Moving capture-scope logic into loggers creates two responsibilities in one class. The manager is the single place to change what is logged — loggers never need to know about modes or bus subscriptions.</p>
+      </div>
+      <div class="decision-card">
+        <h3>Why mode changes go through the bus</h3>
+        <p>The GUI already communicates with all server components via the bus. Adding a direct reference from the GUI to the LoggerManager would break the decoupling pattern. The bus event is the correct channel.</p>
+      </div>
+      <div class="decision-card">
+        <h3>Why <code>SubscribeCategory</code> is added now</h3>
+        <p>It was deferred as speculative earlier, but <code>LoggerMode.Category</code> is a concrete use case that needs it. This is now the right time to add it.</p>
+      </div>
+      <div class="decision-card">
+        <h3>Why tokens live in the manager</h3>
+        <p>Loggers replacing their own tokens on mode changes is possible but creates a lifecycle coupling between the logger and the bus. The manager owns subscriptions so loggers have zero bus awareness.</p>
+      </div>
+    </div>
+
+    <div class="section-title">Steps</div>
+    <ul class="steps-list" id="p2-steps">
+
+      <!-- P2 Step 1 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb1" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d1', this)">
+              <span class="step-num">01</span>
+              <span class="step-title">Create new branch and add <code>SubscribeCategory</code> to the bus</span>
+              <span class="step-action-badge badge-modify">Modify</span>
+              <span class="step-toggle" id="arrow-p2d1">▼</span>
+            </div>
+            <div class="step-detail" id="p2d1">
+              <p>Branch from main/merged state after Phase 1. Then add the category observer tap to the bus.</p>
+              <ul>
+                <li>Create branch: <code>git checkout -b logger-manager</code></li>
+                <li>Add to <code>IEventBus</code>: <code>ISubscriptionToken SubscribeCategory(EventMessageType category, Action&lt;object&gt; handler)</code></li>
+                <li>Add to <code>BasicEventBus</code>: <code>private readonly Dictionary&lt;EventMessageType, HashSet&lt;Action&lt;object&gt;&gt;&gt; _categoryObservers = new();</code></li>
+                <li>Implement <code>SubscribeCategory</code>: add to the category's set, return a removal token</li>
+                <li>In <code>Publish</code>: after typed dispatch and before/after <code>_observers</code>, iterate <code>_categoryObservers[category]</code> if it exists</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 2 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb2" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d2', this)">
+              <span class="step-num">02</span>
+              <span class="step-title">Create <code>LoggingEvents.cs</code> event types</span>
+              <span class="step-action-badge badge-create">Create</span>
+              <span class="step-toggle" id="arrow-p2d2">▼</span>
+            </div>
+            <div class="step-detail" id="p2d2">
+              <p><strong>File:</strong> <code>Shared/EventBus/EventTypes/LoggingEvents.cs</code></p>
+              <p>New event container following the same nested sealed-record pattern as <code>NetworkEvents.cs</code>.</p>
+              <ul>
+                <li><code>SetLoggerModeEvent(string LoggerName, LoggerMode Mode, EventMessageType? Category)</code> — command from GUI to manager; <code>Category</code> is only relevant when <code>Mode == Category</code></li>
+                <li><code>LoggerModeChangedEvent(string LoggerName, LoggerMode Mode, EventMessageType? Category)</code> — notification from manager back to GUI after a mode change is applied</li>
+                <li><code>LoggerStatusSnapshot(IReadOnlyList&lt;LoggerStatus&gt; Loggers)</code> — published on startup and on request, so the GUI can populate its status panel</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 3 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb3" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d3', this)">
+              <span class="step-num">03</span>
+              <span class="step-title">Create <code>LoggerMode</code> enum and <code>LoggerStatus</code> record</span>
+              <span class="step-action-badge badge-create">Create</span>
+              <span class="step-toggle" id="arrow-p2d3">▼</span>
+            </div>
+            <div class="step-detail" id="p2d3">
+              <p><strong>File:</strong> <code>Shared/Logging/LoggerMode.cs</code> (or alongside the events file)</p>
+              <ul>
+                <li><code>LoggerMode</code> enum: <code>Off</code>, <code>AllEvents</code>, <code>Category</code></li>
+                <li><code>LoggerStatus</code> sealed record: <code>(string Name, LoggerMode Mode, EventMessageType? Category, bool IsActive)</code> — used in the snapshot event and GUI binding</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 4 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb4" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d4', this)">
+              <span class="step-num">04</span>
+              <span class="step-title">Refactor loggers into dumb writers</span>
+              <span class="step-action-badge badge-modify">Modify</span>
+              <span class="step-toggle" id="arrow-p2d4">▼</span>
+            </div>
+            <div class="step-detail" id="p2d4">
+              <p><strong>Files:</strong> <code>Shared/Logging/FileLogger.cs</code>, <code>Shared/Logging/EventBusLogger.cs</code></p>
+              <p>Remove bus subscriptions from loggers entirely. Loggers become simple write targets that the manager calls.</p>
+              <ul>
+                <li>Remove <code>IEventBus</code> constructor parameter from both loggers</li>
+                <li>Remove all <code>ISubscriptionToken</code> fields — the manager holds tokens, not loggers</li>
+                <li>Expose a public <code>Write(object evt)</code> method (or keep <code>HandleEvent</code> as <code>internal</code>) that the manager calls</li>
+                <li>Keep <code>IDisposable</code> on <code>FileLogger</code> — it still needs to flush and close the <code>StreamWriter</code></li>
+                <li>Keep the <code>Name</code> property (a string identifier) so the manager and GUI can refer to each logger by name</li>
+              </ul>
+              <div class="note">⚠ DI registrations will need updating — loggers no longer take <code>IEventBus</code> in their constructors.</div>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 5 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb5" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d5', this)">
+              <span class="step-num">05</span>
+              <span class="step-title">Create <code>ILoggerManager</code> interface</span>
+              <span class="step-action-badge badge-create">Create</span>
+              <span class="step-toggle" id="arrow-p2d5">▼</span>
+            </div>
+            <div class="step-detail" id="p2d5">
+              <p><strong>File:</strong> <code>Shared/Logging/ILoggerManager.cs</code></p>
+              <ul>
+                <li><code>void SetMode(string loggerName, LoggerMode mode, EventMessageType? category = null)</code></li>
+                <li><code>LoggerStatus GetStatus(string loggerName)</code></li>
+                <li><code>IReadOnlyList&lt;LoggerStatus&gt; GetAllStatuses()</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 6 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb6" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d6', this)">
+              <span class="step-num">06</span>
+              <span class="step-title">Create <code>LoggerManager</code> implementation</span>
+              <span class="step-action-badge badge-create">Create</span>
+              <span class="step-toggle" id="arrow-p2d6">▼</span>
+            </div>
+            <div class="step-detail" id="p2d6">
+              <p><strong>File:</strong> <code>Shared/Logging/LoggerManager.cs</code> (or <code>Server.Core/Logging/</code> if it needs server-specific dependencies)</p>
+              <p>The manager owns all logger instances and their current subscription tokens.</p>
+              <ul>
+                <li>Constructor accepts <code>IEventBus</code> and a list of logger instances</li>
+                <li>Maintains a <code>Dictionary&lt;string, (ILogger logger, ISubscriptionToken? token, LoggerMode mode, EventMessageType? category)&gt;</code> keyed on logger name</li>
+                <li>On construction: subscribe to <code>SetLoggerModeEvent</code> on a <code>Logging</code> or <code>System</code> category; publish initial <code>LoggerStatusSnapshot</code></li>
+                <li><code>SetMode</code>: dispose existing token, create new subscription based on mode (<code>SubscribeAll</code> / <code>SubscribeCategory</code> / nothing), update state, publish <code>LoggerModeChangedEvent</code></li>
+                <li>Implements <code>IDisposable</code>: disposes all tokens and all loggers</li>
+              </ul>
+              <div class="note">⚠ Add <code>Logging</code> to <code>EventMessageType</code> enum if a dedicated category for logger control messages is desired, to avoid routing them through <code>System</code>.</div>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 7 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb7" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d7', this)">
+              <span class="step-num">07</span>
+              <span class="step-title">Update Server.Core DI registration</span>
+              <span class="step-action-badge badge-register">Register</span>
+              <span class="step-toggle" id="arrow-p2d7">▼</span>
+            </div>
+            <div class="step-detail" id="p2d7">
+              <p>Wire up the new types in the server's dependency injection composition root.</p>
+              <ul>
+                <li>Register <code>FileLogger</code> and <code>EventBusLogger</code> as singletons (no longer need <code>IEventBus</code> passed in)</li>
+                <li>Register <code>ILoggerManager</code> → <code>LoggerManager</code> as a singleton, passing in the bus and the logger instances</li>
+                <li>Remove any old direct bus subscriptions that loggers previously self-registered in their constructors</li>
+                <li>Ensure <code>LoggerManager</code> is resolved early in startup so loggers are active before other services begin publishing</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 8 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb8" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d8', this)">
+              <span class="step-num">08</span>
+              <span class="step-title">Add Logger status panel to Server.GUI</span>
+              <span class="step-action-badge badge-create">Create</span>
+              <span class="step-toggle" id="arrow-p2d8">▼</span>
+            </div>
+            <div class="step-detail" id="p2d8">
+              <p><strong>Files:</strong> <code>Server.GUI/MainWindow.xaml</code> (or a new panel/page), <code>Server.GUI/MainWindow.xaml.cs</code></p>
+              <p>A GUI element that shows each logger's name, current mode, and a control to change the mode.</p>
+              <ul>
+                <li>Subscribe to <code>LoggerModeChangedEvent</code> and <code>LoggerStatusSnapshot</code> with typed <code>Subscribe&lt;T&gt;</code> — no reflection, no <code>SubscribeAll</code> in the GUI</li>
+                <li>Dispatch all UI updates through <code>DispatcherQueue.TryEnqueue</code> matching the existing pattern in <code>MainWindow.xaml.cs</code></li>
+                <li>For each logger row: display Name, Mode badge, Category (if applicable), and a dropdown or button group to select a new mode</li>
+                <li>On mode selection: publish <code>SetLoggerModeEvent</code> on the bus — GUI never calls the manager directly</li>
+                <li>Populate initial state from <code>LoggerStatusSnapshot</code> published by the manager at startup</li>
+              </ul>
+              <div class="note">⚠ Do NOT use reflection or dynamic property access on event objects in the GUI — this was the original crash cause. All display strings must be built from explicitly typed event properties.</div>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- P2 Step 9 -->
+      <li class="step-item">
+        <input type="checkbox" class="step-checkbox p2-cb" id="p2cb9" />
+        <div class="step-body">
+          <div class="step-card">
+            <div class="step-header" onclick="toggleDetail('p2d9', this)">
+              <span class="step-num">09</span>
+              <span class="step-title">Build, test, and commit</span>
+              <span class="step-action-badge badge-commit">Commit</span>
+              <span class="step-toggle" id="arrow-p2d9">▼</span>
+            </div>
+            <div class="step-detail" id="p2d9">
+              <ul>
+                <li>Build the full solution and resolve any errors</li>
+                <li>Run existing tests — particularly any that exercise the event bus or loggers</li>
+                <li>Manually verify the GUI panel: start server, confirm logger statuses appear, toggle a mode, confirm the status badge updates and log output changes</li>
+                <li>Check that high-frequency events (network packets, future tick events) do not appear in the file log when mode is <code>Off</code> or <code>Category</code></li>
+                <li>Commit: <em>"Add LoggerManager with runtime mode switching and GUI status panel"</em></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+    </ul>
+
+    <div class="section-title">Phase 2 file change summary</div>
+    <table class="file-table">
+      <thead>
+        <tr><th>Action</th><th>File</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/EventBus/IEventBus.cs</code></td>
+          <td>Add <code>SubscribeCategory</code> signature</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/EventBus/BasicEventBus.cs</code></td>
+          <td>Add <code>_categoryObservers</code> + <code>SubscribeCategory</code> + loop in <code>Publish</code></td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/EventBus/EventTypes/EventMessageTypes.cs</code></td>
+          <td>Optionally add <code>Logging</code> enum value</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-create">Create</span></td>
+          <td><code>Shared/EventBus/EventTypes/LoggingEvents.cs</code></td>
+          <td><code>SetLoggerModeEvent</code>, <code>LoggerModeChangedEvent</code>, <code>LoggerStatusSnapshot</code></td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-create">Create</span></td>
+          <td><code>Shared/Logging/LoggerMode.cs</code></td>
+          <td><code>LoggerMode</code> enum + <code>LoggerStatus</code> record</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/Logging/FileLogger.cs</code></td>
+          <td>Remove bus subscription; expose <code>Write(object)</code></td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Shared/Logging/EventBusLogger.cs</code></td>
+          <td>Remove bus subscription; expose <code>Write(object)</code></td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-create">Create</span></td>
+          <td><code>Shared/Logging/ILoggerManager.cs</code></td>
+          <td>Manager interface</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-create">Create</span></td>
+          <td><code>Shared/Logging/LoggerManager.cs</code></td>
+          <td>Owns loggers, tokens, mode switching, bus control subscription</td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-register">Register</span></td>
+          <td>Server.Core DI registration</td>
+          <td>Register loggers + <code>ILoggerManager</code></td>
+        </tr>
+        <tr>
+          <td><span class="step-action-badge badge-modify">Modify</span></td>
+          <td><code>Server.GUI/MainWindow.xaml(.cs)</code></td>
+          <td>Logger status panel with mode toggle; typed bus subscriptions only</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div><!-- end phase2 -->
+
+  <footer>
+    <span>Project IV · MUDDY · Logger Manager Plan</span>
+    <span>Copyright 2026 Matthew Schatz · Apache-2.0</span>
+  </footer>
+
+</div>
+
+<script>
+  // ── Tab switching ──
+  function switchTab(phaseId, btnEl) {
+    document.querySelectorAll('.phase-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(phaseId).classList.add('active');
+    btnEl.classList.add('active');
+  }
+
+  // ── Accordion ──
+  function toggleDetail(id, headerEl) {
+    const detail = document.getElementById(id);
+    const arrow  = document.getElementById('arrow-' + id);
+    const isOpen = detail.classList.contains('open');
+    detail.classList.toggle('open', !isOpen);
+    if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+  }
+
+  // ── Progress bars ──
+  function updateProgress(cbClass, barId, textId, total) {
+    const checked = document.querySelectorAll('.' + cbClass + ':checked').length;
+    document.getElementById(textId).textContent = `${checked} / ${total} steps complete`;
+    document.getElementById(barId).style.width = `${(checked / total) * 100}%`;
+  }
+
+  document.querySelectorAll('.p1-cb').forEach(cb =>
+    cb.addEventListener('change', () => { updateProgress('p1-cb', 'p1-bar', 'p1-text', 5); saveState(); })
+  );
+
+  document.querySelectorAll('.p2-cb').forEach(cb =>
+    cb.addEventListener('change', () => { updateProgress('p2-cb', 'p2-bar', 'p2-text', 9); saveState(); })
+  );
+
+  // ── Persist state ──
+  const KEY = 'muddy-logger-plan-checks';
+
+  function saveState() {
+    const state = [...document.querySelectorAll('.step-checkbox')].map(c => c.checked);
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    try {
+      const state = JSON.parse(raw);
+      document.querySelectorAll('.step-checkbox').forEach((cb, i) => {
+        if (state[i] !== undefined) cb.checked = state[i];
+      });
+    } catch (_) {}
+  }
+
+  loadState();
+  updateProgress('p1-cb', 'p1-bar', 'p1-text', 5);
+  updateProgress('p2-cb', 'p2-bar', 'p2-text', 9);
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
 
-namespace Shared.Protocol.Messaging
+namespace Shared.Network.Messaging
 {
     public class MessageEnvelope<T>
     {

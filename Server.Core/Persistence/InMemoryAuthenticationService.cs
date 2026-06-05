@@ -3,7 +3,7 @@
 using Server.Core.Domain.Authentication;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System.Collections.Concurrent;

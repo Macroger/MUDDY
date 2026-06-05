@@ -9,10 +9,10 @@ using Server.Core.Persistence;
 using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.Identity;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 using System.Text;
 using System.Text.Json;
-using static Shared.EventBus.DomainEvents.PlayerEvents;
+using static Shared.EventBus.EventTypes.PlayerEvents;
 
 namespace Server.Core.CommandPipeline.Authentication
 {

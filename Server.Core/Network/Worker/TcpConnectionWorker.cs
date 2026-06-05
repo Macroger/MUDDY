@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.Network.Model;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Collections.Concurrent;
 
 namespace Server.Core.Network.Worker
@@ -219,8 +219,8 @@ namespace Server.Core.Network.Worker
                         // Append received bytes to the accumulator buffer
                         _byteAccumulatorBuffer.AddRange(tempBuffer.AsSpan(0, bytesReceived));
 
-                        // Process complete packets from the accumulator buffer
-                        // Keep looping as long as we have enough bytes to read a full header (which is the minimum requirement to determine packet size)
+                        // Once enough bytes have accumulated to contain at least a full header, we can attempt to parse packets.
+                        // Keep looping until we consume all complete packets in the buffer.
                         while (_byteAccumulatorBuffer.Count >= _packetLimits.headerSize)
                         {
                             // Copy the header bytes to a separate array for deserialization

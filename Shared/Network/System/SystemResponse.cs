@@ -1,8 +1,5 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-namespace Shared.Protocol.System
+﻿namespace Shared.Network.System
 {
-
     /// <summary>
     /// Represents a structured system response code with severity, human-readable message and retry semantics.
     /// </summary>

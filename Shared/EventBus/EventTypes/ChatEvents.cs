@@ -1,8 +1,7 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-using Shared.Identity;
+﻿using Shared.Identity;
+using Shared.Logging;
 
-namespace Shared.EventBus.DomainEvents
+namespace Shared.EventBus.EventTypes
 {
     public class ChatEvents
     {
@@ -13,7 +12,7 @@ namespace Shared.EventBus.DomainEvents
             string SenderName,
             RoomId RoomId,
             string Message,
-            IReadOnlySet<ConnectionId> PlayersInRoom);
+            IReadOnlySet<ConnectionId> PlayersInRoom) : BusEvent(EventMessageType.Chat, LogLevel.Trace);
 
         /// <summary>
         /// Raised when a player emotes.
@@ -22,7 +21,7 @@ namespace Shared.EventBus.DomainEvents
             string SenderName,
             RoomId RoomId,
             string EmoteText,
-            IReadOnlySet<ConnectionId> PlayersInRoom);
+            IReadOnlySet<ConnectionId> PlayersInRoom) : BusEvent(EventMessageType.Chat, LogLevel.Trace);
 
         /// <summary>
         /// Raised when a player is muted. This is a notification event, not a request.
@@ -35,12 +34,12 @@ namespace Shared.EventBus.DomainEvents
             string MutedPlayerName,
             string MutingEntityName,
             TimeSpan Duration,
-            IReadOnlySet<ConnectionId> MutedPlayerConnections);
+            IReadOnlySet<ConnectionId> MutedPlayerConnections) : BusEvent(EventMessageType.Chat, LogLevel.Warning);
 
         /// <summary>
         /// Raised when something wants to mute a player. This is a request event, not a notification.
         /// </summary>
         /// <param name="targetPlayerName"></param>
-        public sealed record MutePlayerRequestEvent(string targetPlayerName);
+        public sealed record MutePlayerRequestEvent(string targetPlayerName) : BusEvent(EventMessageType.Chat, LogLevel.Information);
     }
 }

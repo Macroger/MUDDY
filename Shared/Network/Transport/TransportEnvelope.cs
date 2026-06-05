@@ -1,9 +1,9 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
-using Shared.Protocol.Types;
+using Shared.Network.Types;
 
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     /// <summary>
     /// Encapsulates a protocol message with metadata and payload. 

@@ -1,11 +1,11 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-using Shared.Protocol.Types;
+using Shared.Network.Types;
 using System.Buffers.Binary;
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
 
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     public class MuddyPacketSerializer : IPacketSerializer
     {

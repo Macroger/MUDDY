@@ -5,7 +5,7 @@ using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.World;
 using Server.Core.Persistence;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 

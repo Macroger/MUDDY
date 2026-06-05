@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
 
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     public class MuddyPacketFactory : IPacketFactory
     {

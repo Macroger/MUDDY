@@ -1,6 +1,4 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-namespace Client.Core.CommandPipeline
+﻿namespace Client.Core.CommandPipeline
 {
     /// <summary>
     /// Orchestrates routing and handling of incoming messages from the server.
@@ -13,7 +11,7 @@ namespace Client.Core.CommandPipeline
     {
         public static event Action<string>? OnChatMessageReceived;
 
-        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Assume chat message is UTF-8 encoded text in payload
             var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
@@ -29,7 +27,7 @@ namespace Client.Core.CommandPipeline
     {
         public static event Action<string>? OnEventReceived;
 
-        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Assume event message is UTF-8 encoded text in payload
             var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
@@ -45,7 +43,7 @@ namespace Client.Core.CommandPipeline
     {
         public static event Action<byte[]>? OnImageReceived;
 
-        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Pass the raw payload (expected to be JPEG image data)
             OnImageReceived?.Invoke(envelope.Payload);
@@ -60,7 +58,7 @@ namespace Client.Core.CommandPipeline
     {
         public static event Action<string>? OnErrorReceived;
 
-        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Assume error message is UTF-8 encoded text in payload
             var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
@@ -76,7 +74,7 @@ namespace Client.Core.CommandPipeline
     {
         public static event Action<string>? OnResponseReceived;
 
-        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Assume response message is UTF-8 encoded text in payload
             var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
@@ -92,7 +90,7 @@ namespace Client.Core.CommandPipeline
     {
         public static event Action<string>? OnAuthSuccessReceived;
 
-        public System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Assume auth success message is UTF-8 encoded text in payload
             var message = System.Text.Encoding.UTF8.GetString(envelope.Payload);
@@ -103,7 +101,7 @@ namespace Client.Core.CommandPipeline
 
     public class ClientCommandPipelineOrchestrator
     {
-        private readonly System.Collections.Concurrent.BlockingCollection<Shared.Protocol.Transport.TransportEnvelope> _msgQueue = new();
+        private readonly System.Collections.Concurrent.BlockingCollection<Shared.Network.Transport.TransportEnvelope> _msgQueue = new();
         private readonly Dictionary<string, IClientCommandHandler> _handlers = new(StringComparer.OrdinalIgnoreCase);
         private System.Threading.Tasks.Task? _processingTask;
         private System.Threading.CancellationTokenSource? _cts;
@@ -124,7 +122,7 @@ namespace Client.Core.CommandPipeline
         /// <summary>
         /// Enqueue a message for processing by the pipeline.
         /// </summary>
-        public void ProcessMessage(Shared.Protocol.Transport.TransportEnvelope envelope)
+        public void ProcessMessage(Shared.Network.Transport.TransportEnvelope envelope)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             _msgQueue.Add(envelope);
@@ -177,7 +175,7 @@ namespace Client.Core.CommandPipeline
             }
         }
 
-        private async System.Threading.Tasks.Task HandleMessageAsync(Shared.Protocol.Transport.TransportEnvelope envelope)
+        private async System.Threading.Tasks.Task HandleMessageAsync(Shared.Network.Transport.TransportEnvelope envelope)
         {
             // Route by message type (or use a key from payload if needed)
             var key = envelope.MessageType.ToString();
@@ -194,6 +192,6 @@ namespace Client.Core.CommandPipeline
     /// </summary>
     public interface IClientCommandHandler
     {
-        System.Threading.Tasks.Task HandleAsync(Shared.Protocol.Transport.TransportEnvelope envelope);
+        System.Threading.Tasks.Task HandleAsync(Shared.Network.Transport.TransportEnvelope envelope);
     }
 }

@@ -3,8 +3,8 @@
 using Server.Core.CommandPipeline;
 using Server.Core.Network.Model;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Server.Core.Network.Supervisor
 {

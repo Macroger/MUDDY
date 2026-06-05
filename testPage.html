@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Bus Refactor — Change Plan</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #cba6f7;
+            border-bottom: 2px solid #45475a;
+            padding-bottom: 0.5rem;
+        }
+
+        h2 {
+            color: #89b4fa;
+            margin-top: 2rem;
+        }
+
+        h3 {
+            color: #94e2d5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 2rem 0;
+        }
+
+        th {
+            background-color: #313244;
+            color: #cba6f7;
+            padding: 0.6rem 1rem;
+            text-align: left;
+            border: 1px solid #45475a;
+        }
+
+        td {
+            padding: 0.6rem 1rem;
+            border: 1px solid #45475a;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background-color: #27273a;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .delete {
+            background-color: #f38ba8;
+            color: #1e1e2e;
+        }
+
+        .update {
+            background-color: #fab387;
+            color: #1e1e2e;
+        }
+
+        .add {
+            background-color: #a6e3a1;
+            color: #1e1e2e;
+        }
+
+        .keep {
+            background-color: #89dceb;
+            color: #1e1e2e;
+        }
+
+        ol {
+            counter-reset: steps;
+            list-style: none;
+            padding: 0;
+        }
+
+            ol li {
+                counter-increment: steps;
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 0.8rem;
+                align-items: flex-start;
+            }
+
+                ol li::before {
+                    content: counter(steps);
+                    background-color: #cba6f7;
+                    color: #1e1e2e;
+                    font-weight: bold;
+                    min-width: 1.8rem;
+                    height: 1.8rem;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.85rem;
+                    flex-shrink: 0;
+                }
+
+        code {
+            background-color: #313244;
+            color: #f9e2af;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 1px solid #45475a;
+            margin: 2rem 0;
+        }
+
+        .callout {
+            background-color: #313244;
+            border-left: 4px solid #cba6f7;
+            padding: 1rem 1.5rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+        }
+
+            .callout.warning {
+                border-left-color: #f9e2af;
+            }
+
+            .callout.info {
+                border-left-color: #89b4fa;
+            }
+    </style>
+</head>
+<body>
+
+    <h1>Event Bus Refactor — Strongly Typed Events Only</h1>
+    <p>Branch: <code>eventBus-strongly-typed-events-only</code></p>
+
+    <div class="callout info">
+        <strong>Goal:</strong> Remove <code>SubscribeAll</code>, <code>EventEnvelope</code>, and <code>EventBusHelper</code> from the event bus system.
+        Replace all usages with direct <code>_eventBus.Publish(...)</code> calls using strongly typed events.
+        <code>EventReason</code> is <strong>kept</strong> and published directly rather than wrapped.
+    </div>
+
+    <hr class="section-divider">
+
+    <h2>Affected Files Overview</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Action</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>Shared/EventBus/EventEnvelope.cs</code></td>
+                <td><span class="badge delete">DELETE</span></td>
+                <td><code>EnvelopeId</code> never read anywhere. <code>MsgType</code> redundant. <code>CreatedAt</code> only used in dead loggers. Entire class is a wrapper with no remaining purpose.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/EventBus/EventBusHelper.cs</code></td>
+                <td><span class="badge delete">DELETE</span></td>
+                <td>Generic overload is a pure pass-through with no added value. <code>EventReason</code> overload only existed to wrap in <code>EventEnvelope</code>. Both become unnecessary.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/EventBus/EventReason.cs</code></td>
+                <td><span class="badge keep">KEEP</span></td>
+                <td>Unchanged. Published directly on the bus instead of being wrapped in <code>EventEnvelope</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/EventBus/IEventBus.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Remove <code>SubscribeAll</code> method declaration.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/EventBus/BasicEventBus.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Remove <code>SubscribeAll</code> method, <code>_globalSubscriptionsList</code> field, and the <code>foreach</code> loop over global subscribers inside <code>Publish&lt;T&gt;</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/EventBus/DomainEvents/NetworkEvents.cs</code></td>
+                <td><span class="badge add">ADD</span></td>
+                <td>Add new <code>PacketTransmittedEvent</code> record with fields: <code>Guid MessageId</code>, <code>string MessageType</code>, <code>string Direction</code>, <code>ConnectionId? Client</code>, <code>TransportEnvelope Envelope</code>, <code>DateTimeOffset Timestamp</code>. Replaces the anonymous object hack used on the <code>PacketLog</code> channel.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/Logging/EventBusLogger.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace <code>bus.SubscribeAll(HandleLog)</code> with explicit <code>Subscribe&lt;EventReason&gt;</code> calls per relevant categories. Update <code>HandleLog</code> to accept <code>EventReason</code> directly, removing the double-cast through <code>EventEnvelope</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/Logging/FileLogger.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Same pattern as <code>EventBusLogger</code> — replace <code>SubscribeAll</code> with per-category <code>Subscribe&lt;EventReason&gt;</code>. Update handler to accept <code>EventReason</code> directly.</td>
+            </tr>
+            <tr>
+                <td><code>Shared/Logging/PacketLogger.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace <code>Subscribe&lt;EventEnvelope&gt;(PacketLog)</code> with <code>Subscribe&lt;PacketTransmittedEvent&gt;(PacketLog)</code>. Rewrite <code>OnPacketEvent</code> to use typed fields directly, removing the <code>Payload</code> cast and anonymous object.</td>
+            </tr>
+            <tr>
+                <td><code>Server.GUI/MainWindow.xaml.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace 4x <code>Subscribe&lt;EventEnvelope&gt;(category)</code> with <code>Subscribe&lt;EventReason&gt;(category)</code>. Update the 4 handler methods to accept <code>EventReason</code> directly. Delete the dead <code>OnAnyEventReceived</code> method (leftover from original <code>SubscribeAll</code> era).</td>
+            </tr>
+            <tr>
+                <td><code>Client.GUI/MainWindow.xaml.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace <code>Subscribe&lt;EventEnvelope&gt;(PacketLog)</code> with <code>Subscribe&lt;PacketTransmittedEvent&gt;(PacketLog)</code>. Delete <code>OnPacketReceived</code> and <code>OnPacketReceivedAsync</code>. Replace with a typed handler — <strong>eliminates reflection on the anonymous object</strong> (<code>dataType.GetProperty("Direction")</code>).</td>
+            </tr>
+            <tr>
+                <td><code>Server.Core/Network/Supervisor/StandardNetworkSupervisor.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>~20 call sites. Replace all <code>EventBusHelper.PublishEvent(_eventBus, category, new EventReason(...))</code> with <code>_eventBus.Publish(category, new EventReason(...))</code>. Replace <code>PacketLog</code> anonymous-object calls with <code>new PacketTransmittedEvent(...)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Server.Core/CommandPipeline/CommandPipelineOrchestrator.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace all <code>EventBusHelper.PublishEvent(...)</code> with <code>_eventBus.Publish(...)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Server.Core/CommandPipeline/Authentication/StandardAuthenticationPipeline.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace all <code>EventBusHelper.PublishEvent(...)</code> (both overloads present) with <code>_eventBus.Publish(...)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Server.Core/Persistence/InMemoryAuthenticationService.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace all <code>EventBusHelper.PublishEvent(...)</code> with <code>_eventBus.Publish(...)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Server.Core/Persistence/InMemoryPlayerRepository.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace <code>EventBusHelper.PublishEvent&lt;T&gt;(...)</code> with <code>_eventBus.Publish(...)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Server.Core/Domain/Services/ChatService/ChatService.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace <code>EventBusHelper.PublishEvent(...)</code> with <code>_eventBus.Publish(...)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Client.Core/Network/ClientNetworkService.cs</code></td>
+                <td><span class="badge update">UPDATE</span></td>
+                <td>Replace <code>EventBusHelper.PublishEvent(...)</code> with <code>_eventBus.Publish(...)</code>. Replace <code>PacketLog</code> anonymous-object calls with <code>new PacketTransmittedEvent(...)</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <h2>Ordered Steps</h2>
+
+    <div class="callout warning">
+        <strong>Note:</strong> Steps 1–5 establish the foundation. Steps 6–10 update consumers.
+        Steps 11–18 are mechanical call-site replacements. Always build after step 5 to confirm the core compiles before touching consumers.
+    </div>
+
+    <ol>
+        <li>Add <code>PacketTransmittedEvent</code> record to <code>Shared/EventBus/DomainEvents/NetworkEvents.cs</code> with fields: <code>Guid MessageId</code>, <code>string MessageType</code>, <code>string Direction</code>, <code>ConnectionId? Client</code>, <code>TransportEnvelope Envelope</code>, <code>DateTimeOffset Timestamp</code>.</li>
+        <li>Remove <code>SubscribeAll</code> method declaration from <code>Shared/EventBus/IEventBus.cs</code>.</li>
+        <li>Remove <code>SubscribeAll</code> method implementation, <code>_globalSubscriptionsList</code> field, and the <code>foreach</code> loop over global subscribers inside <code>Publish&lt;T&gt;</code> from <code>Shared/EventBus/BasicEventBus.cs</code>.</li>
+        <li>Delete <code>Shared/EventBus/EventEnvelope.cs</code>.</li>
+        <li>Delete <code>Shared/EventBus/EventBusHelper.cs</code>.</li>
+        <li>Update <code>Shared/Logging/EventBusLogger.cs</code> — replace <code>SubscribeAll</code> with <code>Subscribe&lt;EventReason&gt;</code> per relevant categories; update handler signature to accept <code>EventReason</code> directly.</li>
+        <li>Update <code>Shared/Logging/FileLogger.cs</code> — same pattern as <code>EventBusLogger</code>.</li>
+        <li>Update <code>Shared/Logging/PacketLogger.cs</code> — replace <code>Subscribe&lt;EventEnvelope&gt;</code> with <code>Subscribe&lt;PacketTransmittedEvent&gt;</code>; rewrite handler to use typed fields.</li>
+        <li>Update <code>Server.GUI/MainWindow.xaml.cs</code> — replace 4x <code>Subscribe&lt;EventEnvelope&gt;</code> with <code>Subscribe&lt;EventReason&gt;</code>; update handlers; delete dead <code>OnAnyEventReceived</code>.</li>
+        <li>Update <code>Client.GUI/MainWindow.xaml.cs</code> — replace <code>Subscribe&lt;EventEnvelope&gt;(PacketLog)</code> with <code>Subscribe&lt;PacketTransmittedEvent&gt;</code>; delete reflection-based <code>OnPacketReceived</code> / <code>OnPacketReceivedAsync</code>; replace with typed handler.</li>
+        <li>Update <code>Server.Core/Network/Supervisor/StandardNetworkSupervisor.cs</code> — replace all ~20 <code>EventBusHelper</code> calls with <code>_eventBus.Publish(...)</code>; replace <code>PacketLog</code> anonymous objects with <code>new PacketTransmittedEvent(...)</code>.</li>
+        <li>Update <code>Server.Core/CommandPipeline/CommandPipelineOrchestrator.cs</code> — replace all <code>EventBusHelper</code> calls with <code>_eventBus.Publish(...)</code>.</li>
+        <li>Update <code>Server.Core/CommandPipeline/Authentication/StandardAuthenticationPipeline.cs</code> — replace all <code>EventBusHelper</code> calls with <code>_eventBus.Publish(...)</code>.</li>
+        <li>Update <code>Server.Core/Persistence/InMemoryAuthenticationService.cs</code> — replace all <code>EventBusHelper</code> calls with <code>_eventBus.Publish(...)</code>.</li>
+        <li>Update <code>Server.Core/Persistence/InMemoryPlayerRepository.cs</code> — replace <code>EventBusHelper.PublishEvent&lt;T&gt;</code> with <code>_eventBus.Publish(...)</code>.</li>
+        <li>Update <code>Server.Core/Domain/Services/ChatService/ChatService.cs</code> — replace <code>EventBusHelper</code> calls with <code>_eventBus.Publish(...)</code>.</li>
+        <li>Update <code>Client.Core/Network/ClientNetworkService.cs</code> — replace <code>EventBusHelper</code> calls with <code>_eventBus.Publish(...)</code>; replace <code>PacketLog</code> anonymous objects with <code>new PacketTransmittedEvent(...)</code>.</li>
+        <li>Build the full solution and resolve any remaining compile errors from missed references.</li>
+    </ol>
+
+</body>
+</html>

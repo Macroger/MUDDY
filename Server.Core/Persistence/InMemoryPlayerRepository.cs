@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Domain.Player;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System.Collections.Concurrent;
-using static Shared.EventBus.DomainEvents.ChatEvents;
-using static Shared.EventBus.DomainEvents.PlayerEvents;
+using static Shared.EventBus.EventTypes.ChatEvents;
+using static Shared.EventBus.EventTypes.PlayerEvents;
 
 namespace Server.Core.Persistence
 {
@@ -27,7 +27,7 @@ namespace Server.Core.Persistence
             _eventBus = eventBus;
             _players = new ConcurrentDictionary<ConnectionId, PlayerState>();
             _subscriptions = new List<ISubscriptionToken>();
-            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.ClientDisconnectedEvent>
+            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.ClientDisconnected>
                 (EventMessageType.Network, HandleDisconnect));
             _subscriptions.Add(_eventBus.Subscribe<MutePlayerRequestEvent>
                 (EventMessageType.Player, HandleMutePlayer));
@@ -94,7 +94,7 @@ namespace Server.Core.Persistence
                 );
         }
 
-        private async void HandleDisconnect(NetworkEvents.ClientDisconnectedEvent evt)
+        private async void HandleDisconnect(NetworkEvents.ClientDisconnected evt)
         {
             var player = await GetPlayerByConnectionIdAsync(evt.ConnId);
             if (player is not null)

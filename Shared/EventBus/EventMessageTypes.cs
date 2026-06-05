@@ -1,26 +1,15 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-
-namespace Shared.EventBus
+﻿namespace Shared.EventBus
 {
-
     public enum EventMessageType
     {
         Authentication, // Login/logout, session management
-        Log,            // Structured logging events
-        System,         // Server/process lifecycle & global state
-        Network,        // Server-side networking and connections
-        ClientNetwork,  // Client-side networking 
-        Protocol,       // Protocol-level processing (parsing, validation)
-        Command,        // Command parsing and execution pipeline
-        Domain,         // Game-world/domain events (rooms, items, players)
+        Chat,           // In-game chat messages and events        
+        CmdPipeline,    // Command parsing and execution pipeline
         Gui,            // GUI events, such as updates to the client UI or notifications
+        Network,        // Server-side networking and connections
         Persistence,    // Database, saving/loading, storage operations
-        Chat,           // In-game chat messages and events
-        Error,          // Cross-cutting error reporting
-        PacketLog,       // Special channel for packet transmission events
-        World,
-        Player
+        Player,         // Player-specific events, such as health changes, inventory updates, etc.       
+        System,         // Server/process lifecycle & global state
+        World,          // World state changes, such as entity creation/destruction, movement, etc.
     }
-
 }

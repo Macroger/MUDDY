@@ -1,6 +1,6 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     /// <summary>
     /// Defines server-side limits and constraints for the Muddy wire protocol.

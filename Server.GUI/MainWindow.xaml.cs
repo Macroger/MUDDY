@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Media;
 using Server.Core.Infrastructure.Lifecycle;
 using Shared.Domain.Player;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using Windows.Graphics;
-using static Shared.EventBus.DomainEvents.NetworkEvents;
+using static Shared.EventBus.EventTypes.NetworkEvents;
 
 namespace Server.GUI
 {
@@ -116,7 +116,7 @@ namespace Server.GUI
                     // Subscribe to specific event types for WinUI safety
                     _eventSubscriptions.Add(_eventBus.Subscribe<ServerStateChangedEvent>(EventMessageType.System, OnServerStateChanged));
                     _eventSubscriptions.Add(_eventBus.Subscribe<ServerStateChangeRequestedEvent>(EventMessageType.System, OnServerStateChangeRequested));
-                    _eventSubscriptions.Add(_eventBus.Subscribe<ListenerStateChangedEvent>(EventMessageType.Network, OnListenerStateChanged));
+                    _eventSubscriptions.Add(_eventBus.Subscribe<ListenerStateChanged>(EventMessageType.Network, OnListenerStateChanged));
 
                     // Subscribe to player events
                     _eventSubscriptions.Add(_eventBus.Subscribe<PlayerEvents.PlayerEnteredWorldEvent>(EventMessageType.World, OnPlayerEnteredWorld));
@@ -388,7 +388,7 @@ namespace Server.GUI
             });
         }
 
-        private void OnListenerStateChanged(ListenerStateChangedEvent evnt)
+        private void OnListenerStateChanged(ListenerStateChanged evnt)
         {
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -507,12 +507,12 @@ namespace Server.GUI
             if (ListenerStateText == "ONLINE")
             {
                 // Publish event to stop listener
-                _eventBus.Publish(EventMessageType.Network, new StopListenerRequestEvent());
+                _eventBus.Publish(EventMessageType.Network, new StopListenerRequest());
             }
             else
             {
                 // Publish event to start listener
-                _eventBus.Publish(EventMessageType.Network, new StartListnerRequestEvent());
+                _eventBus.Publish(EventMessageType.Network, new StartListnerRequest());
             }
 
             ToggleListenerButton.IsEnabled = false; // Disable button until we get confirmation of state change
