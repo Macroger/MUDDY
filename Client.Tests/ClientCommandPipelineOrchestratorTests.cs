@@ -11,7 +11,7 @@ namespace Tests.Client
         [TestMethod]
         public void RegisterHandler_And_ProcessMessage_CallsHandler()
         {
-            var orchestrator = new ClientCommandPipelineOrchestrator();
+            var orchestrator = new InboundMessageRouter();
             var handlerMock = new Moq.Mock<IClientCommandHandler>();
             orchestrator.RegisterHandler("Chat", handlerMock.Object);
             var envelope = new TransportEnvelope(

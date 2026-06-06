@@ -1,4 +1,4 @@
-﻿namespace Client.Core.CommandPipeline
+﻿namespace Client.Core.MessageRouting
 {
     /// <summary>
     /// Orchestrates routing and handling of incoming messages from the server.
@@ -99,7 +99,7 @@
         }
     }
 
-    public class ClientCommandPipelineOrchestrator
+    public class InboundMessageRouter
     {
         private readonly System.Collections.Concurrent.BlockingCollection<Shared.Network.Transport.TransportEnvelope> _msgQueue = new();
         private readonly Dictionary<string, IClientCommandHandler> _handlers = new(StringComparer.OrdinalIgnoreCase);

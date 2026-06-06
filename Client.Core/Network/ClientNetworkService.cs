@@ -5,6 +5,7 @@ using Shared.EventBus.EventTypes;
 using Shared.Identity;
 using Shared.Network.Transport;
 using Shared.Network.Types;
+using Client.Core.Events;
 using System.Net.Sockets;
 
 namespace Client.Core.Network
@@ -93,41 +94,48 @@ namespace Client.Core.Network
             _protocolLimits = protocolLimits;
 
             // Subscribe to connect/disconnect requests from the event bus
-            _eventBus.Subscribe<ConnectRequestedEvent>(EventMessageType.Gui, OnConnectRequested);
-            _eventBus.Subscribe<DisconnectRequestedEvent>(EventMessageType.Gui, OnDisconnectRequested);
+            _eventBus.Subscribe<ClientNetworkEvents.Commands.ConnectToServer>(EventMessageType.Gui, OnConnectRequested);
+            _eventBus.Subscribe<ClientNetworkEvents.Commands.DisconnectFromServer>(EventMessageType.Gui, OnDisconnectRequested);
+            _eventBus.Subscribe<ClientNetworkEvents.Commands.UpdateConnectionEndpoint>(EventMessageType.Gui, OnUpdateEndpointRequested);
         }
 
         /// <summary>
         /// Updates the server address and port. Throws if called while connected.
         /// </summary>
-        public void UpdateEndpoint(string address, int port)
+        public void UpdateEndpoint(string serverAddress, int serverPort)
         {
             if (IsConnected)
                 throw new InvalidOperationException("Cannot update endpoint while connected. Please disconnect first.");
-            ServerAddress = address;
-            ServerPort = port;
+
+            // Validate address and port
+            if (!ValidateConnectionParameters(serverAddress, serverPort, out string errorMessage))
+            {
+                _eventBus.Publish(EventMessageType.Network,
+                    new NetworkEvents.Errors.NetworkError(errorMessage));
+                return;
+            }
+
+            ServerAddress = serverAddress;
+            ServerPort = serverPort;
+        }
+
+        private void OnUpdateEndpointRequested(ClientNetworkEvents.Commands.UpdateConnectionEndpoint endpoint)
+        {
+            if (endpoint == null)
+            {
+                _eventBus.Publish(EventMessageType.Network,
+                    new NetworkEvents.Errors.NetworkError("Invalid endpoint update request: data is null"));
+
+                return;
+            }
+
+            UpdateEndpoint(endpoint.address, endpoint.port);
         }
 
         /// <summary>
         /// Handles connect requests from the event bus.
         /// </summary>
-        private async Task OnConnectRequestedAsync(ConnectRequestedEvent evt)
-        {
-            await ConnectAsync();
-        }
-
-        /// <summary>
-        /// Handles disconnect requests from the event bus.
-        /// </summary>
-        private async Task OnDisconnectRequestedAsync(DisconnectRequestedEvent evt)
-        {
-            await DisconnectAsync();
-        }
-
-        /// <summary>
-        /// Handles connect requests from the event bus.
-        /// </summary>
-        private void OnConnectRequested(ConnectRequestedEvent evt)
+        private void OnConnectRequested(BusEvent evt)
         {
             _ = ConnectAsync();
         }
@@ -135,17 +143,15 @@ namespace Client.Core.Network
         /// <summary>
         /// Handles disconnect requests from the event bus.
         /// </summary>
-        private void OnDisconnectRequested(DisconnectRequestedEvent evt)
+        private void OnDisconnectRequested(BusEvent evt)
         {
             _ = DisconnectAsync();
         }
-
 
         /// <summary>
         /// Indicates whether the client is currently connected to the server.
         /// </summary>
         public bool IsConnected { get; private set; } = false;
-
    
         /// <summary>
         /// Connects to the server using the current ServerAddress and ServerPort.
@@ -163,9 +169,9 @@ namespace Client.Core.Network
                 IsConnected = true;
 
                 // Emit an event to notify listeners that we are connected
-                _eventBus.Publish<ConnectionStatusChangedEvent>(
+                _eventBus.Publish(
                     EventMessageType.Network,
-                    new Client.Core.Network.ConnectionStatusChangedEvent
+                    new ClientNetworkEvents.ConnectionStatusChangedEvent
                     (
                         true,
                         $"Connected to server {ServerAddress}:{ServerPort}"
@@ -177,12 +183,14 @@ namespace Client.Core.Network
             catch (Exception ex)
             {               
                 IsConnected = false;
-                var connectionStatusEvent = new Client.Core.Network.ConnectionStatusChangedEvent
+                var connectionStatusEvent = new ClientNetworkEvents.ConnectionStatusChangedEvent
                (
                    false,
                    $"Failed to connect to server {ServerAddress}:{ServerPort}: {ex.Message}"
                );
-                _eventBus.Publish<ConnectionStatusChangedEvent>(EventMessageType.Network, connectionStatusEvent);
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    connectionStatusEvent);
 
                 throw;
             }
@@ -203,9 +211,11 @@ namespace Client.Core.Network
                 IsConnected = false;
 
                 // Notify listeners that we are disconnected
-                _eventBus.Publish<Client.Core.Network.ConnectionStatusChangedEvent>(
+                _eventBus.Publish(
                     EventMessageType.Network,
-                    new ConnectionStatusChangedEvent(false, "Disconnected from server")
+                    new ClientNetworkEvents.ConnectionStatusChangedEvent(
+                        false,
+                        "Disconnected from server")
                 );
             }
             catch (Exception ex)
@@ -213,9 +223,11 @@ namespace Client.Core.Network
                 IsConnected = false;
 
                 // Notify listeners of disconnect error
-                _eventBus.Publish<ConnectionStatusChangedEvent>(
+                _eventBus.Publish(
                     EventMessageType.Network,
-                    new ConnectionStatusChangedEvent(false, $"Disconnected from server with errors: {ex.Message}")
+                    new ClientNetworkEvents.ConnectionStatusChangedEvent(
+                        false,
+                        $"Disconnected from server with errors: {ex.Message}")
                 );
             }
         }
@@ -237,7 +249,7 @@ namespace Client.Core.Network
                 await _networkStream.WriteAsync(bytes, 0, bytes.Length);
 
                 // Only publish to PacketLog channel for specialized logging
-                _eventBus.Publish<NetworkEvents.Packets.PacketSent>(
+                _eventBus.Publish(
                     EventMessageType.Network,
                     new NetworkEvents.Packets.PacketSent(envelope)
                     );
@@ -245,7 +257,7 @@ namespace Client.Core.Network
             catch (Exception ex)
             {
                 // Notify listeners of send error
-                _eventBus.Publish<NetworkEvents.Errors.NetworkError>(
+                _eventBus.Publish(
                     EventMessageType.Network,
                     new NetworkEvents.Errors.NetworkError
                     (
@@ -305,7 +317,7 @@ namespace Client.Core.Network
                     var envelope = ConvertPacketToEnvelope(packet);
 
                     // Publish the received packet event
-                    _eventBus.Publish<NetworkEvents.Packets.PacketReceived>(
+                    _eventBus.Publish(
                         EventMessageType.Network,
                         new NetworkEvents.Packets.PacketReceived(envelope)
                     );
@@ -318,7 +330,7 @@ namespace Client.Core.Network
             catch (Exception ex)
             {
                 // Notify listeners of receive loop error
-                _eventBus.Publish<NetworkEvents.Errors.NetworkError>(
+                _eventBus.Publish(
                     EventMessageType.Network,
                     new NetworkEvents.Errors.NetworkError
                     (
@@ -360,5 +372,43 @@ namespace Client.Core.Network
                 sessionId: sessionId
             );
         }
+
+        /// <summary>
+        /// Validates a server address (IP or hostname) and port.
+        /// </summary>
+        /// <param name="address">The server address to validate.</param>
+        /// <param name="port">The server port to validate.</param>
+        /// <param name="errorMessage">Output parameter containing the validation error message if validation fails.</param>
+        /// <returns>True if both address and port are valid; otherwise false.</returns>
+        private static bool ValidateConnectionParameters(string address, int port, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            // Validate address is not null or empty
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                errorMessage = "Server address cannot be empty";
+                return false;
+            }
+
+            // Validate hostname or IP address format
+            UriHostNameType hostType = Uri.CheckHostName(address);
+            if (hostType == UriHostNameType.Unknown)
+            {
+                errorMessage = $"Invalid server address format: '{address}'";
+                return false;
+            }
+
+            // Validate port range
+            if (port is < 1 or > 65535)
+            {
+                errorMessage = $"Port must be between 1 and 65535 (got {port})";
+                return false;
+            }
+
+            return true;
+        }
+
+
     }
 }

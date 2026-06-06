@@ -15,7 +15,7 @@ using Shared.Network.Types;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using static Shared.EventBus.EventTypes.NetworkEvents;
+//using static Shared.EventBus.EventTypes.NetworkEvents;
 
 
 namespace Server.Core.Network.Supervisor
@@ -274,7 +274,7 @@ namespace Server.Core.Network.Supervisor
 
                 // Log the event
                 _eventBus.Publish(EventMessageType.Network,
-                    new ListenerStateChanged(IsListeningForConnections));
+                    new NetworkEvents.Lifecycle.ListenerStateChanged(IsListeningForConnections));
             }
             catch (Exception ex)
             {
@@ -310,7 +310,7 @@ namespace Server.Core.Network.Supervisor
 
                 _eventBus.Publish(
                     EventMessageType.Network,
-                    new ListenerStateChanged(IsListeningForConnections)
+                    new NetworkEvents.Lifecycle.ListenerStateChanged(IsListeningForConnections)
                 );
             }
             catch (Exception ex)
