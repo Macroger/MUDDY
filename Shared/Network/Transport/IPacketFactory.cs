@@ -8,6 +8,6 @@ namespace Shared.Network.Transport
     /// </summary>
     public interface IPacketFactory
     {
-        MuddyPacket CreateMuddyPacket(TransportEnvelope message);
+        MuddyPacket CreateMuddyPacket(PacketEnvelope message);
     }
 }

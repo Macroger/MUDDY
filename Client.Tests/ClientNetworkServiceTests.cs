@@ -3,7 +3,7 @@
 using Client.Core.Network;
 using Moq;
 using Shared.EventBus;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 
 namespace Client.Tests
 {

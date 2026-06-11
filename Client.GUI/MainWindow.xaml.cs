@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
 using Shared.Logging;
 using Shared.Network.Transport;
@@ -23,8 +24,8 @@ namespace Client.GUI
 {
     public sealed partial class MainWindow : Window
     {
-        private ClientNetworkService? _networkService;
-        private ClientCommandPipelineOrchestrator? _orchestrator;
+        
+        
         private IEventBus? _eventBus;
         private PacketLogger? _packetLogger;
         private bool _isConnected = false;
@@ -65,6 +66,12 @@ namespace Client.GUI
                 AppendGameOutput("Already connected to server.", "#FFFF6B6B");
                 return;
             }
+
+            // Log to user where logs are being saved
+            AppendGameOutput($"Packet logs will be saved to: {LogPathHelper.GetLogDirectory()}", "#FF808080");
+
+            // Subscribe to network events
+            //_networkService.OnSessionEstablished += OnSessionEstablished;
 
             try
             {
@@ -238,9 +245,9 @@ namespace Client.GUI
             var random = new Random();
             var messageId = new MessageId((uint)random.Next());
 
-            var envelope = new TransportEnvelope(
+            var envelope = new PacketEnvelope(
                 messageId: messageId,
-                messageType: TransportMessageType.Command,
+                messageType: PacketType.Command,
                 flags: MessageFlags.None,
                 payload: payload,
                 connectionId: new ConnectionId("client"),
@@ -396,7 +403,7 @@ namespace Client.GUI
                 {
                     // Get Envelope property
                     var envelopeProp = dataType.GetProperty("Envelope");
-                    var envelope = envelopeProp?.GetValue(reason.Data) as TransportEnvelope;
+                    var envelope = envelopeProp?.GetValue(reason.Data) as PacketEnvelope;
 
                     if (envelope != null)
                     {

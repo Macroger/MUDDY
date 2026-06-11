@@ -8,7 +8,7 @@ using System.Threading.Channels;
 namespace Shared.Logging
 {
     /// <summary>
-    /// Subscribes to all event-bus messages and writes <see cref="LogRecord"/> entries
+    /// Subscribes to all event-bus messages and writes entries
     /// at or above the configured minimum level to a text file.
     /// The file is opened in append mode, so restarts accumulate into a single log.
     /// </summary>

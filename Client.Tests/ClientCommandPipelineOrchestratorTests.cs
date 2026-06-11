@@ -1,7 +1,7 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Client.Core.CommandPipeline;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 
 namespace Tests.Client
 {
@@ -14,7 +14,7 @@ namespace Tests.Client
             var orchestrator = new InboundMessageRouter();
             var handlerMock = new Moq.Mock<IClientCommandHandler>();
             orchestrator.RegisterHandler("Chat", handlerMock.Object);
-            var envelope = new TransportEnvelope(
+            var envelope = new PacketEnvelope(
                 messageId: new Shared.Identity.MessageId(1),
                 messageType: TransportMessageType.Chat,
                 flags: 0,
@@ -25,7 +25,7 @@ namespace Tests.Client
             orchestrator.Start();
             orchestrator.ProcessMessage(envelope);
             Task.Delay(100).Wait();
-            handlerMock.Verify(h => h.HandleAsync(Moq.It.IsAny<TransportEnvelope>()), Moq.Times.Once);
+            handlerMock.Verify(h => h.HandleAsync(Moq.It.IsAny<PacketEnvelope>()), Moq.Times.Once);
             orchestrator.StopAsync().Wait();
         }
     }

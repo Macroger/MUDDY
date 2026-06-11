@@ -12,6 +12,6 @@ namespace Server.Core.CommandPipeline.Authentication
         /// <summary>
         /// Processes an authentication command (login or register).
         /// </summary>
-        Task ProcessAuthCommandAsync(TransportEnvelope envelope);
+        Task ProcessAuthCommandAsync(PacketEnvelope envelope);
     }
 }

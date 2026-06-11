@@ -4,8 +4,8 @@ using Moq;
 using Server.Core.CommandPipeline.Policies;
 using Server.Core.Domain.Authentication;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Server.Tests.CommandPipeline;
 
@@ -28,11 +28,11 @@ public class AuthenticationPolicyTests
         _connectionId = new ConnectionId(Guid.NewGuid().ToString());
     }
 
-    private TransportEnvelope BuildEnvelope(SessionId? sessionId)
+    private PacketEnvelope BuildEnvelope(SessionId? sessionId)
     {
-        return new TransportEnvelope(
+        return new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.Command,
+            messageType: PacketType.Command,
             flags: MessageFlags.None,
             payload: Array.Empty<byte>(),
             connectionId: _connectionId,

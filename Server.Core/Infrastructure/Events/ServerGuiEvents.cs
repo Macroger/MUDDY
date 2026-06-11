@@ -6,11 +6,10 @@
 ///             Server.GUI. They drive UI updates via DispatcherQueue and are
 ///             not visible to the client or shared libraries.
 // =============================================================================
-using Shared.EventBus;
-using Shared.EventBus.EventTypes;
 using Shared.Logging;
+using Shared.EventBus.EventTypes;
 
-namespace Server.GUI.Events
+namespace Server.Core.Infrastructure.Events
 {
     public class ServerGuiEvents
     {

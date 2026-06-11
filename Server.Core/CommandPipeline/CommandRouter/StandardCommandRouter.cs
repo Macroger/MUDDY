@@ -43,7 +43,7 @@ namespace Server.Core.CommandPipeline.CommandRouter
         /// </summary>
         /// <param name="context">The enriched command context.</param>
         /// <returns>The matching handler, or null if command is unknown.</returns>
-        public ICommandHandler? Route(Types.ParsedCommand command)
+        public ICommandHandler? GetHandler(Types.ParsedCommand command)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command), "Context cannot be null");

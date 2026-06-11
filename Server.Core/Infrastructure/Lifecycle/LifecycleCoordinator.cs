@@ -1,6 +1,7 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 
 namespace Server.Core.Infrastructure.Lifecycle
 {

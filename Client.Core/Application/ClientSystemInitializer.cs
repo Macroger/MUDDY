@@ -1,179 +1,109 @@
-﻿using Shared.EventBus;
+﻿using Client.Core.MessagePipeline;
+using Client.Core.Network;
+using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Logging;
+using Shared.Network.Transport;
 
 namespace Client.Core.Application
 {
     public class ClientSystemInitializer
-    {    
-        private readonly InboundMessageRouter _messageRouter;
+    {
+        private readonly MessagePipelineOrchestrator _messageRouter;
         private readonly LifecycleCoordinator _lifecycleCoordinator;
 
         private readonly IEventBus _eventBus;
+        private ClientNetworkService? _networkService;
+        private MessagePipelineOrchestrator? _inboundMsgRouter;
 
         public ClientSystemInitializer()
         {
             try
             {
+                // Initialize services
                 _eventBus = new BasicEventBus();
+                var protocolLimits = new MuddyProtocolLimits();
+                var packetSerializer = new MuddyPacketSerializer(protocolLimits);
+                var packetFactory = new MuddyPacketFactory();
 
-                _messageIdGenerator = new MessageIdGenerator();
-                _sessionIdGenerator = new SessionIdGenerator();
+                //Use the LogPathHelper to safely create a location for the log file. 
+                string logFilePath = LogPathHelper.CreateTimestampedLogPath("client_log");
 
-                _lifecycleCoordinator = new LifecycleCoordinator(_eventBus);
-
-                _playerRepository = new InMemoryPlayerRepository(_eventBus);
-                _worldRepository = new InMemoryWorldRepository(_eventBus);
-
-                // Create packet logger with file writer using safe path
-                // 
-
-                // Create the network supervisor
-                _networkSupervisor = new StandardNetworkSupervisor(
-                    _lifecycleCoordinator,          // Provide reference to the lifecycle coordinator for state-aware behavior.
-                    _eventBus,                      // Provide a reference to the eventBus.
-                    _messageIdGenerator             // Provide a reference to the messageIdGenerator
+                // Instantiate the file logger with the event bus and log file path, and the log level as a filter.
+                FileLogger _fileLogger = new FileLogger(
+                    _eventBus,      // Central event bus for communication between components
+                    LogLevel.Debug, // Log level to filter which messages get logged
+                    logFilePath     // Path to the log file where messages will be written
                 );
 
-                // Create handlers and wrap services
-
-                var chatHandler = new ChatCommandHandler(_chatService);
-                var movementHandler = new MovementCommandHandler(_movementService, _worldQueryService);
-                var playerHandler = new PlayerCommandHandler(_playerQueryService);
-                var serverStateHandler = new ServerStateCommandHandler(_lifecycleCoordinator);
-                var imageHandler = new ImageTransferCommandHandler();
-                var logoutHandler = new LogoutCommandHandler(_playerRepository, _eventBus);
-
-                // Register handlers in router
-                var cmdRouter = new StandardCommandRouter();
-
-                // Chat commands
-                cmdRouter.RegisterHandler("say", chatHandler);
-
-                // Movement commands
-                cmdRouter.RegisterHandler("move", movementHandler);
-                cmdRouter.RegisterHandler("go", movementHandler);
-                cmdRouter.RegisterHandler("look", movementHandler);
-
-                // Directional movement shortcuts
-                cmdRouter.RegisterHandler("north", movementHandler);
-                cmdRouter.RegisterHandler("south", movementHandler);
-                cmdRouter.RegisterHandler("east", movementHandler);
-                cmdRouter.RegisterHandler("west", movementHandler);
-                cmdRouter.RegisterHandler("northeast", movementHandler);
-                cmdRouter.RegisterHandler("northwest", movementHandler);
-                cmdRouter.RegisterHandler("southeast", movementHandler);
-                cmdRouter.RegisterHandler("southwest", movementHandler);
-                cmdRouter.RegisterHandler("up", movementHandler);
-                cmdRouter.RegisterHandler("down", movementHandler);
-
-                // Player info commands
-                cmdRouter.RegisterHandler("status", playerHandler);
-                cmdRouter.RegisterHandler("who", playerHandler);
-                cmdRouter.RegisterHandler("player", playerHandler);
-
-                // System commands
-                cmdRouter.RegisterHandler("serverstate", serverStateHandler);
-                cmdRouter.RegisterHandler("sendimage", imageHandler);
-                cmdRouter.RegisterHandler("logout", logoutHandler);
-
-                // Create a standard command parser.
-                ICommandParser cmdParser = new StandardCommandParser();
-
-                // Create a standard command context builder.
-                ICommandContextBuilder cmdContextBuilder = new StandardCommandContextBuilder(_playerRepository, _worldRepository);
-
-                // Create the auth pipeline dependencies
-                IAuthenticationService authService = new InMemoryAuthenticationService(_eventBus, _sessionIdGenerator);
-                IAccountService accountService = new InMemoryAccountService();
-
-                // Create the authentication pipeline
-                IAuthenticationPipeline authPipeline = new StandardAuthenticationPipeline(authService, accountService, _networkSupervisor, _eventBus, _messageIdGenerator, _playerRepository, _worldRepository);
-
-                // Create the fist pass policy list and add the authentication policy to it, so that authentication will be processed before any commands are routed.
-                List<IFirstPassPolicy> firstPassPolicies = new List<IFirstPassPolicy>();
-                firstPassPolicies.Add(new AuthenticationPolicy(authService));
-
-                // Create the second pass policy list and add the muted player policy to it
-                List<ISecondPassPolicy> secondPassPolicies = new List<ISecondPassPolicy>();
-                secondPassPolicies.Add(new MutedPlayerPolicy());
-
-                // Create orchestrator with fully-wired router
-                _messageRouter = new CommandPipelineOrchestrator(
-                    _eventBus,              // Provide a reference to the event bus for publishing command processing events.
-                    _networkSupervisor,     // Provide a reference to the network supervisor for sending responses back to clients.
-                    cmdRouter,              // Provide the fully configured command router.
-                    cmdParser,              // Provide the command parser for parsing raw input into commands.
-                    _messageIdGenerator,    // Provide the message ID generator for generating unique IDs for command processing events and messages.
-                    cmdContextBuilder,      // Provide the command context builder for building the context required for command handling.
-                    authPipeline,           // Provide the authentication pipeline for handling authentication as part of command processing.
-                    firstPassPolicies,      // Provide the list of first pass policies to be applied during command processing.
-                    secondPassPolicies      // Provide the list of second pass policies to be applied during command processing.
+                _networkService = new ClientNetworkService(
+                    _eventBus,          // Central event bus for communication between components
+                    packetSerializer,   // Responsible for converting between raw bytes and structured packets
+                    packetFactory,      // Responsible for creating packet instances based on protocol definitions
+                    protocolLimits      // Defines limits like max packet size, max connections, etc.
                 );
 
-                // Register components for managed lifecycle
-                RegisterLifecycleComponent(_networkSupervisor);
-                RegisterLifecycleComponent(_messageRouter);
+                // Instantiate the message router and register handlers for different message types
+                _inboundMsgRouter = new MessagePipelineOrchestrator(_eventBus);
 
-                // Wire up the network supervisor to the commandPipeline
-                _networkSupervisor.SetCommandPipeline(_messageRouter);
+                // Setup the registrars, which will register their respective commands and handlers in the router.
+                var registrars = new MessageRouting.IMessageRegistrar[]
+                {
+                    new MessageRouting.Registrars.ChatCommandRegistrar(_eventBus),                                             // Handles chat-related commands. Uses the chat service to send messages and provide feedback on chat operations.
+                    new MovementCommandRegistrar(_movementService, _worldQueryService),                 // Handles movement-related commands. Uses movement and world query services to validate moves and provide feedback.
+                    new PlayerCommandRegistrar(_playerQueryService),                                    // Handles player-related commands. Uses the player query service to validate player state and attributes.
+                    new SystemCommandRegistrar(_lifecycleCoordinator, _playerRepository, _eventBus)     // Handles system-related commands like server status and shutdown. Uses lifecycle coordinator to perform state changes and player repository to validate player permissions.
+                };
 
-                _eventBus.Subscribe<ServerStateChangeRequestedEvent>(EventMessageType.System, OnServerStateChangeRequested);
-            }
-            catch (ArgumentNullException ex)
-            {
-                throw new InvalidOperationException($"Failed to initialize system services: missing required dependency. {ex.Message}", ex);
+                // Loop through registrars and register their commands in the router.
+                // This is how we register commands and handlers without tightly coupling them to the router or the system initializer.
+                foreach (var registrar in registrars)
+                {
+                    registrar.Register(_inboundMsgRouter);
+                }
+
+                // Register handlers for all message types
+                _inboundMsgRouter.RegisterHandler("Chat", new ChatMessageHandler());
+                _inboundMsgRouter.RegisterHandler("Event", new EventMessageHandler());
+                _inboundMsgRouter.RegisterHandler("BinaryTransfer", new BinaryTransferHandler());
+                _inboundMsgRouter.RegisterHandler("Error", new ErrorMessageHandler());
+                _inboundMsgRouter.RegisterHandler("Response", new ResponseMessageHandler());
+                _inboundMsgRouter.RegisterHandler("AuthSuccess", new AuthSuccessMessageHandler());
+
+                // Update endpoint
+                string address = ServerAddressBox.Text;
+                if (!int.TryParse(ServerPortBox.Text, out int port))
+                {
+                    AppendGameOutput("Invalid port number.", "#FFFF6B6B");
+                    return;
+                }
+
+                _networkService.UpdateEndpoint(address, port);
+
+
+
+                // Subscribe to packet log events to forward to orchestrator
+                var subscriptionToken = _eventBus.Subscribe<EventEnvelope>(EventMessageType.PacketLog, OnPacketReceived);
+
+                // Connect
+                AppendGameOutput($"Connecting to {address}:{port}...", "#FFDAA520");
+                await _networkService.ConnectAsync();
+
+                _isConnected = true;
+                UpdateConnectionStatus(true);
+                AppendGameOutput("Connected successfully!", "#FF6BCF7F");
+
+                // Start the orchestrator
+                _inboundMsgRouter.Start();
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Failed to initialize system services. Check inner exception for details.", ex);
+                AppendGameOutput($"Connection failed: {ex.Message}", "#FFFF6B6B");
+                _isConnected = false;
+                UpdateConnectionStatus(false);
             }
+
+
         }
-
-        /// <summary>
-        /// Registers a component with the lifecycle coordinator for all lifecycle interfaces it implements.
-        /// </summary>
-        /// <param name="component">The component to register. Can implement IStartable, IStoppable, and/or IShutdownAware.</param>
-        private void RegisterLifecycleComponent(object component)
-        {
-            if (component is IStartable startable)
-                _lifecycleCoordinator.RegisterStartableItem(startable);
-
-            if (component is IStoppable stoppable)
-                _lifecycleCoordinator.RegisterStoppableItem(stoppable);
-
-            if (component is IShutdownAware shutdownAware)
-                _lifecycleCoordinator.RegisterShutdownAwareItem(shutdownAware);
-        }
-
-        public void StartServer()
-        {
-            // Start the lifecycle coordinator, which will in turn start all registered startable items.
-            _lifecycleCoordinator.StartServer();
-        }
-
-        public void StopServer()
-        {
-            // Stop the lifecycle coordinator, which will in turn stop all registered stoppable items.
-            _lifecycleCoordinator.ShutdownServer();
-        }
-
-        public IEventBus GetEventBus()
-        {
-            return _eventBus;
-        }
-
-        private void OnServerStateChangeRequested(ServerStateChangeRequestedEvent evt)
-        {
-            bool ok = _lifecycleCoordinator.SetState(evt.RequestedState);
-            if (!ok)
-            {
-                // Publish an error event if the state change failed
-                _eventBus.Publish(EventMessageType.Error,
-                    new EventReason("Server state change failed", $"Could not change state to {evt.RequestedState} from current state."));
-            }
-        }
-
-        public IServerLifecycle LifecycleCoordinator => _lifecycleCoordinator;
-        
     }
 }

@@ -22,7 +22,7 @@ namespace Server.Core.CommandPipeline.Policies
         {
             _authService = authService;
         }
-        public async Task<PolicyResult> CheckPolicyAsync(TransportEnvelope msg)
+        public async Task<PolicyResult> CheckPolicyAsync(PacketEnvelope msg)
         {
             // If unauthenticated (SessionId = 0), allow it to pass
             // The orchestrator will route to auth pipeline

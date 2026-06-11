@@ -9,7 +9,7 @@ namespace Server.Core.CommandPipeline.Parser
 {
     public class StandardCommandParser : ICommandParser
     {
-        public ParseResult Parse(TransportEnvelope envelope)
+        public ParseResult Parse(PacketEnvelope envelope)
         {
             try
             {

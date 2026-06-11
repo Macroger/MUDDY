@@ -7,6 +7,7 @@ using Server.Core.Domain.World;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Shared.Domain.Player;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
 
 namespace Server.Tests.Domain;

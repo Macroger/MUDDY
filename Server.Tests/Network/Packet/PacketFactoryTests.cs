@@ -1,8 +1,8 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Server.Tests.Network.Packet;
 
@@ -25,10 +25,10 @@ public class PacketFactoryTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
              connectionId: _connectionId,
              messageId: new MessageId(123),
-             messageType: TransportMessageType.Error,
+             messageType: PacketType.Error,
              flags: MessageFlags.None,
              payload: body,
              sessionId: SessionId.Unauthenticated
@@ -40,7 +40,7 @@ public class PacketFactoryTests
         // Assert
         Assert.AreEqual((uint)body.Length, newPacket.Header.BodyLength);
         Assert.AreEqual(message.MessageId.Value, newPacket.Header.MsgId);
-        Assert.AreEqual(message.MessageType, (TransportMessageType)newPacket.Header.MsgType);
+        Assert.AreEqual(message.MessageType, (PacketType)newPacket.Header.MsgType);
         Assert.AreEqual(message.Flags, (MessageFlags)newPacket.Header.BitFlags);
         Assert.AreEqual(body, newPacket.Body);
     }
@@ -49,7 +49,7 @@ public class PacketFactoryTests
     public void Test_PacketFactory_ThrowsWhenMessageNull()
     {
         // Arrange
-        TransportEnvelope? message = null;
+        PacketEnvelope? message = null;
 
         // Act
         // Assert

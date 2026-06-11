@@ -11,12 +11,14 @@ using Server.Core.Domain.Services.ChatService;
 using Server.Core.Domain.Services.PlayerQueryService;
 using Server.Core.Domain.Services.WorldMovementService;
 using Server.Core.Domain.Services.WorldQueryService;
+using Server.Core.Infrastructure.Events;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Supervisor;
 using Server.Core.Persistence;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Logging;
 
 namespace Server.Core.Application
@@ -40,8 +42,6 @@ namespace Server.Core.Application
         private readonly IWorldQueryService _worldQueryService;
         private readonly IPlayerQueryService _playerQueryService;
 
-        private readonly PacketLogger _packetLogger;
-
         public SystemInitializer()
         {
             try
@@ -56,12 +56,15 @@ namespace Server.Core.Application
                 _playerRepository = new InMemoryPlayerRepository(_eventBus);
                 _worldRepository = new InMemoryWorldRepository(_eventBus);
 
-                // Initialize packet logging to file with timestamp to avoid file locking issues
-                // Create packet logger with file writer using safe path
+                // Create a file path for the logger to use, using the LogPathHelper to ensure it's in a safe, writable location.
                 string logFilePath = Shared.Logging.LogPathHelper.CreateTimestampedLogPath("server_packets");
 
-                var packetLogFileWriter = new StandardLogFileWriter(logFilePath, append: true);
-                _packetLogger = new PacketLogger(_eventBus, packetLogFileWriter);                              
+                // Create the file logger and subscribe it to the event bus.
+                FileLogger _fileLogger = new FileLogger(
+                    _eventBus,      // Provide the event bus for subscribing to events.
+                    LogLevel.Debug, // Set minimum log level to Debug to capture all events. Adjust as needed.
+                    logFilePath     // Use the LogPathHelper to get a safe path for the log file.
+                );      
 
                 // Create the network supervisor
                 _networkSupervisor = new StandardNetworkSupervisor(
@@ -82,13 +85,14 @@ namespace Server.Core.Application
                 // Setup the registrars, which will register their respective commands and handlers in the router.
                 var registrars = new ICommandRegistrar[]
                 {
-                    new ChatCommandRegistrar(_chatService),
-                    new MovementCommandRegistrar(_movementService, _worldQueryService),
-                    new PlayerCommandRegistrar(_playerQueryService),
-                    new SystemCommandRegistrar(_lifecycleCoordinator, _playerRepository, _eventBus)
+                    new ChatCommandRegistrar(_chatService),                                             // Handles chat-related commands. Uses the chat service to send messages and provide feedback on chat operations.
+                    new MovementCommandRegistrar(_movementService, _worldQueryService),                 // Handles movement-related commands. Uses movement and world query services to validate moves and provide feedback.
+                    new PlayerCommandRegistrar(_playerQueryService),                                    // Handles player-related commands. Uses the player query service to validate player state and attributes.
+                    new SystemCommandRegistrar(_lifecycleCoordinator, _playerRepository, _eventBus)     // Handles system-related commands like server status and shutdown. Uses lifecycle coordinator to perform state changes and player repository to validate player permissions.
                 };
 
-                // Loop through registrars and register their commands in the router
+                // Loop through registrars and register their commands in the router.
+                // This is how we register commands and handlers without tightly coupling them to the router or the system initializer.
                 foreach (var registrar in registrars)
                 {
                     registrar.Register(cmdRouter);
@@ -135,7 +139,8 @@ namespace Server.Core.Application
                 // Wire up the network supervisor to the commandPipeline
                 _networkSupervisor.SetCommandPipeline(_commandPipelineOrchestrator);
 
-                _eventBus.Subscribe<ServerStateChangeRequestedEvent>(EventMessageType.System, OnServerStateChangeRequested);
+                // Subscribe to server state change requests so we can trigger lifecycle coordinator state changes in response to commands.
+                _eventBus.Subscribe<SystemEvents.Commands.ServerStateChangeRequest>(EventMessageType.System, OnServerStateChangeRequested);
             }
             catch (ArgumentNullException ex)
             {
@@ -180,14 +185,36 @@ namespace Server.Core.Application
             return _eventBus;
         }
 
-        private void OnServerStateChangeRequested(ServerStateChangeRequestedEvent evt)
+        private void OnServerStateChangeRequested(SystemEvents.Commands.ServerStateChangeRequest evt)
         {
-            bool ok = _lifecycleCoordinator.SetState(evt.RequestedState);
+            if(_lifecycleCoordinator == null)
+            {
+                // This should never happen, but just in case, we check for null and log an error if it is.
+                _eventBus.Publish(EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent("Server state change failed, Lifecycle coordinator is not initialized."));
+                return;
+            }
+
+            if(evt == null)
+            {
+                _eventBus.Publish(EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent("Server state change failed, event data is null."));
+                return;
+            }
+
+            if(evt.previousState != _lifecycleCoordinator.CurrentState)
+            {
+                _eventBus.Publish(EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent($"Server state change failed, current state does not match event data. Current: {_lifecycleCoordinator.CurrentState}, Event Previous: {evt.previousState}"));
+                return;
+            }
+
+            bool ok = _lifecycleCoordinator.SetState(evt.newState);
             if (!ok)
             {
                 // Publish an error event if the state change failed
-                _eventBus.Publish(EventMessageType.Error,
-                    new EventReason("Server state change failed", $"Could not change state to {evt.RequestedState} from current state."));
+                _eventBus.Publish(EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent($"Server state change failed, could not change state to {evt.newState} from current state."));
             }
         }
 

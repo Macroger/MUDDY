@@ -1,4 +1,5 @@
-﻿using Shared.EventBus.SubscriptionToken;
+﻿using Shared.EventBus.EventTypes;
+using Shared.EventBus.SubscriptionToken;
 
 namespace Shared.EventBus
 {

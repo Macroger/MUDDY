@@ -4,6 +4,7 @@ using Moq;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Server.Core.Persistence;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
 
 namespace Server.Tests.Persistence;
