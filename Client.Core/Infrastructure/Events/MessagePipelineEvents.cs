@@ -4,7 +4,7 @@ using Shared.Network.Types;
 
 namespace Client.Core.Infrastructure.Events
 {
-    public class MessageRouterEvents
+    public class MessagePipelineEvents
     {
         public class Errors
         {
@@ -13,7 +13,7 @@ namespace Client.Core.Infrastructure.Events
             /// </summary>
             /// <param name="ErrorMessage">A message describing the error that occurred.</param>
             /// <param name="Exception">The exception object associated with the error, if available.</param>
-            public sealed record MessageRouterError(string ErrorMessage, Exception? Exception = null) : BusEvent(EventMessageType.CmdPipeline, LogLevel.Error);
+            public sealed record MessagePipelineError(string ErrorMessage, Exception? Exception = null) : BusEvent(EventMessageType.CmdPipeline, LogLevel.Error);
 
             public sealed record HandlerRegistrationFailed(PacketType key, Exception? Exception = null) : BusEvent(EventMessageType.CmdPipeline, LogLevel.Error);
         }

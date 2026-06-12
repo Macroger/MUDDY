@@ -2,6 +2,7 @@
 //using Server.Core.CommandPipeline.Types;
 
 using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Client.Core.MessagePipeline.Handlers
 {
@@ -10,6 +11,8 @@ namespace Client.Core.MessagePipeline.Handlers
     /// </summary>
     public interface IMessageHandler
     {
+        public PacketType MessageType { get; init; }
+
         /// <summary>
         /// Executes the command with the given context and returns the result.
         /// </summary>

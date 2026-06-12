@@ -98,7 +98,7 @@ namespace Client.GUI
                 _orchestrator.RegisterHandler("BinaryTransfer", new BinaryTransferHandler());
                 _orchestrator.RegisterHandler("Error", new ErrorMessageHandler());
                 _orchestrator.RegisterHandler("Response", new ResponseMessageHandler());
-                _orchestrator.RegisterHandler("AuthSuccess", new AuthSuccessMessageHandler());
+                _orchestrator.RegisterHandler("Authentication", new AuthSuccessMessageHandler());
 
                 // Update endpoint
                 string address = ServerAddressBox.Text;

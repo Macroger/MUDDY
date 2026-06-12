@@ -1,6 +1,7 @@
 ﻿using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Client.Core.MessagePipeline.Handlers
 {
@@ -10,10 +11,12 @@ namespace Client.Core.MessagePipeline.Handlers
     public sealed class ChatMessageHandler : IMessageHandler
     {
         private IEventBus _eventBus;
+        public PacketType MessageType { get; init; }
 
         public ChatMessageHandler(IEventBus eventBus)
         {
             _eventBus = eventBus;
+            MessageType = PacketType.Chat;
         }
 
         public async Task ExecuteAsync(PacketEnvelope envelope)

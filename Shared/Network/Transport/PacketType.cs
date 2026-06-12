@@ -2,10 +2,10 @@
 {
     public enum PacketType
     {
-        AuthSuccess,        // Server -> client authentication success message
-        BinaryTransfer,     // Server -> client raw binary payload (e.g. image data)
-        Chat,               // client <-> client chat message
-        Command,            // Client -> server request
+        Authentication,     // Authentication related messages
+        BinaryTransfer,     // Raw binary payload messages (e.g. image data)
+        Chat,               // Chat messages (think player to player)
+        Command,            // Request message - command or query
         Error,              // Error response (protocol or server-side)
         Event,              // Server -> client unsolicited event
         Ping,               // Server <-> client heartbeat

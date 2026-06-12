@@ -36,7 +36,7 @@ namespace Client.Core.MessagePipeline.Routers
             {
                 _eventBus.Publish(
                     EventMessageType.CmdPipeline,
-                    new MessageRouterEvents.Errors.MessageRouterError(ex.Message, ex)
+                    new MessagePipelineEvents.Errors.MessagePipelineError(ex.Message, ex)
                 );
                 return false;
             }

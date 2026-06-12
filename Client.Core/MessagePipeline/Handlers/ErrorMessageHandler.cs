@@ -2,6 +2,7 @@
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Client.Core.MessagePipeline.Handlers
 {
@@ -11,10 +12,11 @@ namespace Client.Core.MessagePipeline.Handlers
     public sealed class ErrorMessageHandler : IMessageHandler
     {
         private IEventBus _eventBus;
-
+        public PacketType MessageType { get; init; }
         public ErrorMessageHandler(IEventBus eventBus)
         {
             _eventBus = eventBus;
+            MessageType = PacketType.Error;
         }
 
         public async Task ExecuteAsync(PacketEnvelope envelope)

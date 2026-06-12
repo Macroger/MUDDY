@@ -68,7 +68,7 @@ namespace Client.Core.Application
                 _inboundMsgRouter.RegisterHandler("BinaryTransfer", new BinaryTransferHandler());
                 _inboundMsgRouter.RegisterHandler("Error", new ErrorMessageHandler());
                 _inboundMsgRouter.RegisterHandler("Response", new ResponseMessageHandler());
-                _inboundMsgRouter.RegisterHandler("AuthSuccess", new AuthSuccessMessageHandler());
+                _inboundMsgRouter.RegisterHandler("Authentication", new AuthSuccessMessageHandler());
 
                 // Update endpoint
                 string address = ServerAddressBox.Text;

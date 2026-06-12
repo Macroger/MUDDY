@@ -249,7 +249,7 @@ namespace Server.Core.CommandPipeline.Authentication
 
             var envelope = new PacketEnvelope(
                 messageId: _messageIdGenerator.New(),
-                messageType: PacketType.AuthSuccess,
+                messageType: PacketType.Authentication,
                 flags: Shared.Network.Types.MessageFlags.None,
                 payload: Encoding.UTF8.GetBytes(payload),
                 connectionId: connId,

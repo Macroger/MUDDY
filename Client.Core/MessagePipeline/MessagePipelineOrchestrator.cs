@@ -1,11 +1,21 @@
-﻿using Client.Core.Infrastructure.Events;
+﻿// =============================================================================
+/// @file       MessagePipelineOrchestrator.cs
+/// @namespace  Client.Core.MessagePipeline
+/// @brief      Orchestrates routing and handling of incoming server messages.
+///             Validates and dispatches messages to registered handlers.
+/// @details    Manages background message processing with subscription token
+///             lifecycle. Implements IDisposable and must be disposed to clean up
+///             subscriptions. Thread-unsafe by design — intended for single-threaded
+///             use on the game loop only.
+// =============================================================================
+
+using Client.Core.Infrastructure.Events;
 using Client.Core.MessagePipeline.Handlers;
 using Client.Core.MessagePipeline.Routers;
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Network.Transport;
-using Shared.Network.Types;
 
 namespace Client.Core.MessagePipeline
 {
@@ -14,33 +24,54 @@ namespace Client.Core.MessagePipeline
     /// Validates and dispatches messages to registered handlers.
     /// </summary>  
     /// 
-    public class MessagePipelineOrchestrator : IMessageRouter
+    public class MessagePipelineOrchestrator : IDisposable
     {
         private readonly System.Collections.Concurrent.BlockingCollection<PacketEnvelope> _msgQueue = new();
-        private readonly Dictionary<PacketType, IMessageHandler> _handlers;
-        private Task? _processingTask;
-        private CancellationTokenSource? _cts;
-        private bool _started;
+        private Task? _processingTask = null;
+        private CancellationTokenSource? _cts = null;
+        private bool _started = false;
         
         // Used to view and publish events
         private readonly IEventBus _eventBus;
-
-        private ISubscriptionToken _incommingPacketSubscription;
+        private readonly IMessageRouter _msgRouter;
+        private List<ISubscriptionToken> _subscriptions = new();
 
         public MessagePipelineOrchestrator(IEventBus eventBus)
         {   
+            if(eventBus == null) throw new ArgumentNullException(nameof(eventBus));
+            
             _eventBus = eventBus;
-            _handlers = new Dictionary<PacketType, IMessageHandler>();
+            _msgRouter = new BasicMessageRouter(_eventBus);
+            _subscriptions = new List<ISubscriptionToken>();
 
-            // Attach subscription
-            _incommingPacketSubscription = _eventBus.Subscribe<ClientNetworkEvents.Packets.PacketReceived>(
+            // Create list of handlers and register them to the router
+            var handlers = new List<IMessageHandler>
+            {
+                new AuthenticationMessageHandler(_eventBus),
+                new BinaryTransferMessageHandler(_eventBus),
+                new ChatMessageHandler(_eventBus),
+                new ErrorMessageHandler(_eventBus),
+                new EventMessageHandler(_eventBus),
+                new PingMessageHandler(_eventBus),
+                new ResponseMessageHandler(_eventBus),
+                new SystemMessageHandler(_eventBus)
+            };
+
+            // Iterate through the list and register each handler to the router
+            foreach (var handler in handlers)
+            {
+                _msgRouter.RegisterHandler(handler.MessageType, handler);
+            }
+
+            // Attach subscription - Listen for incoming packets from the network and enqueue them for processing
+            _subscriptions.Add(_eventBus.Subscribe<ClientNetworkEvents.Packets.PacketReceived>(
                 EventMessageType.Network,
-                OnPacketReceived);
+                OnPacketReceived));
 
             Start();
         }
 
-        private void OnPacketReceived(ClientNetworkEvents.Packets.PacketReceived evt)
+        private void OnPacketReceived(ClientNetworkEvents.Packets.PacketReceived evnt)
         {
             // Check if background processing is running
             if(_started == false)
@@ -58,39 +89,25 @@ namespace Client.Core.MessagePipeline
             }
 
             // Enqueue the packet for processing
-            Route(evt.envelope);
-        }
+            if (evnt.envelope == null)
+            { 
+                throw new ArgumentNullException(nameof(evnt.envelope));
+            }
 
-        /// <summary>
-        /// Registers a handler for a specific message type or key.
-        /// </summary>
-        public bool RegisterHandler(PacketType key, IMessageHandler handler)
-        {
-            // Validate inputs
-            if (handler == null) throw new ArgumentNullException(nameof(handler));
-            if (_handlers.ContainsKey(key) == true) return false;
-
-            // Add handler to dictionary
-            _handlers.Add(key, handler);
-            return true;
-        }
-
-        /// <summary>
-        /// Enqueue a message for processing by the pipeline.
-        /// </summary>
-        public void Route(PacketEnvelope envelope)
-        {
-            if (envelope == null) throw new ArgumentNullException(nameof(envelope));
-            
-            _msgQueue.Add(envelope);
-        }
+            _msgQueue.Add(evnt.envelope);
+        }     
 
         /// <summary>
         /// Starts the background message processing loop.
         /// </summary>
         public void Start()
         {
-            if (_started) return;
+            // Check if already started to prevent multiple processing loops
+            if (_started)
+            {
+                return;
+            }
+
             _cts = new CancellationTokenSource();
             _processingTask = Task.Run(() => ProcessMessagesAsync(_cts.Token));
             _started = true;
@@ -101,7 +118,11 @@ namespace Client.Core.MessagePipeline
         /// </summary>
         public async Task StopAsync()
         {
-            if (!_started) return;
+            // Check if already stopped to prevent unnecessary work
+            if (!_started) 
+            { 
+                return; 
+            }
             _msgQueue.CompleteAdding();
             _cts?.Cancel();
             if (_processingTask != null) await _processingTask.ConfigureAwait(false);
@@ -134,24 +155,46 @@ namespace Client.Core.MessagePipeline
 
         private async Task HandleMessageAsync(PacketEnvelope envelope)
         {
-            // Route by message type
-            var key = envelope.MessageType;
-
-            if (_handlers.TryGetValue(key, out var handler))
+            var handler = _msgRouter.GetHandler(envelope);
+            
+            if (handler == null)
             {
-                await handler.ExecuteAsync(envelope);
-            }            
-            else
-            {
-                // Incase there is no hanlder subscribed to this message type, publish an event for the logger
+                // If there is no hanlder subscribed to this message type, publish an event for the logger
                 _eventBus.Publish(
                     EventMessageType.CmdPipeline,
-                    new MessageRouterEvents.Errors.MessageRouterError
-                (
-                    $"No message handler registered for message type: {key}",
-                     null
-                ));
+                    new MessagePipelineEvents.Errors.MessagePipelineError(
+                    $"No message handler registered for message type: {envelope.MessageType}",
+                    null )
+                );
             }
+            else
+            {
+                try
+                {
+                    await handler.ExecuteAsync(envelope);
+                }
+                catch (Exception ex)
+                {
+                    // Log any errors that occur via publishing an event for the logger
+                    _eventBus.Publish(
+                        EventMessageType.CmdPipeline,
+                        new MessagePipelineEvents.Errors.MessagePipelineError(ex.Message)
+                    );
+                }
+
+            }            
+        }
+
+        public void Dispose()
+        {
+            foreach (var subscription in _subscriptions)
+            {
+                subscription.Dispose();
+            }
+            _subscriptions.Clear();
+
+            // Dispose other resources if needed
+            _cts?.Dispose();
         }
     }
 }

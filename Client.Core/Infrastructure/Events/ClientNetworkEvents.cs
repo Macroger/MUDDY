@@ -25,6 +25,8 @@ namespace Client.Core.Infrastructure.Events
             /// </summary>
             /// <param name="message">The message to send. </param>
             public sealed record SendMessageToServer(string message) : BusEvent(EventMessageType.Network, LogLevel.Information);
+
+            public sealed record SendPingToServer() : BusEvent(EventMessageType.Network, LogLevel.Trace);
         }
         public class Errors
         {
