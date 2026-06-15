@@ -92,12 +92,6 @@ namespace Server.Core.Network.Supervisor
         /// <remarks>Publishes a network event indicating a broadcast is taking place and iterates through all active connections, sending the provided message to each client's connection worker. If sending to a particular client fails, an error event is published and the broadcast continues for remaining clients.</remarks>
         public void BroadcastMessage(PacketEnvelope msg)
         {
-            //EventBusHelper.PublishEvent(
-            //    _eventBus,
-            //    EventMessageType.Network,
-            //    new EventReason($"Broadcasting message to {_activeConnections.Count} connections: {msg.PacketType} (ID: {msg.MessageId}")
-            //);
-
             // Loop through the active connections and send the message to each client using the connection worker.
             foreach (var connection in _activeConnections.Values)
             {
@@ -440,7 +434,7 @@ namespace Server.Core.Network.Supervisor
                 );
 
             // Subscribe to and listen for outbound message events
-            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.Commands.BroadcastMessage>(
+            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.Commands.SendMessageToClients>(
                 eventType: EventMessageType.Network,
                 handler: OnOutboundMessageRequested
             ));
@@ -560,7 +554,7 @@ namespace Server.Core.Network.Supervisor
         /// Handles outbound message requests from any part of the system that needs to push
         /// a message to clients without going through the inbound command pipeline.
         /// </summary>
-        private void OnOutboundMessageRequested(NetworkEvents.Commands.BroadcastMessage evnt)
+        private void OnOutboundMessageRequested(NetworkEvents.Commands.SendMessageToClients evnt)
         {
             // Generate a transport envelope to send to clients based on the event data.
             var envelope = new PacketEnvelope(

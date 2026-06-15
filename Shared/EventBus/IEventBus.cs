@@ -5,7 +5,7 @@ using Shared.EventBus.SubscriptionToken;
 
 namespace Shared.EventBus
 {
-    public interface IEventBus
+    public interface IEventBus: IDisposable
     {
         /// <summary>
         /// Publishes a strongly-typed domain event to subscribers.

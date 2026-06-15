@@ -1,6 +1,7 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
+using Shared.Network.Types;
 
 namespace Shared.Network.Transport
 {
@@ -14,9 +15,8 @@ namespace Shared.Network.Transport
 
             newHeader.SessionId = message.SessionToken?.Value ?? SessionId.Unauthenticated.Value;
             newHeader.BodyLength = (UInt32)message.Payload.Length;
-            newHeader.MsgId = (UInt32)message.MessageId.Value;
             newHeader.MsgType = (UInt16)message.MessageType;
-            newHeader.BitFlags = (UInt16)message.Flags;
+            newHeader.BitFlags = (UInt16)(message.Flags ?? MessageFlags.None);
 
             MuddyPacket muddyPacket = new MuddyPacket(newHeader, message.Payload);
 

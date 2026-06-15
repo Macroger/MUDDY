@@ -48,7 +48,7 @@ namespace Client.Core.Network.Worker
         /// INFRASTRUCTURE EVENT: Raised when a complete packet is received from the server.
         /// Supervisor subscribes and translates to domain event via event bus.
         /// </summary>
-        event EventHandler<PacketEnvelope>? MessageReceived;
+        event EventHandler<PacketEnvelope>? PacketReceived;
 
         /// <summary>
         /// INFRASTRUCTURE EVENT: Raised when the connection is closed or worker shuts down.

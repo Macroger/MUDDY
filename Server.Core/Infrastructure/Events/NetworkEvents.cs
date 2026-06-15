@@ -20,7 +20,7 @@ namespace Server.Core.Infrastructure.Events
             /// <summary>
             /// Raised when a system component needs to push a message to one or more connected clients.
             /// </summary>
-            public sealed record BroadcastMessage(IReadOnlySet<ConnectionId> Recipients, PacketType MessageType, string Message) : BusEvent(EventMessageType.Network, LogLevel.Trace);
+            public sealed record SendMessageToClients(IReadOnlySet<ConnectionId> Recipients, PacketType MessageType, string Message) : BusEvent(EventMessageType.Network, LogLevel.Trace);
 
             /// <summary>
             /// Represents an event that signals the start of a listener operation.

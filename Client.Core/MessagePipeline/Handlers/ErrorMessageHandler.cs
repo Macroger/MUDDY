@@ -7,16 +7,15 @@ using Shared.Network.Types;
 namespace Client.Core.MessagePipeline.Handlers
 {
     /// <summary>
-    /// Handles authentication event messages from the server.
+    /// Handles ErrorMessages events from the server.
     /// </summary>
     public sealed class ErrorMessageHandler : IMessageHandler
     {
-        private IEventBus _eventBus;
-        public PacketType MessageType { get; init; }
+        private readonly IEventBus _eventBus = null!;
+        public PacketType MessageType { get; init; } = PacketType.Error;
         public ErrorMessageHandler(IEventBus eventBus)
         {
             _eventBus = eventBus;
-            MessageType = PacketType.Error;
         }
 
         public async Task ExecuteAsync(PacketEnvelope envelope)
@@ -25,7 +24,7 @@ namespace Client.Core.MessagePipeline.Handlers
             // Publish the message to the GUI via the event bus
             _eventBus.Publish(
                 EventMessageType.Gui,
-                new ClientGuiEvents.Notifications.ReceivedEventMessage(envelope)
+                new ClientGuiEvents.Notifications.ReceivedErrorMessage(envelope)
             );
 
             return;

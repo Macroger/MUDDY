@@ -20,13 +20,11 @@ namespace Shared.Network.Transport
                 throw new ArgumentNullException(nameof(packet));
 
             return new PacketEnvelope(
-                messageId: new MessageId((uint)packet.Header.MsgId),
                 messageType: (PacketType)packet.Header.MsgType,
                 flags: (MessageFlags)packet.Header.BitFlags,
                 payload: packet.Body,
                 connectionId: connId,
-                sessionId: new SessionId(packet.Header.SessionId),
-                messageCorrelationId: null
+                sessionId: new SessionId(packet.Header.SessionId)
             );
         }
     }

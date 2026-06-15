@@ -65,7 +65,7 @@ namespace Server.Core.CommandPipeline.Authentication
 
                 _eventBus.Publish(
                     EventMessageType.Authentication,
-                    new AuthenticationEvents.ReceivedAuthenticationCommand($"Received authentication command: {cmdJson?.Verb}")
+                    new AuthenticationEvents.Notifications.AuthenticationAttemptEvent($"Received authentication command: {cmdJson?.Verb}")
                 );
 
                 if (cmdJson == null)

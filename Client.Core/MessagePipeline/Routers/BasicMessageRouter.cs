@@ -9,13 +9,12 @@ namespace Client.Core.MessagePipeline.Routers
 {     
     public class BasicMessageRouter : IMessageRouter
     {
-        private readonly Dictionary<PacketType, IMessageHandler> _handlers;
-        private IEventBus _eventBus;
+        private readonly Dictionary<PacketType, IMessageHandler> _handlers = new();
+        private IEventBus _eventBus = null!;
 
         public BasicMessageRouter(IEventBus eventBus)
         {   
             _eventBus = eventBus;
-            _handlers = new Dictionary<PacketType, IMessageHandler>();
         }
 
         /// <summary>
@@ -53,5 +52,17 @@ namespace Client.Core.MessagePipeline.Routers
 			_handlers.TryGetValue(envelope.MessageType, out IMessageHandler? handler);
 			return handler;
 		}
-	}
+
+        public void Dispose()
+        {
+            foreach (var handler in _handlers.Values)
+            {
+                if (handler is IDisposable disposableHandler)
+                {
+                    disposableHandler.Dispose();
+                }
+            }
+            _handlers.Clear();
+        }
+    }
 }

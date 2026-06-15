@@ -30,11 +30,12 @@ namespace Client.Core.MessagePipeline
         private Task? _processingTask = null;
         private CancellationTokenSource? _cts = null;
         private bool _started = false;
-        
+        private bool _disposed = false;
+
         // Used to view and publish events
-        private readonly IEventBus _eventBus;
-        private readonly IMessageRouter _msgRouter;
-        private List<ISubscriptionToken> _subscriptions = new();
+        private readonly IEventBus _eventBus = null!;
+        private readonly IMessageRouter _msgRouter = null!;
+        private readonly List<ISubscriptionToken> _subscriptions = new();
 
         public MessagePipelineOrchestrator(IEventBus eventBus)
         {   
@@ -42,14 +43,12 @@ namespace Client.Core.MessagePipeline
             
             _eventBus = eventBus;
             _msgRouter = new BasicMessageRouter(_eventBus);
-            _subscriptions = new List<ISubscriptionToken>();
 
             // Create list of handlers and register them to the router
             var handlers = new List<IMessageHandler>
             {
                 new AuthenticationMessageHandler(_eventBus),
                 new BinaryTransferMessageHandler(_eventBus),
-                new ChatMessageHandler(_eventBus),
                 new ErrorMessageHandler(_eventBus),
                 new EventMessageHandler(_eventBus),
                 new PingMessageHandler(_eventBus),
@@ -67,14 +66,12 @@ namespace Client.Core.MessagePipeline
             _subscriptions.Add(_eventBus.Subscribe<ClientNetworkEvents.Packets.PacketReceived>(
                 EventMessageType.Network,
                 OnPacketReceived));
-
-            Start();
         }
 
         private void OnPacketReceived(ClientNetworkEvents.Packets.PacketReceived evnt)
         {
             // Check if background processing is running
-            if(_started == false)
+            if(!_started)
             {
                 // log error and ignore packet
                 _eventBus.Publish(
@@ -102,11 +99,11 @@ namespace Client.Core.MessagePipeline
         /// </summary>
         public void Start()
         {
+            // Check if the orchestrator has been disposed to prevent starting after disposal            
+            if (_disposed) throw new ObjectDisposedException(nameof(MessagePipelineOrchestrator));
+
             // Check if already started to prevent multiple processing loops
-            if (_started)
-            {
-                return;
-            }
+            if (_started) return;
 
             _cts = new CancellationTokenSource();
             _processingTask = Task.Run(() => ProcessMessagesAsync(_cts.Token));
@@ -118,14 +115,22 @@ namespace Client.Core.MessagePipeline
         /// </summary>
         public async Task StopAsync()
         {
+            // Check if the orchestrator has been disposed to prevent stopping after disposal
+            if (_disposed) throw new ObjectDisposedException(nameof(MessagePipelineOrchestrator));
+
             // Check if already stopped to prevent unnecessary work
-            if (!_started) 
-            { 
-                return; 
-            }
+            if (!_started) return;
+
+            // Signal the processing loop to stop and wait for it to finish
             _msgQueue.CompleteAdding();
+
+            // Cancel the processing task if it's still running
             _cts?.Cancel();
+
+            // Wait for the processing task to finish
             if (_processingTask != null) await _processingTask.ConfigureAwait(false);
+
+            // Dispose of the cancellation token source
             _cts?.Dispose();
             _started = false;
         }
@@ -143,7 +148,10 @@ namespace Client.Core.MessagePipeline
                     catch (Exception ex)
                     {
                         // Log or handle handler exceptions as needed
-                        System.Diagnostics.Debug.WriteLine($"Handler exception: {ex.Message}");
+                        _eventBus.Publish(EventMessageType.CmdPipeline,
+                            new MessagePipelineEvents.Errors.MessagePipelineError(
+                             $"Exception in message processing loop: {ex.Message}", ex)
+                        );
                     }
                 }
             }
@@ -159,7 +167,7 @@ namespace Client.Core.MessagePipeline
             
             if (handler == null)
             {
-                // If there is no hanlder subscribed to this message type, publish an event for the logger
+                // If there is no handler subscribed to this message type, publish an event for the logger
                 _eventBus.Publish(
                     EventMessageType.CmdPipeline,
                     new MessagePipelineEvents.Errors.MessagePipelineError(
@@ -178,7 +186,7 @@ namespace Client.Core.MessagePipeline
                     // Log any errors that occur via publishing an event for the logger
                     _eventBus.Publish(
                         EventMessageType.CmdPipeline,
-                        new MessagePipelineEvents.Errors.MessagePipelineError(ex.Message)
+                        new MessagePipelineEvents.Errors.MessagePipelineError(ex.Message, ex)
                     );
                 }
 
@@ -187,14 +195,54 @@ namespace Client.Core.MessagePipeline
 
         public void Dispose()
         {
-            foreach (var subscription in _subscriptions)
+            if (_disposed)
             {
-                subscription.Dispose();
+                return;
             }
-            _subscriptions.Clear();
 
-            // Dispose other resources if needed
-            _cts?.Dispose();
+            try
+            {
+                // Graceful shutdown
+                StopAsync().GetAwaiter().GetResult();
+
+                // Dispose subscriptions
+                foreach (ISubscriptionToken subscription in _subscriptions)
+                {
+                    subscription?.Dispose();
+                }
+                _subscriptions.Clear();
+
+                // Dispose handlers if they implement IDisposable
+                if (_msgRouter is IDisposable disposableRouter)
+                {
+                    disposableRouter.Dispose();
+                }
+
+                // Dispose queue and cancellation token
+                _msgQueue?.Dispose();
+                _cts?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    // Log but don't throw from Dispose
+                    _eventBus.Publish(
+                        EventMessageType.CmdPipeline,
+                        new MessagePipelineEvents.Errors.MessagePipelineError(
+                        $"Exception during MessagePipelineOrchestrator.Dispose: {ex.Message}",
+                        ex)
+                    );
+                }
+                catch
+                {
+                    // Fallback: if event bus fails, use debug output
+                    System.Diagnostics.Debug.WriteLine(
+                        $"Exception during MessagePipelineOrchestrator.Dispose: {ex.Message}");
+                }
+            }
+
+            _disposed = true;
         }
     }
 }

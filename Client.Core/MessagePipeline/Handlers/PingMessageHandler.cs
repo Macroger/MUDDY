@@ -7,21 +7,20 @@ using Shared.Network.Types;
 namespace Client.Core.MessagePipeline.Handlers
 {
     /// <summary>
-    /// Handles authentication event messages from the server.
+    /// Handles ping messages from the server.
     /// </summary>
     public sealed class PingMessageHandler : IMessageHandler
     {
-        private IEventBus _eventBus;
-        public PacketType MessageType { get; init; }
+        private readonly IEventBus _eventBus = null!;
+        public PacketType MessageType { get; init; } = PacketType.Ping;
         public PingMessageHandler(IEventBus eventBus)
         {
             _eventBus = eventBus;
-            MessageType = PacketType.Ping;
         }
 
         public async Task ExecuteAsync(PacketEnvelope envelope)
         {
-            // Responsd to the ping message by sending a ping back to the server.
+            // Respond to the ping message by sending a ping back to the server.
             _eventBus.Publish(
                 EventMessageType.Network,
                 new ClientNetworkEvents.Commands.SendPingToServer()

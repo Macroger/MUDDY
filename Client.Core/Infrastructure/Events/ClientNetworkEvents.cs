@@ -37,6 +37,13 @@ namespace Client.Core.Infrastructure.Events
             /// <param name="Exception">The exception object associated with the error, if available.</param>
             public sealed record NetworkError(string ErrorMessage, Exception? Exception = null) : BusEvent(EventMessageType.Network, LogLevel.Error);
 
+            /// <summary>
+            /// An event that is raised when the network supervisor's serializer encounters an error.
+            /// </summary>
+            /// <param name="ErrorMessage"> A text description of the error </param>
+            /// <param name="Exception"></param>
+            public sealed record SerializerError(string ErrorMessage, Exception? Exception = null) : BusEvent(EventMessageType.Network, LogLevel.Error);
+
         }
         public class Packets
         {

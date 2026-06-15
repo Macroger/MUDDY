@@ -3,7 +3,7 @@ using Shared.EventBus.SubscriptionToken;
 
 namespace Shared.EventBus
 {
-    public sealed class BasicEventBus : IEventBus, IDisposable
+    public sealed class BasicEventBus : IEventBus
     {
         /// <summary>
         /// An internal interface representing a subscriber to an event. This abstraction allows us to store subscribers 

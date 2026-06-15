@@ -7,17 +7,16 @@ using Shared.Network.Types;
 namespace Client.Core.MessagePipeline.Handlers
 {
     /// <summary>
-    /// Handles authentication event messages from the server.
+    /// Handles system event messages from the server.
     /// </summary>
     public sealed class SystemMessageHandler : IMessageHandler
     {
-        private IEventBus _eventBus;
-        public PacketType MessageType { get; init; }
+        private readonly IEventBus _eventBus = null!;
+        public PacketType MessageType { get; init; } = PacketType.System;
 
         public SystemMessageHandler(IEventBus eventBus)
         {
             _eventBus = eventBus;
-            MessageType = PacketType.System;
         }
 
         public async Task ExecuteAsync(PacketEnvelope envelope)

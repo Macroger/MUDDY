@@ -63,7 +63,7 @@ namespace Client.Core.Network.Worker
         /// <summary>
         /// Raised when a complete packet is received.
         /// </summary>
-        public event EventHandler<PacketEnvelope>? MessageReceived = null;
+        public event EventHandler<PacketEnvelope>? PacketReceived = null;
 
         /// <summary>
         /// Raised when the connection closes.
@@ -321,7 +321,7 @@ namespace Client.Core.Network.Worker
                         MuddyPacket packet = _packetSerializer.Deserialize(fullPacketBytes);
                         PacketEnvelope envelope = _envelopeFactory.CreateFromPacket(packet, _serverConnectionId);
 
-                        MessageReceived?.Invoke(this, envelope);
+                        PacketReceived?.Invoke(this, envelope);
                     }
                 }
             }

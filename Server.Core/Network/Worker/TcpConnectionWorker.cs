@@ -41,6 +41,8 @@ namespace Server.Core.Network.Worker
         private IPacketFactory _packetFactory;
         private IPacketSerializer _packetSerializer;
 
+        private uint _incommingMessageCounter = 0; // Simple counter for assigning unique message IDs to incoming messages.
+
         #endregion
 
         #region Lifecycle management fields
@@ -251,7 +253,7 @@ namespace Server.Core.Network.Worker
                             // Create a PacketEnvelope from the deserialized packet
                             var msg = new PacketEnvelope(
                                 sessionId: new SessionId(pktHeader.SessionId),
-                                messageId: new MessageId(pktHeader.MsgId),
+                                messageId: new MessageId(_incommingMessageCounter++),
                                 messageType: (PacketType)pktHeader.MsgType,
                                 flags: (MessageFlags)pkt.Header.BitFlags,
                                 payload: pkt.Body,

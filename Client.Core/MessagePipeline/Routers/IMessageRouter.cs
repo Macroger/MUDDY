@@ -3,7 +3,7 @@ using Shared.Network.Types;
 
 namespace Client.Core.MessagePipeline.Routers
 {
-    public interface IMessageRouter
+    public interface IMessageRouter: IDisposable
     {
         /// <summary>
         /// Registers a handler for a specific command verb.

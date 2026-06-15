@@ -13,8 +13,10 @@ namespace Shared.Network.Types
 
         /// <summary>Message requires the sender to be authenticated.</summary>
         RequiresAuthentication = 1 << 0,
+
         /// <summary>Message payload is encrypted.</summary>
         Encrypted = 1 << 1,
+
         /// <summary>Message payload is compressed.</summary>
         Compressed = 1 << 2,
 
