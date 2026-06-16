@@ -31,8 +31,16 @@ namespace Server.Core.CommandPipeline.Policies
                 return await Task.FromResult(PolicyResult.Success());
             }
 
+            // Validate that the message has a connection ID, otherwise we can't validate the session
+            if(msg.ConnId == null)
+            {
+                return await Task.FromResult(PolicyResult.Failure("Missing connection ID for authenticated message."));
+            }
+
+            ConnectionId connId = msg.ConnId.Value;
+
             // If authenticated, validate the session is real
-            bool isValid = await _authService.ValidateSessionAsync(msg.SessionToken, msg.ConnId);
+            bool isValid = await _authService.ValidateSessionAsync(msg.SessionToken, connId);
 
             if (!isValid)
             {

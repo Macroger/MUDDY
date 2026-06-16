@@ -1,7 +1,5 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-using Client.Core.CommandPipeline;
-using Client.Core.Network;
+﻿
+using Client.Core.Infrastructure.Events;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
@@ -9,152 +7,91 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
-using Shared.Identity;
-using Shared.Logging;
-using Shared.Network.Transport;
-using Shared.Network.Types;
+using Shared.EventBus.SubscriptionToken;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.Json;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Client.GUI
 {
     public sealed partial class MainWindow : Window
     {
-        
-        
-        private IEventBus? _eventBus;
-        private PacketLogger? _packetLogger;
+        private IEventBus _eventBus;
         private bool _isConnected = false;
         private readonly List<string> _commandHistory = new();
         private int _historyIndex = -1;
 
-        public MainWindow()
+        private readonly List<ISubscriptionToken> _subscriptions = new();
+
+        public MainWindow(IEventBus eventBus)
         {
+            if (eventBus == null) throw new ArgumentNullException(nameof(eventBus));
+
+            _eventBus = eventBus;
             InitializeComponent();
             this.Closed += MainWindow_Closed;
 
-            // Subscribe to handlers
-            ChatMessageHandler.OnChatMessageReceived += OnChatMessageReceived;
-            EventMessageHandler.OnEventReceived += OnEventReceived;
-            BinaryTransferHandler.OnImageReceived += OnImageReceived;
-            ErrorMessageHandler.OnErrorReceived += OnErrorReceived;
-            ResponseMessageHandler.OnResponseReceived += OnResponseReceived;
-            AuthSuccessMessageHandler.OnAuthSuccessReceived += OnAuthSuccessReceived;
+            SubscribeToEventBus();
         }
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
         {
             // Cleanup
-            ChatMessageHandler.OnChatMessageReceived -= OnChatMessageReceived;
-            EventMessageHandler.OnEventReceived -= OnEventReceived;
-            BinaryTransferHandler.OnImageReceived -= OnImageReceived;
-            ErrorMessageHandler.OnErrorReceived -= OnErrorReceived;
-            ResponseMessageHandler.OnResponseReceived -= OnResponseReceived;
-            AuthSuccessMessageHandler.OnAuthSuccessReceived -= OnAuthSuccessReceived;
-            _packetLogger?.Dispose();
-            _networkService?.DisconnectAsync().Wait();
+            foreach (var subscription in _subscriptions)
+            {
+                subscription?.Dispose();
+            }
+
+            _subscriptions.Clear();
         }
 
-        private async void ConnectButton_Click(object sender, RoutedEventArgs e)
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             if (_isConnected)
             {
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Errors.GuiError("Already connected to server.", null));
                 AppendGameOutput("Already connected to server.", "#FFFF6B6B");
                 return;
             }
 
-            // Log to user where logs are being saved
-            AppendGameOutput($"Packet logs will be saved to: {LogPathHelper.GetLogDirectory()}", "#FF808080");
-
-            // Subscribe to network events
-            //_networkService.OnSessionEstablished += OnSessionEstablished;
-
-            try
+            // Validate input
+            string address = ServerAddressBox.Text;
+            if (!int.TryParse(ServerPortBox.Text, out int port))
             {
-                // Initialize services
-                _eventBus = new BasicEventBus();
-                var protocolLimits = new MuddyProtocolLimits();
-                var packetSerializer = new MuddyPacketSerializer(protocolLimits);
-                var packetFactory = new MuddyPacketFactory();
-
-                // Initialize packet logging to file using safe path helper
-                string logFilePath = LogPathHelper.CreateTimestampedLogPath("client_packets");
-                var packetLogFileWriter = new StandardLogFileWriter(logFilePath, append: true);
-                _packetLogger = new PacketLogger(_eventBus, packetLogFileWriter);
-
-                // Log to user where logs are being saved
-                AppendGameOutput($"Packet logs will be saved to: {LogPathHelper.GetLogDirectory()}", "#FF808080");
-
-                _networkService = new ClientNetworkService(_eventBus, packetSerializer, packetFactory, protocolLimits);
-                _orchestrator = new ClientCommandPipelineOrchestrator();
-
-                // Register handlers for all message types
-                _orchestrator.RegisterHandler("Chat", new ChatMessageHandler());
-                _orchestrator.RegisterHandler("Event", new EventMessageHandler());
-                _orchestrator.RegisterHandler("BinaryTransfer", new BinaryTransferHandler());
-                _orchestrator.RegisterHandler("Error", new ErrorMessageHandler());
-                _orchestrator.RegisterHandler("Response", new ResponseMessageHandler());
-                _orchestrator.RegisterHandler("Authentication", new AuthSuccessMessageHandler());
-
-                // Update endpoint
-                string address = ServerAddressBox.Text;
-                if (!int.TryParse(ServerPortBox.Text, out int port))
-                {
-                    AppendGameOutput("Invalid port number.", "#FFFF6B6B");
-                    return;
-                }
-
-                _networkService.UpdateEndpoint(address, port);
-
-                // Subscribe to network events
-                _networkService.OnSessionEstablished += OnSessionEstablished;
-
-                // Subscribe to packet log events to forward to orchestrator
-                var subscriptionToken = _eventBus.Subscribe<EventEnvelope>(EventMessageType.PacketLog, OnPacketReceived);
-
-                // Connect
-                AppendGameOutput($"Connecting to {address}:{port}...", "#FFDAA520");
-                await _networkService.ConnectAsync();
-
-                _isConnected = true;
-                UpdateConnectionStatus(true);
-                AppendGameOutput("Connected successfully!", "#FF6BCF7F");
-
-                // Start the orchestrator
-                _orchestrator.Start();
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Errors.GuiError("Invalid port number.", null));
+                AppendGameOutput("Invalid port number.", "#FFFF6B6B");
+                return;
             }
-            catch (Exception ex)
-            {
-                AppendGameOutput($"Connection failed: {ex.Message}", "#FFFF6B6B");
-                _isConnected = false;
-                UpdateConnectionStatus(false);
-            }
+
+            // Publish connect command - NetworkSupervisor will handle it
+            AppendGameOutput($"Connecting to {address}:{port}...", "#FFDAA520");
+
+            _eventBus.Publish(
+                EventMessageType.Network,
+                new ClientNetworkEvents.Commands.ConnectToServer(address, port));
         }
 
-        private async void DisconnectButton_Click(object sender, RoutedEventArgs e)
+        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!_isConnected || _networkService == null)
+            if (!_isConnected)
             {
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Errors.GuiError("Not connected to any server.", null));
                 AppendGameOutput("Not connected to any server.", "#FFFF6B6B");
                 return;
             }
 
-            try
-            {
-                await _networkService.DisconnectAsync();
-                // _orchestrator doesn't have a Stop method, so we'll just stop using it
-                _isConnected = false;
-                UpdateConnectionStatus(false);
-                AppendGameOutput("Disconnected from server.", "#FFDAA520");
-            }
-            catch (Exception ex)
-            {
-                AppendGameOutput($"Error during disconnect: {ex.Message}", "#FFFF6B6B");
-            }
+            // Publish disconnect command
+            _eventBus.Publish(
+                EventMessageType.Network,
+                new ClientNetworkEvents.Commands.DisconnectFromServer());
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -185,9 +122,11 @@ namespace Client.GUI
         {
             string command = CommandInputBox.Text.Trim();
             if (string.IsNullOrWhiteSpace(command))
+            {
                 return;
+            }
 
-            if (!_isConnected || _networkService == null)
+            if (!_isConnected)
             {
                 AppendGameOutput("Not connected to server. Please connect first.", "#FFFF6B6B");
                 return;
@@ -202,59 +141,21 @@ namespace Client.GUI
 
             try
             {
-                // Send command to server
-                await SendCommandToServerAsync(command);
+                // Publish command to event bus - NetworkSupervisor will handle it
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Commands.SendMessageToServer(command));
             }
             catch (Exception ex)
             {
-                AppendGameOutput($"Error sending command: {ex.Message}", "#FFFF6B6B");
+                // Publish error event - will be logged
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Errors.GuiError(
+                        $"Error sending command: {ex.Message}", ex));
             }
 
             CommandInputBox.Text = string.Empty;
-        }
-
-        private async Task SendCommandToServerAsync(string command)
-        {
-            if (_networkService == null)
-                throw new InvalidOperationException("Network service not initialized");
-
-            // Parse the command into verb and arguments
-            var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
-                return;
-
-            string verb = parts[0];
-            string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
-
-            // Debug output
-            System.Diagnostics.Debug.WriteLine($"Sending command - Verb: '{verb}', Args: [{string.Join(", ", args.Select(a => $"'{a}'"))}]");
-
-            // Create JSON command object
-            var jsonCommand = new
-            {
-                verb = verb,
-                args = args
-            };
-
-            // Serialize to JSON
-            string json = JsonSerializer.Serialize(jsonCommand);
-
-            var payload = System.Text.Encoding.UTF8.GetBytes(json);
-
-            // Generate a random message ID
-            var random = new Random();
-            var messageId = new MessageId((uint)random.Next());
-
-            var envelope = new PacketEnvelope(
-                messageId: messageId,
-                messageType: PacketType.Command,
-                flags: MessageFlags.None,
-                payload: payload,
-                connectionId: new ConnectionId("client"),
-                sessionId: _networkService.SessionId
-            );
-
-            await _networkService.SendMessageAsync(envelope);
         }
 
         private void NavigateCommandHistory(int direction)
@@ -305,123 +206,6 @@ namespace Client.GUI
             AppendGameOutput("Settings panel not yet implemented.", "#FFAAAAAA");
         }
 
-        private void OnSessionEstablished(SessionId sessionId)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendGameOutput($"Session established: {sessionId}", "#FF6BCF7F");
-            });
-        }
-
-        private void OnChatMessageReceived(string message)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendGameOutput(message, "#FFFFDD88");
-            });
-        }
-
-        private void OnEventReceived(string eventMessage)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendGameOutput(eventMessage, "#FFE0E0E0");
-            });
-        }
-
-        private void OnErrorReceived(string errorMessage)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendGameOutput($"ERROR: {errorMessage}", "#FFFF6B6B");
-            });
-        }
-
-        private void OnResponseReceived(string responseMessage)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendGameOutput(responseMessage, "#FF88DD88");
-            });
-        }
-
-        private void OnAuthSuccessReceived(string authMessage)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendGameOutput(authMessage, "#FF6BCF7F");
-            });
-        }
-
-        private void OnImageReceived(byte[] imageData)
-        {
-            DispatcherQueue.TryEnqueue(async () =>
-            {
-                try
-                {
-                    // Clear existing content in MapCanvas
-                    MapCanvas.Children.Clear();
-
-                    // Convert byte[] to BitmapImage
-                    using var stream = new MemoryStream(imageData);
-                    var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-                    await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
-
-                    // Create Image control to display the bitmap
-                    var image = new Image
-                    {
-                        Source = bitmap,
-                        Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform,
-                        Width = MapCanvas.ActualWidth > 0 ? MapCanvas.ActualWidth : 280,
-                        Height = MapCanvas.ActualHeight > 0 ? MapCanvas.ActualHeight : 200
-                    };
-
-                    // Add to canvas
-                    MapCanvas.Children.Add(image);
-
-                    AppendGameOutput($"Image received ({imageData.Length:N0} bytes)", "#FF88DD88");
-                }
-                catch (Exception ex)
-                {
-                    AppendGameOutput($"Error displaying image: {ex.Message}", "#FFFF6B6B");
-                }
-            });
-        }
-
-        private async Task OnPacketReceivedAsync(EventReason reason)
-        {
-            // The Data field is an anonymous object with properties
-            if (reason.Data != null)
-            {
-                var dataType = reason.Data.GetType();
-
-                // Get Direction property
-                var directionProp = dataType.GetProperty("Direction");
-                var direction = directionProp?.GetValue(reason.Data)?.ToString();
-
-                if (direction == "Inbound")
-                {
-                    // Get Envelope property
-                    var envelopeProp = dataType.GetProperty("Envelope");
-                    var envelope = envelopeProp?.GetValue(reason.Data) as PacketEnvelope;
-
-                    if (envelope != null)
-                    {
-                        // Forward to orchestrator
-                        _orchestrator?.ProcessMessage(envelope);
-                    }
-                }
-            }
-        }
-
-        private void OnPacketReceived(EventEnvelope envelope)
-        {
-            if (envelope.Payload is EventReason reason)
-            {
-                _ = OnPacketReceivedAsync(reason);
-            }
-        }
-
         private void UpdateConnectionStatus(bool connected)
         {
             DispatcherQueue.TryEnqueue(() =>
@@ -467,6 +251,176 @@ namespace Client.GUI
 
                 // Auto-scroll to bottom
                 GameOutputScroller.ChangeView(null, GameOutputScroller.ScrollableHeight, null);
+            });
+        }
+
+        private void SubscribeToEventBus()
+        {
+            // Subscribe to connection status changes
+            _subscriptions.Add(_eventBus.Subscribe<ClientNetworkEvents.Lifecycle.ConnectionStatusChangedEvent>(
+                eventType: EventMessageType.Network,
+                handler: OnConnectionStatusChanged
+            ));
+
+            // Subscribe to GUI errors
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Errors.GuiError>(
+                eventType: EventMessageType.Gui,
+                handler: OnGuiError
+            ));
+
+            // Authentication messages (login success/failure, session established)
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedAuthenticationMessage>(
+                eventType: EventMessageType.Gui,
+                handler: OnAuthenticationMessageReceived
+            ));
+
+            // Binary transfer messages (images, files, etc.)
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedBinaryTransferMessage>(
+                eventType: EventMessageType.Gui,
+                handler: OnBinaryTransferMessageReceived
+            ));
+
+            // Error messages from server
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedErrorMessage>(
+                eventType: EventMessageType.Gui,
+                handler: OnErrorMessageReceived
+            ));
+
+            // Event messages (server-initiated notifications, including chat broadcasts)
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedEventMessage>(
+                eventType: EventMessageType.Gui,
+                handler: OnEventMessageReceived
+            ));
+
+            // Response messages (server replies to commands)
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedResponseMessage>(
+                eventType: EventMessageType.Gui,
+                handler: OnResponseMessageReceived
+            ));
+
+            // System messages (infrastructure/protocol-level)
+            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedSystemMessage>(
+                eventType: EventMessageType.Gui,
+                handler: OnSystemMessageReceived
+            ));
+        }
+
+        private void OnConnectionStatusChanged(ClientNetworkEvents.Lifecycle.ConnectionStatusChangedEvent evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _isConnected = evnt.ConnectionStatus;
+                UpdateConnectionStatus(evnt.ConnectionStatus);
+                AppendGameOutput(evnt.Message, evnt.ConnectionStatus ? "#FF6BCF7F" : "#FFDAA520");
+            });
+        }
+
+        private void OnGuiError(ClientGuiEvents.Errors.GuiError evnt)
+        {
+            // Note: We don't need to append to GUI output here because the caller
+            // already does that for immediate user feedback. This subscription exists
+            // solely so the logger can capture GUI-level errors.
+        }
+
+        private void OnAuthenticationMessageReceived(ClientGuiEvents.Notifications.ReceivedAuthenticationMessage evnt)
+        {
+            // Marshal to UI thread before touching UI
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                string message = Encoding.UTF8.GetString(evnt.envelope.Payload);
+                AppendGameOutput(message, "#FF6BCF7F"); // Green for success
+            });
+        }
+
+        private void OnBinaryTransferMessageReceived(ClientGuiEvents.Notifications.ReceivedBinaryTransferMessage evnt)
+        {
+            // Heavy processing on background thread - extract and validate data
+            byte[] imageData = evnt.envelope.Payload;
+            int dataLength = imageData.Length;
+
+            // Validate before marshalling to UI thread
+            if (imageData == null || imageData.Length == 0)
+            {
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Errors.GuiError("Received empty image data", null));
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    AppendGameOutput("Error: Received empty image data", "#FFFF6B6B");
+                });
+                return;
+            }
+
+            // Only marshal UI updates to UI thread
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                try
+                {
+                    // Clear existing content in MapCanvas
+                    MapCanvas.Children.Clear();
+
+                    // Convert byte[] to BitmapImage (must be on UI thread)
+                    using var stream = new MemoryStream(imageData);
+                    var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                    await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
+
+                    // Create Image control to display the bitmap
+                    var image = new Image
+                    {
+                        Source = bitmap,
+                        Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform,
+                        Width = MapCanvas.ActualWidth > 0 ? MapCanvas.ActualWidth : 280,
+                        Height = MapCanvas.ActualHeight > 0 ? MapCanvas.ActualHeight : 200
+                    };
+
+                    // Add to canvas
+                    MapCanvas.Children.Add(image);
+
+                    AppendGameOutput($"Image received ({dataLength:N0} bytes)", "#FF88DD88");
+                }
+                catch (Exception ex)
+                {
+                    _eventBus.Publish(
+                        EventMessageType.Gui,
+                        new ClientGuiEvents.Errors.GuiError($"Error displaying image: {ex.Message}", ex));
+                    AppendGameOutput($"Error displaying image: {ex.Message}", "#FFFF6B6B");
+                }
+            });
+        }
+
+        private void OnErrorMessageReceived(ClientGuiEvents.Notifications.ReceivedErrorMessage evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                string errorMessage = Encoding.UTF8.GetString(evnt.envelope.Payload);
+                AppendGameOutput($"Error: {errorMessage}", "#FFFF6B6B"); // Red
+            });
+        }
+
+        private void OnEventMessageReceived(ClientGuiEvents.Notifications.ReceivedEventMessage evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                string eventMessage = Encoding.UTF8.GetString(evnt.envelope.Payload);
+                AppendGameOutput(eventMessage, "#FFFFFF"); // White for events
+            });
+        }
+
+        private void OnResponseMessageReceived(ClientGuiEvents.Notifications.ReceivedResponseMessage evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                string response = Encoding.UTF8.GetString(evnt.envelope.Payload);
+                AppendGameOutput(response, "#FFD3D3D3"); // Light gray for responses
+            });
+        }
+
+        private void OnSystemMessageReceived(ClientGuiEvents.Notifications.ReceivedSystemMessage evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                string systemMessage = Encoding.UTF8.GetString(evnt.envelope.Payload);
+                AppendGameOutput($"[System] {systemMessage}", "#FFDAA520"); // Gold/orange for system
             });
         }
     }

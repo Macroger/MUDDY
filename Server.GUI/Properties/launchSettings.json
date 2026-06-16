@@ -1,8 +1,5 @@
 {
-  "profiles": {
-    "Server.GUI (Package)": {
-      "commandName": "MsixPackage"
-    },
+  "profiles": {    
     "Server.GUI (Unpackaged)": {
       "commandName": "Project"
     }

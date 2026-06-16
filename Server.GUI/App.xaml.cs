@@ -25,12 +25,6 @@ namespace Server.GUI
         /// </summary>
         public App()
         {
-            // DIAGNOSTIC: Confirm app starts
-            try
-            {
-                System.IO.File.WriteAllText(@"C:\temp\server_app_started.txt", $"App constructor called at {DateTime.Now}");
-            }
-            catch { }
 
             InitializeComponent();
 
@@ -85,15 +79,10 @@ namespace Server.GUI
         {
             try
             {
-                // DIAGNOSTIC: Confirm OnLaunched called
-                try
-                {
-                    System.IO.File.AppendAllText(@"C:\temp\server_app_started.txt", $"\nOnLaunched called at {DateTime.Now}");
-                }
-                catch { }
-
                 // Instantiate the core system initializer (GUI must reference Server.Core).
                 _initializer = new SystemInitializer();
+
+                _initializer.Build();
 
                 // Only pass the event bus to MainWindow (no direct lifecycle reference)
                 _window = new MainWindow(_initializer.GetEventBus());

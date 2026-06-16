@@ -57,6 +57,20 @@ namespace Server.Core.CommandPipeline.Authentication
         /// </summary>
         public async Task ProcessAuthCommandAsync(PacketEnvelope envelope)
         {
+            if(envelope.ConnId == null)
+            {
+                // We should never get here since the network supervisor only sends auth commands from connected clients, but we'll check just in case
+                _eventBus.Publish(
+                    EventMessageType.Authentication,
+                    new AuthenticationEvents.Errors.AuthenticationError(
+                        $"Received authentication command with null ConnectionId. Payload: {Encoding.UTF8.GetString(envelope.Payload)}")
+                    );
+                return;
+            }
+
+            // ConnId is guaranteed non-null from this point forward
+            ConnectionId connId = envelope.ConnId.Value;
+
             try
             {
                 // Parse the JSON payload to extract command and arguments
@@ -70,30 +84,32 @@ namespace Server.Core.CommandPipeline.Authentication
 
                 if (cmdJson == null)
                 {
-                    SendAuthError(envelope.ConnId, "Invalid command format");
+                    SendAuthError(connId, "Invalid command format");
                     return;
-                }                
+                }
 
                 // GetHandler to appropriate handler based on command verb
                 switch (cmdJson.Verb?.ToLowerInvariant())
                 {
                     case "login":
-                        await HandleLoginAsync(envelope.ConnId, cmdJson.Args);
+                        await HandleLoginAsync(connId, cmdJson.Args);
                         break;
 
                     case "register":
-                        await HandleRegisterAsync(envelope.ConnId, cmdJson.Args);
+                        await HandleRegisterAsync(connId, cmdJson.Args);
                         break;
 
                     default:
-                        SendAuthError(envelope.ConnId, $"Unknown authentication command: {cmdJson.Verb}");
+                        SendAuthError(connId, $"Unknown authentication command: {cmdJson.Verb}");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                SendAuthError(envelope.ConnId, $"Authentication error: {ex.Message}");
+                SendAuthError(connId, $"Authentication error: {ex.Message}");
             }
+
+
         }
 
         /// <summary>

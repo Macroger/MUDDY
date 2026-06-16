@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.World;
+using Server.Core.Infrastructure.Events;
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
@@ -28,11 +29,13 @@ namespace Server.Core.Persistence
             _eventBus = eventBus;
             // Pre-populate the authoritative rooms dictionary with the default world layout.
             Seed(GameWorldFactory.CreateDefaultWorld());
-            _playerLeftSubscription = _eventBus.Subscribe<PlayerEvents.PlayerLeftWorldEvent>(
-                EventMessageType.Domain, HandlePlayerLeft);
+
+            _playerLeftSubscription = _eventBus.Subscribe<WorldEvents.Notifications.PlayerLeftWorldEvent>(
+                EventMessageType.World,
+                HandlePlayerLeft);
         }
 
-        private async void HandlePlayerLeft(PlayerEvents.PlayerLeftWorldEvent evt)
+        private async void HandlePlayerLeft(WorldEvents.Notifications.PlayerLeftWorldEvent evt)
         {
             var room = await GetRoomAsync(evt.LastRoom);
             if (room is null) return;

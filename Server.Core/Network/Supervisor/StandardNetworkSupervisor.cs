@@ -257,7 +257,12 @@ namespace Server.Core.Network.Supervisor
         public bool StartListener()
         {
             // Check if the listener is already off, if so return true.
-            if (IsListeningForConnections == true) return true;
+            if (IsListeningForConnections == true)
+            {
+                _eventBus.Publish(EventMessageType.Network,
+                    new NetworkEvents.Errors.NetworkError($"TCP listener already started on {_listenerEndPoint}"));
+                return true;
+            }
 
             try
             {
@@ -297,7 +302,14 @@ namespace Server.Core.Network.Supervisor
             try
             {
                 // Initiate the TCP listener on the configured endpoint.
-                _ = _tcpConnectionListener.StopAsync();
+                _ = _tcpConnectionListener.StopAsync().ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        _eventBus.Publish(EventMessageType.Network,
+                            new NetworkEvents.Errors.NetworkError("Listener stop failed", t.Exception?.InnerException));
+                    }
+                });
 
                 // Log success event to eventBus here.
                 IsListeningForConnections = false;

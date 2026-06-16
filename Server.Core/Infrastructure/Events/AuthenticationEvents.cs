@@ -1,4 +1,5 @@
 ﻿using Shared.EventBus.EventTypes;
+using Shared.Identity;
 using Shared.Logging;
 
 namespace Server.Core.Infrastructure.Events
@@ -10,6 +11,10 @@ namespace Server.Core.Infrastructure.Events
             public sealed record AuthenticationAttemptEvent(string command) : BusEvent(EventMessageType.Chat, LogLevel.Debug);
 
             public sealed record AuthenticationSuccessEvent(string command) : BusEvent(EventMessageType.Chat, LogLevel.Debug);
+
+            public sealed record SessionCreatedEvent(string message) : BusEvent(EventMessageType.Authentication, LogLevel.Debug);
+
+            public sealed record SessionRemovedEvent(string message) : BusEvent(EventMessageType.Authentication, LogLevel.Debug);
         }        
 
         public class Errors

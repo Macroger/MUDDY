@@ -1,16 +1,24 @@
-﻿using Shared.EventBus;
+﻿// =============================================================================
+/// @file       TickSystem.cs
+/// @namespace  Server.Core.Infrastructure.Timing
+/// @brief      Produces periodic tick events for server game loop coordination.
+/// @details    Runs asynchronously on its own task. Must be disposed to ensure
+///             graceful shutdown and completion of the tick loop.
+// =============================================================================
+using Server.Core.Infrastructure.Events;
+using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 
 namespace Server.Core.Infrastructure.Timing
 {
-    public class TickSystem: ITickSystem
+    public class TickSystem : ITickSystem, IDisposable
     {
         /// <summary>
         /// A reference to the eventBus to publish tick events to.
         /// </summary>
-        private IEventBus _eventBus;
+        private readonly IEventBus _eventBus;
 
         /// <summary>
         /// The current tick count.
@@ -18,51 +26,111 @@ namespace Server.Core.Infrastructure.Timing
         private long _currentTick = 0;
 
         /// <summary>
-        /// Ticks per second
+        /// Ticks per second.
         /// </summary>
-        private int _tickRate; 
+        private readonly int _tickRate;
 
         /// <summary>
-        /// Indicates whether the tick system is currently running (producing ticks).
+        /// Cancellation token source used to signal the tick loop to stop.
         /// </summary>
-        private bool _isRunning = false;
+        private CancellationTokenSource? _cancellationTokenSource = null;
+
+        /// <summary>
+        /// The task running the tick loop, tracked for clean disposal.
+        /// </summary>
+        private Task? _tickLoopTask = null;
+
+        /// <summary>
+        /// Stopwatch used to measure delta time between ticks.
+        /// </summary>
+        private readonly Stopwatch _stopwatch = new Stopwatch();
+
+        /// <summary>
+        /// Indicates whether the tick system has been disposed.
+        /// </summary>
+        private bool _disposed = false;
 
         public TickSystem(IEventBus eventBus, int tickRate = 10)
         {
-            _eventBus = eventBus;
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _tickRate = tickRate;
         }
 
         public void Start()
         {
-            // If the system is already running, we throw an exception.
-            if (_isRunning) 
-                throw new InvalidOperationException("Tick system is already running.");
+            if (_disposed) throw new ObjectDisposedException(nameof(TickSystem));
+            if (_cancellationTokenSource != null) throw new InvalidOperationException("Tick system is already running.");
 
-            _isRunning = true;
-
-            RunTickLoop();
-        }        
+            _cancellationTokenSource = new CancellationTokenSource();
+            _stopwatch.Restart();
+            _tickLoopTask = RunTickLoopAsync(_cancellationTokenSource.Token);
+        }
 
         public void Stop()
         {
-            // If the system is not running, we can ignore the stop request.
-            if (!_isRunning) return;
+            if (_cancellationTokenSource == null) return;
 
-            _isRunning = false;
+            _cancellationTokenSource.Cancel();
         }
 
-        private async void RunTickLoop()
+        private async Task RunTickLoopAsync(CancellationToken cancellationToken)
         {
-            while(_isRunning)
+            double lastElapsed = 0.0;
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                // Publish a tick event with the current tick count.
-                _eventBus.Publish(new TickEvent(_currentTick));
+                double currentElapsed = _stopwatch.Elapsed.TotalMilliseconds;
+                double deltaTime = currentElapsed - lastElapsed;
+                lastElapsed = currentElapsed;
+
+                // Publish a tick event with the current tick count and delta time.
+                _eventBus.Publish(
+                    EventMessageType.System,
+                    new TickEvents.Timing.GameTickEvent(_currentTick, deltaTime)
+                );
+
                 // Increment the tick count for the next tick.
                 _currentTick++;
+
                 // Wait for the next tick based on the tick rate.
-                await Task.Delay(1000 / _tickRate);
-            })
+                try
+                {
+                    await Task.Delay(1000 / _tickRate, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    // Expected when Stop() is called; exit gracefully.
+                    break;
+                }
+            }
+
+            _stopwatch.Stop();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            Stop();
+
+            // Wait for the tick loop to complete (with timeout for safety).
+            if (_tickLoopTask != null)
+            {
+                try
+                {
+                    _tickLoopTask.Wait(TimeSpan.FromSeconds(2));
+                }
+                catch (AggregateException)
+                {
+                    // Task was cancelled or faulted; already stopped.
+                }
+            }
+
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+            _tickLoopTask = null;
+
+            _disposed = true;
         }
     }
 }

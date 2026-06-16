@@ -1,13 +1,10 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
+﻿using Server.Core.Infrastructure.Events;
 using Shared.Domain.Player;
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System.Collections.Concurrent;
-using static Shared.EventBus.EventTypes.ChatEvents;
-using static Shared.EventBus.EventTypes.PlayerEvents;
 
 namespace Server.Core.Persistence
 {
@@ -27,9 +24,10 @@ namespace Server.Core.Persistence
             _eventBus = eventBus;
             _players = new ConcurrentDictionary<ConnectionId, PlayerState>();
             _subscriptions = new List<ISubscriptionToken>();
-            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.ClientDisconnected>
-                (EventMessageType.Network, HandleDisconnect));
-            _subscriptions.Add(_eventBus.Subscribe<MutePlayerRequestEvent>
+            _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.Lifecycle.ClientDisconnected>
+                (EventMessageType.Network,
+                HandleDisconnect));
+            _subscriptions.Add(_eventBus.Subscribe<ChatEvents.MutePlayerRequestEvent>
                 (EventMessageType.Player, HandleMutePlayer));
         }
 
@@ -37,15 +35,14 @@ namespace Server.Core.Persistence
         /// Handles a request to mute a player.
         /// </summary>
         /// <param name="evnt"></param>
-        private async void HandleMutePlayer(MutePlayerRequestEvent evnt)
+        private async void HandleMutePlayer(ChatEvents.MutePlayerRequestEvent evnt)
         {
             if (string.IsNullOrEmpty(evnt.targetPlayerName))
             {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
+                _eventBus.Publish(
                     EventMessageType.System,
-                    new EventReason($"Invalid player name provided for mute request: '{evnt.targetPlayerName}'")
-                    );
+                    new SystemEvents.Errors.SystemErrorEvent($"Invalid player name provided for mute request: '{evnt.targetPlayerName}'")
+                );
                 return;
             }
 
@@ -54,22 +51,18 @@ namespace Server.Core.Persistence
             // Check if player was found.
             if (targetPlayer == null)
             {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.System,
-                    new EventReason($"Player '{evnt.targetPlayerName}' not found for mute request.")
-                    );
+                _eventBus.Publish(EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent($"Player '{evnt.targetPlayerName}' not found for mute request."));
+               
                 return;
             }
 
             // Check if player is already muted.
             if (targetPlayer.ActiveConditions.Contains(PlayerCondition.Muted))
             {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.System,
-                    new EventReason($"Player '{evnt.targetPlayerName}' is already muted.")
-                    );
+                _eventBus.Publish(EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent($"Player '{evnt.targetPlayerName}' is already muted."));
+                
                 return;
             }
 
@@ -87,14 +80,11 @@ namespace Server.Core.Persistence
             await UpsertPlayerAsync(updatedPlayer);
 
             // Publish an event to report that the mute was successfully applied to the target player.
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.System,
-                new EventReason($"Player '{evnt.targetPlayerName}' has been muted successfully.")
-                );
+            _eventBus.Publish(EventMessageType.System,
+                new SystemEvents.Errors.SystemErrorEvent($"Player '{evnt.targetPlayerName}' has been muted successfully."));
         }
 
-        private async void HandleDisconnect(NetworkEvents.ClientDisconnected evt)
+        private async void HandleDisconnect(NetworkEvents.Lifecycle.ClientDisconnected evt)
         {
             var player = await GetPlayerByConnectionIdAsync(evt.ConnId);
             if (player is not null)
@@ -177,11 +167,9 @@ namespace Server.Core.Persistence
                 bool result = _players.TryRemove(connId, out _);
 
                 // Emit a PlayerLeftWorldEvent to notify other parts of the system that the player has left the world. This event includes the player's connection ID and their current location in the world.
-                EventBusHelper.PublishEvent<PlayerLeftWorldEvent>(
-                    _eventBus,
-                    EventMessageType.Domain,
-                    new PlayerLeftWorldEvent(connId, player.PlayerName, player.CurrentLocation)
-                    );
+                _eventBus.Publish(
+                    EventMessageType.World,
+                    new WorldEvents.Notifications.PlayerLeftWorldEvent(connId, player.PlayerName, player.CurrentLocation));
 
                 // Return a completed task to maintain the asynchronous method signature, even though the operation is synchronous.
                 return await Task.FromResult(result);

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.World;
+using Server.Core.Infrastructure.Events;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Shared.Domain.Player;
 using Shared.EventBus;
@@ -58,18 +59,14 @@ namespace Server.Core.Domain.Services.ChatService
             // Build message
             string broadcastMsg = $"{sender.PlayerName} says: {message}";
 
-            // Publish with player list
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.Chat,
-                new EventReason(
-                "PlayerSaid",
-                new ChatEvents.PlayerSaidEvent(
+            _eventBus.Publish(EventMessageType.Chat,
+                new ChatEvents.PlayerSaidEvent
+                (
                     sender.PlayerName,
                     sender.CurrentLocation,
                     broadcastMsg,
                     room.PlayersPresent
-                ))
+                )
             );
 
             // Return success

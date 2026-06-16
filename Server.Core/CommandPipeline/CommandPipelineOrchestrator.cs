@@ -161,12 +161,24 @@ namespace Server.Core.CommandPipeline
                 _eventBus.Publish(
                     EventMessageType.CmdPipeline,
                     new CmdPipelineEvents.Errors.CmdPipeLineError(
-                        "Received null message envelope",
-                        null
+                        "Received null message envelope"
                     )
                 );
                 return;
             }
+
+            if(msg.ConnId == null)
+            {
+                _eventBus.Publish(EventMessageType.CmdPipeline,
+                    new CmdPipelineEvents.Errors.CmdPipeLineError(
+                        "Received message envelope with null ConnectionId"
+                    )
+                );
+
+                return;
+            }
+
+            ConnectionId connId = msg.ConnId.Value;
 
             // 1st pass Policy check - AuthenticationPolicy
             foreach (var policy in _firstPassPolicies)
@@ -184,9 +196,9 @@ namespace Server.Core.CommandPipeline
                     PacketEnvelope response = CreateErrorResponse(
                         errorType: PacketType.Error,
                         message: result.ErrorMessage ?? "Authentication failed",
-                        connId: msg.ConnId);
+                        connId: connId);
 
-                    _networkSupervisor.SendToClient(msg.ConnId, response);
+                    _networkSupervisor.SendToClient(connId, response);
 
                     // As soon as any policy fails, we stop processing this message.
                     return;
@@ -215,12 +227,12 @@ namespace Server.Core.CommandPipeline
                     connectionId: msg.ConnId
                 );
 
-                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                 return;
             }
 
             // Build context (player state, inventory, effects, etc.)
-            CommandContext context = await _contextBuilder.BuildContextAsync(msg.ConnId, parseResult.Command!);
+            CommandContext context = await _contextBuilder.BuildContextAsync(connId, parseResult.Command!);
             if (!context.Success)
             {
                 PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
@@ -232,7 +244,7 @@ namespace Server.Core.CommandPipeline
                     payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown parsing error."),
                     connectionId: msg.ConnId
                 );
-                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                 return;
             }
 
@@ -251,7 +263,7 @@ namespace Server.Core.CommandPipeline
                     payload: Encoding.UTF8.GetBytes(result.ErrorMessage ?? "Unknown policy error."),
                     connectionId: msg.ConnId
                     );
-                    _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                    _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                     return;
                 }
             }
@@ -269,7 +281,7 @@ namespace Server.Core.CommandPipeline
                     payload: Encoding.UTF8.GetBytes($"Unknown command: {parseResult.Command?.CommandType}"),
                     connectionId: msg.ConnId
                     );
-                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                 return;
             }
 
@@ -301,7 +313,7 @@ namespace Server.Core.CommandPipeline
                 payload: responsePayload,
                 connectionId: msg.ConnId
             );
-            _networkSupervisor.SendToClient(msg.ConnId, successResponse);
+            _networkSupervisor.SendToClient(connId, successResponse);
         }
 
         private PacketEnvelope CreateErrorResponse(PacketType? errorType, string? message, ConnectionId connId, MessageId? msgId = null)

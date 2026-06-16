@@ -54,6 +54,17 @@ namespace Server.Core.Infrastructure.Events
             public record ShowNotificationEvent(string Title, string Message, NotificationSeverity Severity)
                 : BusEvent(EventMessageType.Gui, LogLevel.Debug);
         }
+
+        public class Errors
+        {
+            /// <summary>
+            /// Represents an event that is raised when an error occurs during GUI operations.
+            /// </summary>
+            /// <param name="ErrorMessage">A message describing the error that occurred.</param>
+            /// <param name="Exception">The exception object associated with the error, if available.</param>
+            public record GuiError(string ErrorMessage, Exception? Exception = null)
+                : BusEvent(EventMessageType.Gui, LogLevel.Error);
+        }
     }
 
     public enum NotificationSeverity

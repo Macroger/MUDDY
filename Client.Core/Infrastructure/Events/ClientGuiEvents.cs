@@ -25,13 +25,21 @@ namespace Client.Core.Infrastructure.Events
             public sealed record SendMessageToServer(string Message) : BusEvent(EventMessageType.Gui, LogLevel.Information);
         }
 
+        public class Errors
+        {
+            /// <summary>
+            /// Represents an event that is raised when an error occurs during GUI operations.
+            /// </summary>
+            /// <param name="ErrorMessage">A message describing the error that occurred.</param>
+            /// <param name="Exception">The exception object associated with the error, if available.</param>
+            public sealed record GuiError(string ErrorMessage, Exception? Exception = null) : BusEvent(EventMessageType.Gui, LogLevel.Error);
+        }
+
         public class Notifications
         {
             public sealed record ReceivedAuthenticationMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
             public sealed record ReceivedBinaryTransferMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
-
-            public sealed record ReceivedChatMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
             public sealed record ReceivedErrorMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
@@ -40,8 +48,6 @@ namespace Client.Core.Infrastructure.Events
             public sealed record ReceivedResponseMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
             public sealed record ReceivedSystemMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
-
-            
         }
     }
 }

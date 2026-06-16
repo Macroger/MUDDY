@@ -8,7 +8,7 @@ namespace Server.Core.Infrastructure.Events
     {
         public class Commands
         {
-            public record ServerStateChangeRequest(ServerStateEnum previousState, ServerStateEnum newState) : BusEvent(EventMessageType.Player, LogLevel.Information);
+            public record ServerStateChangeRequest(ServerStateEnum previousState, ServerStateEnum newState) : BusEvent(EventMessageType.System, LogLevel.Information);
             public record CommandExecutedEvent(string CommandText, string PlayerId) : BusEvent(EventMessageType.System, LogLevel.Information);
         }
         public class Errors
