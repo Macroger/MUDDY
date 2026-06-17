@@ -1,6 +1,6 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     /// <summary>
     /// Creates a MuddyPacket representing the given message.
@@ -8,6 +8,6 @@ namespace Shared.Protocol.Transport
     /// </summary>
     public interface IPacketFactory
     {
-        MuddyPacket CreateMuddyPacket(TransportEnvelope message);
+        MuddyPacket CreateMuddyPacket(PacketEnvelope message);
     }
 }

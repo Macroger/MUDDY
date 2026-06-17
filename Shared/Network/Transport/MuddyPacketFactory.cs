@@ -1,12 +1,13 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
+using Shared.Network.Types;
 
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     public class MuddyPacketFactory : IPacketFactory
     {
-        public MuddyPacket CreateMuddyPacket(TransportEnvelope message)
+        public MuddyPacket CreateMuddyPacket(PacketEnvelope message)
         {
             if (message == null) throw new ArgumentNullException("message cannot be null.");
 
@@ -14,9 +15,8 @@ namespace Shared.Protocol.Transport
 
             newHeader.SessionId = message.SessionToken?.Value ?? SessionId.Unauthenticated.Value;
             newHeader.BodyLength = (UInt32)message.Payload.Length;
-            newHeader.MsgId = (UInt32)message.MessageId.Value;
             newHeader.MsgType = (UInt16)message.MessageType;
-            newHeader.BitFlags = (UInt16)message.Flags;
+            newHeader.BitFlags = (UInt16)(message.Flags ?? MessageFlags.None);
 
             MuddyPacket muddyPacket = new MuddyPacket(newHeader, message.Payload);
 

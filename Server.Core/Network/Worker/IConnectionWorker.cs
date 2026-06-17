@@ -1,7 +1,7 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 
 namespace Server.Core.Network.Worker
 {
@@ -11,9 +11,9 @@ namespace Server.Core.Network.Worker
         public ConnectionId ConnId { get; }
         void Start();
         void Stop();
-        bool SendMessage(TransportEnvelope msg);
+        bool SendMessage(PacketEnvelope msg);
 
-        event EventHandler<TransportEnvelope> MessageReceived;
+        event EventHandler<PacketEnvelope> MessageReceived;
         event EventHandler ConnectionClosed;
         event EventHandler<Exception> ErrorOccurred;
     }

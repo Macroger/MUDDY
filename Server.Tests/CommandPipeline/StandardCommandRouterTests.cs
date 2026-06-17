@@ -27,7 +27,7 @@ public class StandardCommandRouterTests
         => new ParsedCommand { CommandType = verb, Arguments = Array.Empty<string>(), MsgId = new MessageId(1) };
 
     // -------------------------------------------------------------------------
-    // Route â€” registered verb
+    // GetHandler â€” registered verb
     // -------------------------------------------------------------------------
 
     [TestMethod]
@@ -36,19 +36,19 @@ public class StandardCommandRouterTests
         var mockHandler = new Mock<ICommandHandler>();
         _router.RegisterHandler("move", mockHandler.Object);
 
-        var result = _router.Route(BuildCommand("move"));
+        var result = _router.GetHandler(BuildCommand("move"));
 
         Assert.AreEqual(mockHandler.Object, result);
     }
 
     // -------------------------------------------------------------------------
-    // Route â€” unknown verb
+    // GetHandler â€” unknown verb
     // -------------------------------------------------------------------------
 
     [TestMethod]
     public void Route_UnregisteredVerb_ReturnsNull()
     {
-        var result = _router.Route(BuildCommand("unknown_command"));
+        var result = _router.GetHandler(BuildCommand("unknown_command"));
 
         Assert.IsNull(result);
     }

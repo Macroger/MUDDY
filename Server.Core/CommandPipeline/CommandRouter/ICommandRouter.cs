@@ -17,10 +17,10 @@ namespace Server.Core.CommandPipeline
         bool RegisterHandler(string verb, ICommandHandler handler);
 
         /// <summary>
-        /// Routes a parsed command to its corresponding handler.
+        /// Returns a parsed command's corresponding handler.
         /// </summary>
         /// <param name="command">The parsed command with verb and arguments.</param>
         /// <returns>The matching command handler, or null if the command is unknown.</returns>
-        ICommandHandler? Route(ParsedCommand command);
+        ICommandHandler? GetHandler(ParsedCommand command);
     }
 }

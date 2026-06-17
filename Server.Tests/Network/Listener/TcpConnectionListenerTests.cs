@@ -5,8 +5,8 @@ using Server.Core.Infrastructure.Identity.ConnectionId;
 using Server.Core.Network.Model;
 using Server.Core.Network.Supervisor;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Net;
 using System.Net.Sockets;
 
@@ -26,10 +26,10 @@ namespace Server.Core.Network.Listener.Tests
             {
                 LastConnection = connection;
             }
-            public void BroadcastMessage(TransportEnvelope msg) { }
-            public void SendToClient(ConnectionId client, TransportEnvelope msg) { }
+            public void BroadcastMessage(PacketEnvelope msg) { }
+            public void SendToClient(ConnectionId client, PacketEnvelope msg) { }
 
-            public void SendToMultipleClients(IEnumerable<ConnectionId> clients, TransportEnvelope msg)
+            public void SendToMultipleClients(IEnumerable<ConnectionId> clients, PacketEnvelope msg)
             {
                 throw new NotImplementedException();
             }

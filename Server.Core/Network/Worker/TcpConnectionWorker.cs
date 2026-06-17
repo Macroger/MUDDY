@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.Network.Model;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Collections.Concurrent;
 
 namespace Server.Core.Network.Worker
@@ -24,7 +24,7 @@ namespace Server.Core.Network.Worker
         /// <summary>
         /// Queue of outbound protocol envelopes to be sent to the remote endpoint.
         /// </summary>
-        private BlockingCollection<TransportEnvelope> sendQue = new BlockingCollection<TransportEnvelope>(new ConcurrentQueue<TransportEnvelope>());
+        private BlockingCollection<PacketEnvelope> sendQue = new BlockingCollection<PacketEnvelope>(new ConcurrentQueue<PacketEnvelope>());
 
         /// <summary>
         /// Accumulator buffer used for assembling bytes read from the socket until complete packets are available.
@@ -40,6 +40,8 @@ namespace Server.Core.Network.Worker
 
         private IPacketFactory _packetFactory;
         private IPacketSerializer _packetSerializer;
+
+        private uint _incommingMessageCounter = 0; // Simple counter for assigning unique message IDs to incoming messages.
 
         #endregion
 
@@ -75,7 +77,7 @@ namespace Server.Core.Network.Worker
         #region Events for message reception, connection closure, and error reporting
 
         /// <summary>Raised when a complete protocol message has been received and parsed.</summary>
-        public event EventHandler<TransportEnvelope>? MessageReceived;
+        public event EventHandler<PacketEnvelope>? MessageReceived;
 
         /// <summary>Raised when the connection has been closed or the worker has shut down.</summary>
         public event EventHandler? ConnectionClosed;
@@ -177,7 +179,7 @@ namespace Server.Core.Network.Worker
         /// </summary>
         /// <param name="msg">The protocol envelope to send.</param>
         /// <returns>true if the message was accepted for sending; false if the worker is not running or the queue cannot accept the message.</returns>
-        public bool SendMessage(TransportEnvelope msg)
+        public bool SendMessage(PacketEnvelope msg)
         {
             if (!IsRunning)
                 return false;
@@ -219,8 +221,8 @@ namespace Server.Core.Network.Worker
                         // Append received bytes to the accumulator buffer
                         _byteAccumulatorBuffer.AddRange(tempBuffer.AsSpan(0, bytesReceived));
 
-                        // Process complete packets from the accumulator buffer
-                        // Keep looping as long as we have enough bytes to read a full header (which is the minimum requirement to determine packet size)
+                        // Once enough bytes have accumulated to contain at least a full header, we can attempt to parse packets.
+                        // Keep looping until we consume all complete packets in the buffer.
                         while (_byteAccumulatorBuffer.Count >= _packetLimits.headerSize)
                         {
                             // Copy the header bytes to a separate array for deserialization
@@ -248,11 +250,11 @@ namespace Server.Core.Network.Worker
 
                             MuddyPacket pkt = _packetSerializer.Deserialize(fullPacketBytes);
 
-                            // Create a TransportEnvelope from the deserialized packet
-                            var msg = new TransportEnvelope(
+                            // Create a PacketEnvelope from the deserialized packet
+                            var msg = new PacketEnvelope(
                                 sessionId: new SessionId(pktHeader.SessionId),
-                                messageId: new MessageId(pktHeader.MsgId),
-                                messageType: (TransportMessageType)pktHeader.MsgType,
+                                messageId: new MessageId(_incommingMessageCounter++),
+                                messageType: (PacketType)pktHeader.MsgType,
                                 flags: (MessageFlags)pkt.Header.BitFlags,
                                 payload: pkt.Body,
                                 connectionId: ConnId
@@ -293,7 +295,7 @@ namespace Server.Core.Network.Worker
                     var loopObject = sendQue.GetConsumingEnumerable();
 
                     // Process each message in the queue and send it over the socket
-                    foreach (TransportEnvelope msg in loopObject)
+                    foreach (PacketEnvelope msg in loopObject)
                     {
                         // Optional secondary cancellation guard - to ensure we don't attempt to send messages after cancellation has been requested
                         if (ct.IsCancellationRequested) break;
@@ -321,7 +323,7 @@ namespace Server.Core.Network.Worker
         #region Event invokers for raising events to subscribers
 
         /// <summary>Invokes the MessageReceived event with the provided protocol envelope.</summary>
-        private void OnMessageReceived(TransportEnvelope msg)
+        private void OnMessageReceived(PacketEnvelope msg)
         {
             MessageReceived?.Invoke(this, msg);
         }

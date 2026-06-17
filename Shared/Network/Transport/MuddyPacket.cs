@@ -1,6 +1,6 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
 
     /// <summary>
@@ -13,27 +13,20 @@ namespace Shared.Protocol.Transport
     /// Muddy protocol packets are serialized and deserialized.</remarks>
     public struct MuddyPacketHeader
     {
-        public const int Size = 28;
+        public const int Size = 24;
 
         public const int SessionIdSize = 16;
         public const int BodyLengthSize = 4;
-        public const int MsgIdSize = 4;
         public const int MsgTypeSize = 2;
         public const int BitFlagsSize = 2;
-
-        public const int SessionIdOffset = 0;                                  // SessionId is the first segment, so it goes into offset 0.
-        public const int BodyLengthOffset = SessionIdOffset + SessionIdSize;  // BodyLength goes after SessionId, so its offset is the sum of SessionIdOffset and SesssionIdSize.
-        public const int MsgIdOffset = BodyLengthOffset + BodyLengthSize;       // MsgId goes after BodyLength, so its offset is the sum of BodyLengthOffset and BodyLengthSize.
-        public const int MsgTypeOffset = MsgIdOffset + MsgIdSize;               // MsgType goes after MsgId, so its offset is the sum of MsgIdOffset and MsgIdSize.
-        public const int BitFlagsOffset = MsgTypeOffset + MsgTypeSize;          // BitFlags goes after MsgType, so its offset is the sum of MsgTypeOffset and MsgTypeSize. Total header size is the sum of all field sizes, which is 28 bytes.
-
-
-        //public const int BitFlagsOffset = 26;       // BitFlags is 2 bytes, so total header size is 28 bytes.
-
-
+       
+        public const int SessionIdOffset = 0;                                   // SessionId is the first segment, so it goes into offset 0.
+        public const int BodyLengthOffset = SessionIdOffset + SessionIdSize;    // BodyLength goes after SessionId, so its offset is the sum of SessionIdOffset and SesssionIdSize.
+        public const int MsgTypeOffset = BodyLengthOffset + BodyLengthSize;     // MsgType goes after BodyLength, so its offset is the sum of BodyLengthOffset and BodyLengthSize.
+        public const int BitFlagsOffset = MsgTypeOffset + MsgTypeSize;          // BitFlags goes after MsgType, so its offset is the sum of MsgTypeOffset and MsgTypeSize. 
+        
         public Guid SessionId;
         public UInt32 BodyLength;
-        public UInt32 MsgId;
         public UInt16 MsgType;
         public UInt16 BitFlags;
     }
@@ -49,11 +42,10 @@ namespace Shared.Protocol.Transport
         public MuddyPacketHeader Header { get; init; }          // Store the header as a struct for easy access to its fields.
         public byte[] Body { get; init; }                       // Store the body as a byte array, since it can be either JSON or binary data.
 
-        public UInt32 Crc { get; init; }                            // Store the CRC value for integrity verification.
+        public UInt32 Crc { get; init; }                        // Store the CRC value for integrity verification.
 
         public MuddyPacket(
             UInt32 bodyLength,
-            UInt32 msgId,
             UInt16 msgType,
             UInt16 bitFlags,
             byte[] body,
@@ -64,7 +56,6 @@ namespace Shared.Protocol.Transport
             MuddyPacketHeader newHeader = new MuddyPacketHeader();
 
             // Assign values to the new header object.
-            newHeader.MsgId = msgId;
             newHeader.MsgType = msgType;
             newHeader.BitFlags = bitFlags;
             newHeader.BodyLength = bodyLength;

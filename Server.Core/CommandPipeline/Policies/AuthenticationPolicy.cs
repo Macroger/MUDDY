@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.Domain.Authentication;
 using Shared.Identity;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 
 namespace Server.Core.CommandPipeline.Policies
 {
@@ -22,7 +22,7 @@ namespace Server.Core.CommandPipeline.Policies
         {
             _authService = authService;
         }
-        public async Task<PolicyResult> CheckPolicyAsync(TransportEnvelope msg)
+        public async Task<PolicyResult> CheckPolicyAsync(PacketEnvelope msg)
         {
             // If unauthenticated (SessionId = 0), allow it to pass
             // The orchestrator will route to auth pipeline
@@ -31,8 +31,16 @@ namespace Server.Core.CommandPipeline.Policies
                 return await Task.FromResult(PolicyResult.Success());
             }
 
+            // Validate that the message has a connection ID, otherwise we can't validate the session
+            if(msg.ConnId == null)
+            {
+                return await Task.FromResult(PolicyResult.Failure("Missing connection ID for authenticated message."));
+            }
+
+            ConnectionId connId = msg.ConnId.Value;
+
             // If authenticated, validate the session is real
-            bool isValid = await _authService.ValidateSessionAsync(msg.SessionToken, msg.ConnId);
+            bool isValid = await _authService.ValidateSessionAsync(msg.SessionToken, connId);
 
             if (!isValid)
             {

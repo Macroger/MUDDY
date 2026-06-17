@@ -1,6 +1,6 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-using Shared.Protocol.System;
+using Shared.Network.System;
 
 namespace Server.Core.Network.Model
 {

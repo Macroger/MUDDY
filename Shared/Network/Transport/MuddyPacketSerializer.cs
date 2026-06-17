@@ -1,11 +1,11 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-using Shared.Protocol.Types;
+using Shared.Network.Types;
 using System.Buffers.Binary;
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
 
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     public class MuddyPacketSerializer : IPacketSerializer
     {
@@ -164,7 +164,6 @@ namespace Shared.Protocol.Transport
             // Copy the header fields into the serializedHeader via BinaryPrimitives.WriteUIntx
             WriteSessionId(serializedHeader.Slice(MuddyPacketHeader.SessionIdOffset, MuddyPacketHeader.SessionIdSize), header.SessionId);
             BinaryPrimitives.WriteUInt32LittleEndian(serializedHeader.Slice(MuddyPacketHeader.BodyLengthOffset, MuddyPacketHeader.BodyLengthSize), header.BodyLength);
-            BinaryPrimitives.WriteUInt32LittleEndian(serializedHeader.Slice(MuddyPacketHeader.MsgIdOffset, MuddyPacketHeader.MsgIdSize), header.MsgId);
             BinaryPrimitives.WriteUInt16LittleEndian(serializedHeader.Slice(MuddyPacketHeader.MsgTypeOffset, MuddyPacketHeader.MsgTypeSize), header.MsgType);
             BinaryPrimitives.WriteUInt16LittleEndian(serializedHeader.Slice(MuddyPacketHeader.BitFlagsOffset, MuddyPacketHeader.BitFlagsSize), header.BitFlags);
 
@@ -181,7 +180,6 @@ namespace Shared.Protocol.Transport
 
             newHeader.SessionId = ReadSessionId(headerSpan.Slice(MuddyPacketHeader.SessionIdOffset, MuddyPacketHeader.SessionIdSize));
             newHeader.BodyLength = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(MuddyPacketHeader.BodyLengthOffset, MuddyPacketHeader.BodyLengthSize));
-            newHeader.MsgId = BinaryPrimitives.ReadUInt32LittleEndian(headerSpan.Slice(MuddyPacketHeader.MsgIdOffset, MuddyPacketHeader.MsgIdSize));
             newHeader.MsgType = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(MuddyPacketHeader.MsgTypeOffset, MuddyPacketHeader.MsgTypeSize));
             newHeader.BitFlags = BinaryPrimitives.ReadUInt16LittleEndian(headerSpan.Slice(MuddyPacketHeader.BitFlagsOffset, MuddyPacketHeader.BitFlagsSize));
 

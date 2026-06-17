@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Monitor — Implementation Plan</title>
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e334d;
+      --accent:    #5b8dee;
+      --accent2:   #a78bfa;
+      --green:     #4ade80;
+      --yellow:    #facc15;
+      --red:       #f87171;
+      --text:      #e2e8f0;
+      --muted:     #8892aa;
+      --code-bg:   #12151f;
+      --radius:    10px;
+      --mono:      'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .page-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .project-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(91,141,238,.12);
+      border: 1px solid rgba(91,141,238,.3);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-bottom: .75rem;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: .35rem;
+    }
+
+    header p.subtitle {
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 1rem;
+    }
+
+    .meta-badge {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 10px;
+    }
+
+    /* ── Progress bar ── */
+    .progress-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: .6rem;
+    }
+
+    .progress-label span:last-child { color: var(--accent); font-weight: 600; }
+
+    .progress-bar-outer {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      width: 0%;
+      transition: width .4s ease;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Rationale card ── */
+    .rationale-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent2);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 2rem;
+      font-size: .93rem;
+      color: var(--text);
+    }
+
+    .rationale-card p + p { margin-top: .7rem; }
+
+    /* ── Two-layer diagram ── */
+    .layer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 600px) { .layer-grid { grid-template-columns: 1fr; } }
+
+    .layer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+    }
+
+    .layer-card h3 {
+      font-size: .85rem;
+      font-weight: 700;
+      margin-bottom: .7rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .layer-card ul {
+      list-style: none;
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    .layer-card ul li { padding: .2rem 0; }
+    .layer-card ul li::before { content: '✓ '; color: var(--green); }
+    .layer-card ul li.no::before { content: '✗ '; color: var(--red); }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-green  { background: var(--green); }
+    .dot-yellow { background: var(--yellow); }
+
+    /* ── Steps ── */
+    .steps-list { list-style: none; margin-bottom: 2rem; }
+
+    .step-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: .75rem;
+      align-items: flex-start;
+    }
+
+    .step-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      margin-top: 3px;
+      position: relative;
+    }
+
+    .step-checkbox:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .step-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px; top: 1px;
+      width: 6px; height: 10px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .step-body { flex: 1; }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .step-item:has(.step-checkbox:checked) .step-card {
+      border-color: rgba(74,222,128,.25);
+      opacity: .7;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .8rem 1.1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .step-header:hover { background: var(--surface2); }
+
+    .step-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(91,141,238,.12);
+      border: 1px solid rgba(91,141,238,.25);
+      border-radius: 4px;
+      padding: 1px 7px;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .step-title {
+      font-weight: 600;
+      font-size: .95rem;
+      flex: 1;
+    }
+
+    .step-action-badge {
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      padding: 1px 7px;
+    }
+
+    .badge-modify  { background: rgba(250,204,21,.12);  color: var(--yellow); border: 1px solid rgba(250,204,21,.3); }
+    .badge-create  { background: rgba(74,222,128,.1);   color: var(--green);  border: 1px solid rgba(74,222,128,.3); }
+    .badge-register{ background: rgba(167,139,250,.12); color: var(--accent2);border: 1px solid rgba(167,139,250,.3); }
+
+    .step-toggle {
+      color: var(--muted);
+      font-size: .8rem;
+      transition: transform .25s;
+    }
+
+    .step-detail {
+      padding: 0 1.1rem;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease, padding .3s ease;
+    }
+
+    .step-detail.open {
+      max-height: 600px;
+      padding: 0 1.1rem .9rem;
+    }
+
+    .step-detail p { font-size: .88rem; color: var(--muted); margin-bottom: .5rem; }
+
+    .step-detail ul {
+      list-style: none;
+      font-size: .87rem;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+
+    .step-detail ul li { padding: .15rem 0; }
+    .step-detail ul li::before { content: '· '; color: var(--accent); font-weight: 700; }
+
+    code {
+      font-family: var(--mono);
+      font-size: .85em;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #a5d6ff;
+    }
+
+    /* ── File table ── */
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+      margin-bottom: 2rem;
+    }
+
+    .file-table th {
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: .5rem .9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .file-table td {
+      padding: .55rem .9rem;
+      border-bottom: 1px solid rgba(46,51,77,.5);
+      vertical-align: top;
+    }
+
+    .file-table tr:last-child td { border-bottom: none; }
+
+    .file-table td:first-child code { color: #c3d5ff; }
+
+    .file-table td:last-child { color: var(--muted); font-size: .83rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1.2rem;
+      font-size: .8rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="project-tag">Project IV · MUDDY Server</div>
+    <h1>Performance Monitor — Implementation Plan</h1>
+    <p class="subtitle">In-process handler timing, tick budget enforcement, and slow-handler alerting via the EventBus.</p>
+    <div class="meta-row">
+      <span class="meta-badge">Branch: eventBus-strongly-typed-events-only</span>
+      <span class="meta-badge">Target: .NET 10 · C# 14</span>
+      <span class="meta-badge">Scope: Shared · Server.Core DI</span>
+      <span class="meta-badge">Generated: 2026</span>
+    </div>
+  </header>
+
+  <!-- ── Progress ── -->
+  <div class="progress-section">
+    <div class="progress-label">
+      <span>Implementation progress</span>
+      <span id="progress-text">0 / 7 steps complete</span>
+    </div>
+    <div class="progress-bar-outer">
+      <div class="progress-bar-inner" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- ── Rationale ── -->
+  <div class="section-title">Why this approach was chosen</div>
+  <div class="rationale-card">
+    <p>
+      The MUDDY server uses a <strong>synchronous, in-process EventBus</strong> (<code>BasicEventBus</code>) where
+      <code>Publish&lt;T&gt;</code> iterates over a <code>HashSet&lt;IEventSubscriber&gt;</code> and calls each handler
+      sequentially on the same thread. This means handler execution time directly contributes to tick latency — a slow
+      handler silently steals budget from every other system that fires in the same tick.
+    </p>
+    <p>
+      Because all dispatch is synchronous and single-threaded, <strong>a <code>Stopwatch</code> wrap around each
+      <code>handler.Invoke</code> call gives 100% accurate wall-time attribution per handler, per event type</strong>
+      with zero threading ambiguity. No external agent is needed for this signal.
+    </p>
+    <p>
+      An external profiler (Visual Studio CPU Usage / dotnet-trace) answers <em>why</em> a handler is slow
+      (GC pressure, I/O blocking, hot inner loops), but it cannot fire a runtime alert when a budget is exceeded during
+      live play. The two-layer design gives you both: the in-process monitor fires a bus event you can log or display in
+      the Server GUI; the external profiler is reserved for root-cause diagnosis when the monitor flags a problem.
+    </p>
+  </div>
+
+  <!-- ── Two-layer summary ── -->
+  <div class="section-title">Two-layer design</div>
+  <div class="layer-grid">
+    <div class="layer-card">
+      <h3><span class="dot dot-green"></span> Layer 1 — In-Process Monitor (build now)</h3>
+      <ul>
+        <li>Per-handler wall-time via <code>Stopwatch</code></li>
+        <li>Tick budget violation alerts at runtime</li>
+        <li>Total <code>Publish</code> dispatch time</li>
+        <li>Handler call frequency tracking</li>
+        <li>Zero external dependencies</li>
+        <li class="no">Cannot explain <em>why</em> a handler is slow</li>
+        <li class="no">No CPU/thread contention visibility</li>
+        <li class="no">No GC pause attribution</li>
+      </ul>
+    </div>
+    <div class="layer-card">
+      <h3><span class="dot dot-yellow"></span> Layer 2 — External Profiler (on demand)</h3>
+      <ul>
+        <li>CPU hotspot drill-down (VS / dotnet-trace)</li>
+        <li>GC pressure and allocation analysis</li>
+        <li>Thread contention identification</li>
+        <li>I/O wait attribution</li>
+        <li>Tick scheduling jitter (pre-publish)</li>
+        <li class="no">Cannot fire live runtime alerts</li>
+        <li class="no">Not suitable for continuous production use</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── Steps ── -->
+  <div class="section-title">Implementation steps</div>
+  <ul class="steps-list" id="steps-list">
+
+    <!-- Step 1 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb1" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d1', this)">
+            <span class="step-num">01</span>
+            <span class="step-title">Add <code>Performance</code> to <code>EventMessageType</code> enum</span>
+            <span class="step-action-badge badge-modify">Modify</span>
+            <span class="step-toggle" id="arrow-d1">▼</span>
+          </div>
+          <div class="step-detail" id="d1">
+            <p><strong>File:</strong> <code>Shared/EventBus/EventTypes/EventMessageTypes.cs</code></p>
+            <p>Add a new <code>Performance</code> enum value so that performance events have their own routing channel on the bus, keeping them isolated from Domain, System, and other categories.</p>
+            <ul>
+              <li>Add <code>Performance,  // Handler timing, tick budget violations</code> after the existing <code>Error</code> entry</li>
+              <li>No other changes to this file</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+    <!-- Step 2 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb2" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d2', this)">
+            <span class="step-num">02</span>
+            <span class="step-title">Create <code>PerformanceEvents.cs</code></span>
+            <span class="step-action-badge badge-create">Create</span>
+            <span class="step-toggle" id="arrow-d2">▼</span>
+          </div>
+          <div class="step-detail" id="d2">
+            <p><strong>File:</strong> <code>Shared/EventBus/EventTypes/PerformanceEvents.cs</code></p>
+            <p>New event container class following the same nested-sealed-record pattern used by <code>NetworkEvents</code>, <code>ChatEvents</code>, etc.</p>
+            <ul>
+              <li><code>HandlerSlowEvent(string HandlerTypeName, string EventTypeName, TimeSpan Elapsed, TimeSpan Budget)</code> — fired when a single handler exceeds its budget</li>
+              <li><code>PublishSlowEvent(string EventTypeName, int HandlerCount, TimeSpan TotalElapsed, TimeSpan Budget)</code> — fired when the full <code>Publish</code> call for an event type exceeds the per-publish budget (tick-level signal)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+    <!-- Step 3 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb3" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d3', this)">
+            <span class="step-num">03</span>
+            <span class="step-title">Create <code>PerformanceMonitorOptions.cs</code></span>
+            <span class="step-action-badge badge-create">Create</span>
+            <span class="step-toggle" id="arrow-d3">▼</span>
+          </div>
+          <div class="step-detail" id="d3">
+            <p><strong>File:</strong> <code>Shared/Performance/PerformanceMonitorOptions.cs</code></p>
+            <p>A plain configuration record (or class) injected into the monitor at startup. Keeps all budget values in one place and out of the monitor logic.</p>
+            <ul>
+              <li><code>bool IsEnabled</code> — master on/off switch (default <code>true</code>)</li>
+              <li><code>TimeSpan DefaultHandlerBudget</code> — per-handler threshold, e.g. 5 ms</li>
+              <li><code>TimeSpan DefaultPublishBudget</code> — per-Publish threshold, e.g. 16 ms (one 60fps tick)</li>
+              <li><code>IReadOnlyDictionary&lt;string, TimeSpan&gt; PerEventBudgetOverrides</code> — optional per-event-type overrides (keyed on event type name)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+    <!-- Step 4 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb4" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d4', this)">
+            <span class="step-num">04</span>
+            <span class="step-title">Create <code>IPerformanceMonitor.cs</code></span>
+            <span class="step-action-badge badge-create">Create</span>
+            <span class="step-toggle" id="arrow-d4">▼</span>
+          </div>
+          <div class="step-detail" id="d4">
+            <p><strong>File:</strong> <code>Shared/Performance/IPerformanceMonitor.cs</code></p>
+            <p>A thin interface so the event bus depends on an abstraction and the monitor can be swapped or mocked in tests.</p>
+            <ul>
+              <li><code>void RecordHandlerTiming(string handlerTypeName, string eventTypeName, TimeSpan elapsed)</code> — called by the bus once per handler invocation</li>
+              <li><code>void RecordPublishTiming(string eventTypeName, int handlerCount, TimeSpan elapsed)</code> — called by the bus once per <code>Publish</code> call, after all handlers have run</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+    <!-- Step 5 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb5" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d5', this)">
+            <span class="step-num">05</span>
+            <span class="step-title">Create <code>BasicPerformanceMonitor.cs</code></span>
+            <span class="step-action-badge badge-create">Create</span>
+            <span class="step-toggle" id="arrow-d5">▼</span>
+          </div>
+          <div class="step-detail" id="d5">
+            <p><strong>File:</strong> <code>Shared/Performance/BasicPerformanceMonitor.cs</code></p>
+            <p>Concrete implementation. Accepts <code>IEventBus</code> and <code>PerformanceMonitorOptions</code> via constructor. Compares recorded durations against configured budgets and publishes alert events when thresholds are exceeded.</p>
+            <ul>
+              <li>Implement <code>RecordHandlerTiming</code>: if <code>elapsed &gt; budget</code>, publish <code>PerformanceEvents.HandlerSlowEvent</code> on <code>EventMessageType.Performance</code></li>
+              <li>Implement <code>RecordPublishTiming</code>: if <code>elapsed &gt; budget</code>, publish <code>PerformanceEvents.PublishSlowEvent</code> on <code>EventMessageType.Performance</code></li>
+              <li>Resolve per-event budget from <code>PerEventBudgetOverrides</code> first, fall back to <code>DefaultHandlerBudget</code></li>
+              <li>Guard with <code>IsEnabled</code> check at the top of each method — zero overhead when disabled</li>
+              <li>No internal state accumulation needed for MVP; add counters/histograms later if required</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+    <!-- Step 6 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb6" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d6', this)">
+            <span class="step-num">06</span>
+            <span class="step-title">Instrument <code>BasicEventBus.Publish</code> with <code>Stopwatch</code></span>
+            <span class="step-action-badge badge-modify">Modify</span>
+            <span class="step-toggle" id="arrow-d6">▼</span>
+          </div>
+          <div class="step-detail" id="d6">
+            <p><strong>File:</strong> <code>Shared/EventBus/BasicEventBus.cs</code></p>
+            <p>Inject an optional <code>IPerformanceMonitor?</code> into <code>BasicEventBus</code> via constructor (defaults to <code>null</code> — existing DI registrations that don't pass a monitor continue to work without change).</p>
+            <ul>
+              <li>Add <code>private readonly IPerformanceMonitor? _monitor;</code> field</li>
+              <li>Add optional constructor parameter: <code>IPerformanceMonitor? monitor = null</code></li>
+              <li>Inside the handler loop, wrap <code>handler.Invoke(newEvent)</code> with <code>Stopwatch.GetTimestamp()</code> before/after (avoid allocating a <code>Stopwatch</code> instance per call — use the static timestamp API)</li>
+              <li>After each invoke: <code>_monitor?.RecordHandlerTiming(handler.GetType().Name, eventType.Name, elapsed)</code></li>
+              <li>After the loop exits: <code>_monitor?.RecordPublishTiming(eventType.Name, handlerCount, totalElapsed)</code></li>
+              <li>Timing calls must be outside the existing per-handler <code>try/catch</code> so exceptions don't corrupt elapsed measurements</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+    <!-- Step 7 -->
+    <li class="step-item">
+      <input type="checkbox" class="step-checkbox" id="cb7" />
+      <div class="step-body">
+        <div class="step-card">
+          <div class="step-header" onclick="toggleDetail('d7', this)">
+            <span class="step-num">07</span>
+            <span class="step-title">Register <code>BasicPerformanceMonitor</code> in Server.Core DI</span>
+            <span class="step-action-badge badge-register">Register</span>
+            <span class="step-toggle" id="arrow-d7">▼</span>
+          </div>
+          <div class="step-detail" id="d7">
+            <p><strong>File:</strong> Server.Core DI registration (wherever <code>BasicEventBus</code> is currently wired up as a singleton)</p>
+            <ul>
+              <li>Register <code>PerformanceMonitorOptions</code> as a singleton with desired budget values</li>
+              <li>Register <code>IPerformanceMonitor</code> → <code>BasicPerformanceMonitor</code> as a singleton</li>
+              <li>Update the <code>BasicEventBus</code> registration to resolve and pass <code>IPerformanceMonitor</code> into its constructor</li>
+              <li>Optionally subscribe a lightweight logging handler to <code>PerformanceEvents.HandlerSlowEvent</code> on <code>EventMessageType.Performance</code> so violations appear in the server log and GUI event feed immediately</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </li>
+
+  </ul>
+
+  <!-- ── File summary table ── -->
+  <div class="section-title">File change summary</div>
+  <table class="file-table">
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>File</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-action-badge badge-modify">Modify</span></td>
+        <td><code>Shared/EventBus/EventTypes/EventMessageTypes.cs</code></td>
+        <td>Add <code>Performance</code> enum value</td>
+      </tr>
+      <tr>
+        <td><span class="step-action-badge badge-create">Create</span></td>
+        <td><code>Shared/EventBus/EventTypes/PerformanceEvents.cs</code></td>
+        <td><code>HandlerSlowEvent</code>, <code>PublishSlowEvent</code></td>
+      </tr>
+      <tr>
+        <td><span class="step-action-badge badge-create">Create</span></td>
+        <td><code>Shared/Performance/PerformanceMonitorOptions.cs</code></td>
+        <td>Budget config record</td>
+      </tr>
+      <tr>
+        <td><span class="step-action-badge badge-create">Create</span></td>
+        <td><code>Shared/Performance/IPerformanceMonitor.cs</code></td>
+        <td>Abstraction interface</td>
+      </tr>
+      <tr>
+        <td><span class="step-action-badge badge-create">Create</span></td>
+        <td><code>Shared/Performance/BasicPerformanceMonitor.cs</code></td>
+        <td>Concrete implementation; publishes alert events</td>
+      </tr>
+      <tr>
+        <td><span class="step-action-badge badge-modify">Modify</span></td>
+        <td><code>Shared/EventBus/BasicEventBus.cs</code></td>
+        <td>Optional <code>IPerformanceMonitor?</code> injection + <code>Stopwatch</code> instrumentation</td>
+      </tr>
+      <tr>
+        <td><span class="step-action-badge badge-register">Register</span></td>
+        <td>Server.Core DI registration file</td>
+        <td>Wire up monitor; subscribe slow-event logger</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <span>Project IV · MUDDY · Performance Monitor Plan</span>
+    <span>Copyright 2026 Matthew Schatz · Apache-2.0</span>
+  </footer>
+
+</div>
+
+<script>
+  // ── Accordion toggle ──
+  function toggleDetail(id, headerEl) {
+    const detail = document.getElementById(id);
+    const arrowId = 'arrow-' + id;
+    const arrow = document.getElementById(arrowId);
+    const isOpen = detail.classList.contains('open');
+    detail.classList.toggle('open', !isOpen);
+    if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+  }
+
+  // ── Progress bar ──
+  function updateProgress() {
+    const checkboxes = document.querySelectorAll('.step-checkbox');
+    const total = checkboxes.length;
+    const checked = [...checkboxes].filter(c => c.checked).length;
+    document.getElementById('progress-text').textContent = `${checked} / ${total} steps complete`;
+    document.getElementById('progress-bar').style.width = `${(checked / total) * 100}%`;
+  }
+
+  document.querySelectorAll('.step-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateProgress);
+  });
+
+  // ── Persist checkbox state in localStorage ──
+  const STORAGE_KEY = 'muddy-perf-plan-checks';
+
+  function saveState() {
+    const state = [...document.querySelectorAll('.step-checkbox')].map(c => c.checked);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const state = JSON.parse(raw);
+      document.querySelectorAll('.step-checkbox').forEach((cb, i) => {
+        if (state[i] !== undefined) cb.checked = state[i];
+      });
+    } catch (_) {}
+  }
+
+  document.querySelectorAll('.step-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => { updateProgress(); saveState(); });
+  });
+
+  loadState();
+  updateProgress();
+</script>
+</body>
+</html>

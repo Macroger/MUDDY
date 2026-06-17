@@ -1,6 +1,6 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-namespace Shared.Protocol.Types
+namespace Shared.Network.Types
 {
     /// <summary>
     /// Bit flags that describe metadata and processing requirements for protocol messages.
@@ -13,8 +13,10 @@ namespace Shared.Protocol.Types
 
         /// <summary>Message requires the sender to be authenticated.</summary>
         RequiresAuthentication = 1 << 0,
+
         /// <summary>Message payload is encrypted.</summary>
         Encrypted = 1 << 1,
+
         /// <summary>Message payload is compressed.</summary>
         Compressed = 1 << 2,
 

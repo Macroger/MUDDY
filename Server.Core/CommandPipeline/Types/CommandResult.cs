@@ -1,8 +1,5 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+﻿using Shared.Identity;
+using Shared.Network.Types;
 
 namespace Server.Core.CommandPipeline.Types
 {
@@ -27,7 +24,7 @@ namespace Server.Core.CommandPipeline.Types
         /// <summary>
         /// When non-null, the orchestrator sends this raw binary buffer instead of <see cref="Message"/>.
         /// The packet is transmitted with <see cref="MessageFlags.BinaryPayload"/> and
-        /// <see cref="TransportMessageType.BinaryTransfer"/>, bypassing the JSON size cap.
+        /// <see cref="PacketType.BinaryTransfer"/>, bypassing the JSON size cap.
         /// </summary>
         public byte[]? BinaryPayload { get; init; }
     }

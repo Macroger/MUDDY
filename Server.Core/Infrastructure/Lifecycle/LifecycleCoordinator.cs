@@ -1,6 +1,8 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
+using Server.Core.Infrastructure.Events;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 
 namespace Server.Core.Infrastructure.Lifecycle
 {
@@ -126,7 +128,7 @@ namespace Server.Core.Infrastructure.Lifecycle
             _currentState = next;
 
             // Fire off the state changed event to notify any listeners of the new state.
-            _eventBus.Publish(EventMessageType.System, new ServerStateChangedEvent(_previousState, next));
+            _eventBus.Publish(EventMessageType.System, new  SystemEvents.Lifecycle.ServerStateChangedEvent(_previousState, next));
 
             return true;
         }

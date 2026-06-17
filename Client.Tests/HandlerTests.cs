@@ -1,7 +1,7 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Client.Core.CommandPipeline;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 
 namespace Tests.Client
 {
@@ -14,7 +14,7 @@ namespace Tests.Client
             string? received = null;
             var handler = new ChatMessageHandler();
             ChatMessageHandler.OnChatMessageReceived += msg => received = msg;
-            var envelope = new TransportEnvelope(
+            var envelope = new PacketEnvelope(
                 messageId: new Shared.Identity.MessageId(1),
                 messageType: TransportMessageType.Chat,
                 flags: 0,
@@ -37,7 +37,7 @@ namespace Tests.Client
             var handler = new BinaryTransferHandler();
             BinaryTransferHandler.OnImageReceived += img => received = img;
             var payload = new byte[] { 1, 2, 3, 4, 5 };
-            var envelope = new TransportEnvelope(
+            var envelope = new PacketEnvelope(
                 messageId: new Shared.Identity.MessageId(2),
                 messageType: TransportMessageType.BinaryTransfer,
                 flags: 0,

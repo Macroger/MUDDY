@@ -1,7 +1,8 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.CommandPipeline.Types;
-using Shared.Protocol.Transport;
+using Shared.Identity;
+using Shared.Network.Transport;
 using System.Text;
 using System.Text.Json;
 
@@ -9,8 +10,15 @@ namespace Server.Core.CommandPipeline.Parser
 {
     public class StandardCommandParser : ICommandParser
     {
-        public ParseResult Parse(TransportEnvelope envelope)
+        public ParseResult Parse(PacketEnvelope envelope)
         {
+            if(envelope.MessageId == null)
+            {
+                return CreateErrorResult($"Message ID error: ID is null.", CommandErrorType.UNKNOWN_ERROR);                
+            }
+
+            MessageId messageId = envelope.MessageId.Value;
+
             try
             {
                 // Extract JSON from payload
@@ -30,7 +38,7 @@ namespace Server.Core.CommandPipeline.Parser
                 {
                     CommandType = cmdJson.Verb.ToLowerInvariant(),
                     Arguments = cmdJson.Args ?? Array.Empty<string>(),
-                    MsgId = envelope.MessageId
+                    MsgId = messageId
                 };
 
                 return new ParseResult

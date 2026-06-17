@@ -6,13 +6,15 @@ using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Parser;
 using Server.Core.CommandPipeline.Policies;
 using Server.Core.CommandPipeline.Types;
+using Server.Core.Infrastructure.Events;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Infrastructure.Lifecycle;
 using Server.Core.Network.Supervisor;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Collections.Concurrent;
 using System.Text;
 
@@ -20,7 +22,7 @@ namespace Server.Core.CommandPipeline
 {
     public sealed class CommandPipelineOrchestrator : IStartable, IStoppable
     {
-        private readonly BlockingCollection<TransportEnvelope> _msgEnvelopeQueue = new BlockingCollection<TransportEnvelope>();
+        private readonly BlockingCollection<PacketEnvelope> _msgEnvelopeQueue = new BlockingCollection<PacketEnvelope>();
 
         private bool _started;
         #region Dependencies
@@ -66,7 +68,7 @@ namespace Server.Core.CommandPipeline
         /// Adds the specified transport envelope to the processing queue.
         /// </summary>
         /// <param name="envelope">The transport envelope to be queued for processing. Cannot be null.</param>
-        public void ProcessMessage(TransportEnvelope envelope)
+        public void ProcessMessage(PacketEnvelope envelope)
         {
             // Basic validation - check if null
             if (envelope == null) throw new ArgumentNullException(nameof(envelope), "Transport envelope cannot be null");
@@ -126,10 +128,11 @@ namespace Server.Core.CommandPipeline
                     }
                     catch (Exception ex)
                     {
-                        EventBusHelper.PublishEvent(
-                            _eventBus,
-                            EventMessageType.Error,
-                            new EventReason($"Exception during message handling: {ex.Message}, MessageID: {envelope.MessageId}")
+                        _eventBus.Publish(
+                            EventMessageType.CmdPipeline,
+                            new CmdPipelineEvents.Errors.CmdPipeLineError(
+                                ErrorMessage: $"Exception during message handling: {ex.Message}, MessageID: {envelope.MessageId}",
+                                Exception: ex)
                         );
                     }
                 }
@@ -141,29 +144,41 @@ namespace Server.Core.CommandPipeline
             catch (Exception ex)
             {
                 // Log or handle unexpected exceptions that occur during message processing.
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason($"Unexpected exception in message processing loop: {ex.Message}")
+                _eventBus.Publish(
+                    EventMessageType.CmdPipeline,
+                    new CmdPipelineEvents.Errors.CmdPipeLineError(
+                        ErrorMessage: $"Unexpected exception in message processing loop: {ex.Message}",
+                        Exception: ex)
                 );
             }
         }
 
-        private async Task HandleMessageAsync(TransportEnvelope msg)
+        private async Task HandleMessageAsync(PacketEnvelope msg)
         {
             // Validate that the msg is not null.
             if (msg == null)
             {
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    new EventReason(
-                        "Received null message envelope",
-                        null
+                _eventBus.Publish(
+                    EventMessageType.CmdPipeline,
+                    new CmdPipelineEvents.Errors.CmdPipeLineError(
+                        "Received null message envelope"
                     )
                 );
                 return;
             }
+
+            if(msg.ConnId == null)
+            {
+                _eventBus.Publish(EventMessageType.CmdPipeline,
+                    new CmdPipelineEvents.Errors.CmdPipeLineError(
+                        "Received message envelope with null ConnectionId"
+                    )
+                );
+
+                return;
+            }
+
+            ConnectionId connId = msg.ConnId.Value;
 
             // 1st pass Policy check - AuthenticationPolicy
             foreach (var policy in _firstPassPolicies)
@@ -172,18 +187,18 @@ namespace Server.Core.CommandPipeline
                 if (!result.IsValid)
                 {
                     // Log the policy failure event
-                    EventBusHelper.PublishEvent(
-                        _eventBus,
-                        EventMessageType.Error,
-                        new EventReason($"{result.ErrorMessage ?? "Authentication failed"} (Policy: {policy.GetType().Name}, MessageID: {msg.MessageId})")
+                    _eventBus.Publish(
+                        EventMessageType.CmdPipeline,
+                        new CmdPipelineEvents.Errors.CmdPipeLineError(
+                            $"{result.ErrorMessage ?? "Authentication failed"} (Policy: {policy.GetType().Name}, MessageID: {msg.MessageId})")
                     );
 
-                    TransportEnvelope response = CreateErrorResponse(
-                        errorType: TransportMessageType.Error,
+                    PacketEnvelope response = CreateErrorResponse(
+                        errorType: PacketType.Error,
                         message: result.ErrorMessage ?? "Authentication failed",
-                        connId: msg.ConnId);
+                        connId: connId);
 
-                    _networkSupervisor.SendToClient(msg.ConnId, response);
+                    _networkSupervisor.SendToClient(connId, response);
 
                     // As soon as any policy fails, we stop processing this message.
                     return;
@@ -202,34 +217,34 @@ namespace Server.Core.CommandPipeline
             ParseResult parseResult = _cmdParser.Parse(msg);
             if (!parseResult.Success)
             {
-                TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
-                    messageType: TransportMessageType.Error,
+                    messageType: PacketType.Error,
                     flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(parseResult.ErrorMessage ?? "Unknown authentication error."),
                     connectionId: msg.ConnId
                 );
 
-                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                 return;
             }
 
             // Build context (player state, inventory, effects, etc.)
-            CommandContext context = await _contextBuilder.BuildContextAsync(msg.ConnId, parseResult.Command!);
+            CommandContext context = await _contextBuilder.BuildContextAsync(connId, parseResult.Command!);
             if (!context.Success)
             {
-                TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
-                    messageType: TransportMessageType.Error,
+                    messageType: PacketType.Error,
                     flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(context.ErrorMessage ?? "Unknown parsing error."),
                     connectionId: msg.ConnId
                 );
-                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                 return;
             }
 
@@ -239,57 +254,57 @@ namespace Server.Core.CommandPipeline
                 var result = await policy.CheckPolicyAsync(context);
                 if (!result.IsValid)
                 {
-                    TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                    PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
-                    messageType: TransportMessageType.Error,
+                    messageType: PacketType.Error,
                     flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(result.ErrorMessage ?? "Unknown policy error."),
                     connectionId: msg.ConnId
                     );
-                    _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                    _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                     return;
                 }
             }
 
-            // Route & Execute
-            ICommandHandler? handler = _cmdRouter.Route(parseResult.Command!);
+            // GetHandler & Execute
+            ICommandHandler? handler = _cmdRouter.GetHandler(parseResult.Command!);
             if (handler == null)
             {
-                TransportEnvelope errorResponseEnvelope = new TransportEnvelope(
+                PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
-                    messageType: TransportMessageType.Error,
+                    messageType: PacketType.Error,
                     flags: MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes($"Unknown command: {parseResult.Command?.CommandType}"),
                     connectionId: msg.ConnId
                     );
-                _networkSupervisor.SendToClient(msg.ConnId, errorResponseEnvelope);
+                _networkSupervisor.SendToClient(connId, errorResponseEnvelope);
                 return;
             }
 
             var commandResult = await handler.ExecuteAsync(context);
 
             byte[] responsePayload;
-            TransportMessageType responseType;
+            PacketType responseType;
             MessageFlags responseFlags;
 
             if (commandResult.BinaryPayload is { Length: > 0 } binaryData)
             {
                 responsePayload = binaryData;
-                responseType = TransportMessageType.BinaryTransfer;
+                responseType = PacketType.BinaryTransfer;
                 responseFlags = MessageFlags.BinaryPayload;
             }
             else
             {
                 responsePayload = Encoding.UTF8.GetBytes(commandResult.Message);
-                responseType = TransportMessageType.Response;
+                responseType = PacketType.Response;
                 responseFlags = MessageFlags.None;
             }
 
-            TransportEnvelope successResponse = new TransportEnvelope(
+            PacketEnvelope successResponse = new PacketEnvelope(
                 messageId: _messageIdGenerator.New(),
                 sessionId: null,
                 messageCorrelationId: msg.MessageId,
@@ -298,17 +313,17 @@ namespace Server.Core.CommandPipeline
                 payload: responsePayload,
                 connectionId: msg.ConnId
             );
-            _networkSupervisor.SendToClient(msg.ConnId, successResponse);
+            _networkSupervisor.SendToClient(connId, successResponse);
         }
 
-        private TransportEnvelope CreateErrorResponse(TransportMessageType? errorType, string? message, ConnectionId connId, MessageId? msgId = null)
+        private PacketEnvelope CreateErrorResponse(PacketType? errorType, string? message, ConnectionId connId, MessageId? msgId = null)
         {
-            TransportEnvelope response = new TransportEnvelope(
+            PacketEnvelope response = new PacketEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msgId,
-                    messageType: errorType ?? TransportMessageType.Error,
-                    flags: Shared.Protocol.Types.MessageFlags.None,
+                    messageType: errorType ?? PacketType.Error,
+                    flags: Shared.Network.Types.MessageFlags.None,
                     payload: Encoding.UTF8.GetBytes(message ?? "Unknown parsing error"),
                     connectionId: connId
                 );

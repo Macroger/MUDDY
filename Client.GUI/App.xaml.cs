@@ -1,11 +1,14 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
+﻿// =============================================================================
+/// @file       App.xaml.cs
+/// @namespace  Client.GUI
+/// @brief      WinUI 3 application entry point for MUDDY client.
+///             Initializes core systems and manages application lifecycle.
+// =============================================================================
+
 using Microsoft.UI.Xaml;
+using Client.Core.Application;
 using System;
 using System.IO;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Client.GUI
 {
@@ -14,10 +17,11 @@ namespace Client.GUI
     /// </summary>
     public partial class App : Application
     {
-        private Window? _window;
+        private Window? _window = null;
+        private ClientSystemInitializer? _clientCore = null;
 
         /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
+        /// Initializes the singleton application object. This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
         public App()
@@ -58,7 +62,7 @@ namespace Client.GUI
                 }
                 catch
                 {
-                    // Last resort - just write to console
+                    // Last resort - ignore if we can't log
                 }
             }
 
@@ -73,8 +77,41 @@ namespace Client.GUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-            _window.Activate();
+            try
+            {
+                // Initialize client core systems (event bus, logger, network supervisor, message pipeline)
+                _clientCore = new ClientSystemInitializer();
+
+                // Create main window and pass event bus
+                _window = new MainWindow(_clientCore.EventBus);
+
+                // Cleanup when window closes
+                _window.Closed += Window_Closed;
+
+                _window.Activate();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"App launch error: {ex}");
+                throw;
+            }
+        }
+
+        private void Window_Closed(object? sender, WindowEventArgs e)
+        {
+            // Dispose client systems gracefully when GUI window closes
+            try
+            {
+                _clientCore?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during client shutdown: {ex.Message}");
+            }
+            finally
+            {
+                _clientCore = null;
+            }
         }
     }
 }

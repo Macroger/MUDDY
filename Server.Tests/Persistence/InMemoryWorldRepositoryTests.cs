@@ -3,9 +3,10 @@
 using Moq;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.Domain.World;
+using Server.Core.Infrastructure.Events;
 using Server.Core.Persistence;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 
@@ -31,8 +32,8 @@ public class InMemoryWorldRepositoryTests
     {
         _mockEventBus = new Mock<IEventBus>();
         _mockEventBus
-            .Setup(b => b.Subscribe<PlayerEvents.PlayerLeftWorldEvent>(
-                EventMessageType.Domain, It.IsAny<Action<PlayerEvents.PlayerLeftWorldEvent>>()))
+            .Setup(b => b.Subscribe<WorldEvents.Notifications.PlayerLeftWorldEvent>(
+                EventMessageType.World, It.IsAny<Action<WorldEvents.Notifications.PlayerLeftWorldEvent>>()))
             .Returns(new Mock<ISubscriptionToken>().Object);
 
         // The constructor seeds _rooms with the default world automatically

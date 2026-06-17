@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.Network.Worker;
 using Shared.Identity;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
 using System.Net;
 using System.Net.Sockets;
 
@@ -31,7 +31,7 @@ namespace Server.Core.Network.Model.Tests
         {
             public bool IsRunning => false;
             public ConnectionId ConnId => new();
-            public event EventHandler<TransportEnvelope>? MessageReceived
+            public event EventHandler<PacketEnvelope>? MessageReceived
             {
                 add { }
                 remove { }
@@ -46,7 +46,7 @@ namespace Server.Core.Network.Model.Tests
                 add { }
                 remove { }
             }
-            public bool SendMessage(TransportEnvelope msg) => true;
+            public bool SendMessage(PacketEnvelope msg) => true;
             public void Start() { }
             public void Stop() { }
         }

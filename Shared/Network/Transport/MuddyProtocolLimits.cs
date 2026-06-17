@@ -1,6 +1,6 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
-namespace Shared.Protocol.Transport
+namespace Shared.Network.Transport
 {
     /// <summary>
     /// Defines server-side limits and constraints for the Muddy wire protocol.
@@ -19,7 +19,7 @@ namespace Shared.Protocol.Transport
 
         public bool AllowBinaryPayloads { get; } = true;           // Whether the server accepts binary payloads at all, as an additional layer of control over protocol usage
 
-        public int headerSize { get; } = 28;          // The size in bytes of the header.
+        public int headerSize { get; } = MuddyPacketHeader.Size;   // The size in bytes of the header.
 
         public int tailSize { get; } = 4;             // The size in bytes of the CRC value at the end of the packet.
     }

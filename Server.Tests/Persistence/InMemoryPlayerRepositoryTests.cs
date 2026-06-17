@@ -4,7 +4,7 @@ using Moq;
 using Server.Core.Persistence;
 using Shared.Domain.Player;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 
@@ -27,8 +27,8 @@ public class InMemoryPlayerRepositoryTests
     {
         _mockEventBus = new Mock<IEventBus>();
         _mockEventBus
-            .Setup(b => b.Subscribe<NetworkEvents.ClientDisconnectedEvent>(
-                EventMessageType.Network, It.IsAny<Action<NetworkEvents.ClientDisconnectedEvent>>()))
+            .Setup(b => b.Subscribe<NetworkEvents.ClientDisconnected>(
+                EventMessageType.Network, It.IsAny<Action<NetworkEvents.ClientDisconnected>>()))
             .Returns(new Mock<ISubscriptionToken>().Object);
 
         _repository = new InMemoryPlayerRepository(_mockEventBus.Object);

@@ -46,7 +46,7 @@ namespace Shared.Logging
         /// <summary>
         /// Gets a full path for a log file in the application log directory.
         /// </summary>
-        /// <param name="fileName">The log file name (e.g., "client_packets_2024-01-15.log")</param>
+        /// <param name="fileName">The log file name (e.g., "client_packets_2026-01-15.log")</param>
         /// <returns>Full path to the log file in a safe, writable location</returns>
         public static string GetLogFilePath(string fileName)
         {

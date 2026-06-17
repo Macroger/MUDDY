@@ -3,16 +3,19 @@
 using Server.Core.CommandPipeline.Types;
 using Server.Core.Domain.Authentication;
 using Server.Core.Domain.World;
+using Server.Core.Infrastructure.Events;
 using Server.Core.Infrastructure.Identity.MessageId;
 using Server.Core.Network.Supervisor;
 using Server.Core.Persistence;
 using Shared.Domain.Player;
 using Shared.EventBus;
+using Shared.EventBus.EventTypes;
 using Shared.Identity;
-using Shared.Protocol.Transport;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 using System.Text;
 using System.Text.Json;
-using static Shared.EventBus.DomainEvents.PlayerEvents;
+using static Server.Core.Infrastructure.Events.PlayerEvents;
 
 namespace Server.Core.CommandPipeline.Authentication
 {
@@ -52,48 +55,61 @@ namespace Server.Core.CommandPipeline.Authentication
         /// Processes an authentication command.
         /// Parses the command, validates it, and creates a session if successful.
         /// </summary>
-        public async Task ProcessAuthCommandAsync(TransportEnvelope envelope)
+        public async Task ProcessAuthCommandAsync(PacketEnvelope envelope)
         {
+            if(envelope.ConnId == null)
+            {
+                // We should never get here since the network supervisor only sends auth commands from connected clients, but we'll check just in case
+                _eventBus.Publish(
+                    EventMessageType.Authentication,
+                    new AuthenticationEvents.Errors.AuthenticationError(
+                        $"Received authentication command with null ConnectionId. Payload: {Encoding.UTF8.GetString(envelope.Payload)}")
+                    );
+                return;
+            }
+
+            // ConnId is guaranteed non-null from this point forward
+            ConnectionId connId = envelope.ConnId.Value;
+
             try
             {
-
-
                 // Parse the JSON payload to extract command and arguments
                 string json = Encoding.UTF8.GetString(envelope.Payload);
                 var cmdJson = JsonSerializer.Deserialize<JsonCommand>(json);
 
-                EventBusHelper.PublishEvent(
-                    _eventBus,
+                _eventBus.Publish(
                     EventMessageType.Authentication,
-                    new EventReason($"Received authentication command: {cmdJson?.Verb}")
+                    new AuthenticationEvents.Notifications.AuthenticationAttemptEvent($"Received authentication command: {cmdJson?.Verb}")
                 );
 
                 if (cmdJson == null)
                 {
-                    SendAuthError(envelope.ConnId, "Invalid command format");
+                    SendAuthError(connId, "Invalid command format");
                     return;
                 }
 
-                // Route to appropriate handler based on command verb
+                // GetHandler to appropriate handler based on command verb
                 switch (cmdJson.Verb?.ToLowerInvariant())
                 {
                     case "login":
-                        await HandleLoginAsync(envelope.ConnId, cmdJson.Args);
+                        await HandleLoginAsync(connId, cmdJson.Args);
                         break;
 
                     case "register":
-                        await HandleRegisterAsync(envelope.ConnId, cmdJson.Args);
+                        await HandleRegisterAsync(connId, cmdJson.Args);
                         break;
 
                     default:
-                        SendAuthError(envelope.ConnId, $"Unknown authentication command: {cmdJson.Verb}");
+                        SendAuthError(connId, $"Unknown authentication command: {cmdJson.Verb}");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                SendAuthError(envelope.ConnId, $"Authentication error: {ex.Message}");
+                SendAuthError(connId, $"Authentication error: {ex.Message}");
             }
+
+
         }
 
         /// <summary>
@@ -195,11 +211,15 @@ namespace Server.Core.CommandPipeline.Authentication
                     room.Exits);
                 await _worldRepository.UpdateRoomAsync(updatedRoom);
 
-                EventBusHelper.PublishEvent<PlayerEnteredWorldEvent>(
-                _eventBus,
-                EventMessageType.World,
-                new PlayerEnteredWorldEvent(connId, username, updatedRoom.Id)
+                _eventBus.Publish(
+                    EventMessageType.World,
+                    new WorldEvents.Notifications.PlayerEnteredWorldEvent(
+                        connId,
+                        username,
+                        updatedRoom.Id
+                    )
                 );
+
             }
         }
 
@@ -210,18 +230,16 @@ namespace Server.Core.CommandPipeline.Authentication
         {
             string payload = $"ERROR: {message}";
 
-            EventReason eventReason = new(payload);
-
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.Error,
-                eventReason
+            _eventBus.Publish(
+                EventMessageType.Authentication,
+                new AuthenticationEvents.Errors.AuthenticationError(
+                    $"Authentication error for connection {connId.Value}: {message}")
             );
 
-            var response = new TransportEnvelope(
+            var response = new PacketEnvelope(
                 messageId: _messageIdGenerator.New(),
-                messageType: TransportMessageType.Error,
-                flags: Shared.Protocol.Types.MessageFlags.None,
+                messageType: PacketType.Error,
+                flags: Shared.Network.Types.MessageFlags.None,
                 payload: Encoding.UTF8.GetBytes(payload),
                 connectionId: connId,
                 sessionId: SessionId.Unauthenticated  // No session for error
@@ -240,18 +258,15 @@ namespace Server.Core.CommandPipeline.Authentication
         {
             string payload = $"SUCCESS: {message}";
 
-            EventReason eventReason = new(payload);
-
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                EventMessageType.Authentication,
-                eventReason
+            _eventBus.Publish(EventMessageType.Authentication,
+                new AuthenticationEvents.Notifications.AuthenticationSuccessEvent(
+                    $"Authentication success for connection {connId.Value}, session {sessionId.Value}: {message}")
             );
 
-            var envelope = new TransportEnvelope(
+            var envelope = new PacketEnvelope(
                 messageId: _messageIdGenerator.New(),
-                messageType: TransportMessageType.AuthSuccess,
-                flags: Shared.Protocol.Types.MessageFlags.None,
+                messageType: PacketType.Authentication,
+                flags: Shared.Network.Types.MessageFlags.None,
                 payload: Encoding.UTF8.GetBytes(payload),
                 connectionId: connId,
                 sessionId: sessionId

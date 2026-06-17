@@ -1,9 +1,10 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Server.Core.Domain.Authentication;
+using Server.Core.Infrastructure.Events;
 using Server.Core.Infrastructure.Identity.SessionId;
 using Shared.EventBus;
-using Shared.EventBus.DomainEvents;
+using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
 using Shared.Identity;
 using System.Collections.Concurrent;
@@ -44,8 +45,9 @@ namespace Server.Core.Persistence
         {
             _eventBus = eventBus;
             _sessionIdGenerator = sessionIdGenerator;
-            _playerLeftSubscription = _eventBus.Subscribe<PlayerEvents.PlayerLeftWorldEvent>(
-                EventMessageType.Domain, async evt => await RemoveSessionByConnectionIdAsync(evt.ConnId));
+            _playerLeftSubscription = _eventBus.Subscribe<WorldEvents.Notifications.PlayerLeftWorldEvent>(
+                EventMessageType.World,
+                async evt => await RemoveSessionByConnectionIdAsync(evt.ConnId));
         }
 
         /// <summary>
@@ -60,31 +62,17 @@ namespace Server.Core.Persistence
 
             if (result == false)
             {
-                EventReason eventReason = new EventReason
-                (
-                    Message: $"Failed to create session for player '{playerName}' with connection ID {connId}. Session ID {sessionId} already exists.",
-                    Data: new { PlayerName = playerName, ConnectionId = connId, SessionId = sessionId }
-                );
 
-                EventBusHelper.PublishEvent(
-                    _eventBus,
-                    EventMessageType.Error,
-                    eventReason
-                    );
+                _eventBus.Publish(
+                    EventMessageType.System,
+                    new SystemEvents.Errors.SystemErrorEvent($"Failed to create session for player '{playerName}' with connection ID {connId}. Session ID {sessionId} already exists."));
+                
             }
             else
             {
-                EventReason eventReason = new EventReason
-                (
-                    Message: $"Session created for player '{playerName}' with connection ID {connId}. Assigned session ID {sessionId}.",
-                    Data: new { PlayerName = playerName, ConnectionId = connId, SessionId = sessionId }
-                );
-
-                EventBusHelper.PublishEvent(
-                    _eventBus,
+                _eventBus.Publish(
                     EventMessageType.Authentication,
-                    eventReason
-                    );
+                    new AuthenticationEvents.Notifications.SessionCreatedEvent($"Successfully created session ID for {playerName} at connection: {connId}."));
             }
 
             return Task.FromResult(sessionId);
@@ -96,21 +84,25 @@ namespace Server.Core.Persistence
         public Task RemoveSession(SessionId sessionId)
         {
             bool result = _sessions.TryRemove(sessionId, out _);
+            string logMessage = "";
+            if (result == true)
+            {
+                logMessage = $"Session with ID {sessionId} removed successfully.";
 
-            string logMessage = result ? $"Session with ID {sessionId} removed successfully."
-                : $"Failed to remove session with ID {sessionId}. Session not found.";
+                _eventBus.Publish(
+                EventMessageType.Authentication,
+                new AuthenticationEvents.Notifications.SessionRemovedEvent(logMessage));
+            }
+            else
+            {
+                logMessage = $"Failed to remove session with ID {sessionId}. Session not found.";
 
-            EventReason eventReason = new EventReason
-            (
-                Message: logMessage,
-                Data: new { SessionId = sessionId }
-            );
+                _eventBus.Publish(
+                EventMessageType.System,
+                new SystemEvents.Errors.SystemErrorEvent(logMessage));
+            }
 
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                result ? EventMessageType.Authentication : EventMessageType.Error,
-                eventReason
-            );
+            
 
             return Task.CompletedTask;
         }
@@ -134,21 +126,26 @@ namespace Server.Core.Persistence
         public Task RemoveSessionByConnectionIdAsync(ConnectionId connId)
         {
             var match = _sessions.FirstOrDefault(kv => kv.Value.ConnId == connId);
+            bool result = false;
 
             // Check if the session was found before attempting to remove, and log appropriately
-            if (match.Key != default) _sessions.TryRemove(match.Key, out _);
+            if (match.Key != default)
+            {
+                result = _sessions.TryRemove(match.Key, out _);
+            }
 
-            EventBusHelper.PublishEvent(
-                _eventBus,
-                match.Key != default ? EventMessageType.Authentication : EventMessageType.Error,
-                new EventReason
-                (
-                    Message: match.Key != default
-                        ? $"Session with ID {match.Key} removed successfully for connection ID {connId}."
-                        : $"Failed to remove session for connection ID {connId}. No matching session found.",
-                    Data: new { ConnectionId = connId, SessionId = match.Key }
-                )
-            );
+
+            if (result == true)
+            {
+                _eventBus.Publish(EventMessageType.Authentication,
+                new AuthenticationEvents.Notifications.SessionRemovedEvent($"Session with ID {match.Key} removed successfully for connection ID {connId}."));
+            }
+            else
+            {
+                _eventBus.Publish(EventMessageType.Authentication,
+                new AuthenticationEvents.Notifications.SessionRemovedEvent($"Failed to remove session for connection ID {connId}. No matching session found."));
+                
+            }
 
             return Task.CompletedTask;
         }

@@ -1,8 +1,8 @@
 ﻿// Copyright 2026 Matthew Schatz
 // SPDX-License-Identifier: Apache-2.0
 using Shared.Identity;
-using Shared.Protocol.Transport;
-using Shared.Protocol.Types;
+using Shared.Network.Transport;
+using Shared.Network.Types;
 
 namespace Server.Tests.Network.Packet;
 
@@ -30,9 +30,9 @@ public class PacketSerializerTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
              messageId: new MessageId(123),
-             messageType: TransportMessageType.Error,
+             messageType: PacketType.Error,
              flags: MessageFlags.None,
              payload: body,
              connectionId: _connectionId,
@@ -65,9 +65,9 @@ public class PacketSerializerTests
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
 
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(123),
-            messageType: TransportMessageType.Chat,
+            messageType: PacketType.Chat,
             flags: MessageFlags.None,
             payload: body,
             connectionId: _connectionId,
@@ -95,9 +95,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = Array.Empty<byte>();
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.Ping,
+            messageType: PacketType.Ping,
             flags: MessageFlags.None,
             payload: body,
             connectionId: _connectionId,
@@ -127,7 +127,7 @@ public class PacketSerializerTests
             SessionId = SessionId.Unauthenticated.Value,
             BodyLength = 10, // incorrect on purpose
             MsgId = 1,
-            MsgType = (ushort)TransportMessageType.Chat,
+            MsgType = (ushort)PacketType.Chat,
             BitFlags = 0
         };
 
@@ -152,9 +152,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02 };
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.Chat,
+            messageType: PacketType.Chat,
             flags: MessageFlags.None,
             payload: body,
             connectionId: _connectionId,
@@ -176,9 +176,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02, 0x03 };
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.Chat,
+            messageType: PacketType.Chat,
             flags: MessageFlags.None,
             payload: body,
             connectionId: _connectionId,
@@ -200,9 +200,9 @@ public class PacketSerializerTests
         // Arrange
         byte[] body = new byte[_limits.MaxJsonBodyBytes + 1];
 
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.Chat,
+            messageType: PacketType.Chat,
             flags: MessageFlags.None,
             payload: body,
             connectionId: _connectionId,
@@ -220,9 +220,9 @@ public class PacketSerializerTests
     {
         // Arrange
         var body = new byte[] { 0x01, 0x02 };
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(42),
-            messageType: TransportMessageType.Chat,
+            messageType: PacketType.Chat,
             flags: MessageFlags.None,
             payload: body,
             connectionId: _connectionId,
@@ -250,9 +250,9 @@ public class PacketSerializerTests
         // A body that exceeds MaxJsonBodyBytes but fits within MaxBinaryBodyBytes
         byte[] body = new byte[_limits.MaxJsonBodyBytes + 1024];
 
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.BinaryTransfer,
+            messageType: PacketType.BinaryTransfer,
             flags: MessageFlags.BinaryPayload,
             payload: body,
             connectionId: _connectionId,
@@ -279,7 +279,7 @@ public class PacketSerializerTests
             SessionId = SessionId.Unauthenticated.Value,
             BodyLength = (uint)(_limits.MaxBinaryBodyBytes + 1),   // exceeds binary cap
             MsgId = 1,
-            MsgType = (ushort)TransportMessageType.BinaryTransfer,
+            MsgType = (ushort)PacketType.BinaryTransfer,
             BitFlags = (ushort)MessageFlags.BinaryPayload
         };
 
@@ -292,9 +292,9 @@ public class PacketSerializerTests
         // we can't even build a wire packet that large in a unit test. Instead, verify the
         // flag is read correctly by checking a body that is exactly at the cap passes.
         byte[] atCapBody = new byte[_limits.MaxBinaryBodyBytes];
-        var atCapEnvelope = new TransportEnvelope(
+        var atCapEnvelope = new PacketEnvelope(
             messageId: new MessageId(2),
-            messageType: TransportMessageType.BinaryTransfer,
+            messageType: PacketType.BinaryTransfer,
             flags: MessageFlags.BinaryPayload,
             payload: atCapBody,
             connectionId: _connectionId,
@@ -313,9 +313,9 @@ public class PacketSerializerTests
         // Without BinaryPayload flag, even MessageFlags.None must be rejected over the JSON cap
         byte[] body = new byte[_limits.MaxJsonBodyBytes + 1];
 
-        var message = new TransportEnvelope(
+        var message = new PacketEnvelope(
             messageId: new MessageId(1),
-            messageType: TransportMessageType.Response,
+            messageType: PacketType.Response,
             flags: MessageFlags.None,       // no binary flag
             payload: body,
             connectionId: _connectionId,
