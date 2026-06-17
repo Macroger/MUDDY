@@ -34,6 +34,9 @@ namespace Client.Core.Network.Supervisor
 
         private IClientConnectionWorker? _worker = null;
         private CancellationTokenSource _supervisorCts = null!;
+        private CancellationTokenSource? _connectionCts = null;
+
+        private readonly object _connectionLock = new object();
 
         private bool _isConnected = false;
         private bool _disposed = false;
@@ -77,83 +80,126 @@ namespace Client.Core.Network.Supervisor
         /// <summary>
         /// Establishes a connection to the server at the specified address and port.
         /// </summary>
+        /// <remarks>
+        /// Uses a lock to ensure only one connection attempt can proceed at a time.
+        /// Concurrent calls will be rejected while a connection is being established.
+        /// The lock is released immediately after creating and wiring the worker;
+        /// the actual socket connection happens on the worker's background threads.
+        /// </remarks>
         /// <param name="serverAddress">The server address.</param>
         /// <param name="serverPort">The server port.</param>
         /// <returns>True if connection was established; otherwise, false.</returns>
         public async Task<bool> StartConnectionAsync(string serverAddress, int serverPort)
         {
+            System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] ENTRY: serverAddress={serverAddress}, serverPort={serverPort}");
+
+            if (string.IsNullOrWhiteSpace(serverAddress))
+            {
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: serverAddress is null/empty");
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    new ClientNetworkEvents.Errors.NetworkError(
+                        "Cannot connect: server address is null or empty."));
+                return false;
+            }
+
+            if (serverPort <= 0 || serverPort > 65535)
+            {
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: invalid port {serverPort}");
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    new ClientNetworkEvents.Errors.NetworkError(
+                        $"Cannot connect: invalid port number {serverPort}."));
+                return false;
+            }
+
+            IClientConnectionWorker? newWorker = null;
+
             try
             {
-                if (IsConnected)
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Acquiring lock...");
+                lock (_connectionLock)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Inside lock: IsConnected={IsConnected}, _worker!=null={_worker != null}");
+
+                    if (IsConnected || _worker != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: already connected or worker exists");
+                        _eventBus.Publish(
+                            EventMessageType.Network,
+                            new ClientNetworkEvents.Errors.NetworkError(
+                                "Cannot connect: already connected to server or connection attempt in progress."));
+                        return false;
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Disposing old CTS and creating new one");
+                    _connectionCts?.Dispose();
+                    _connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_supervisorCts.Token);
+
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Creating ClientConnectionWorker");
+                    newWorker = new ClientConnectionWorker(
+                        serverAddress: serverAddress,
+                        serverPort: serverPort,
+                        packetFactory: new MuddyPacketFactory(),
+                        envelopeFactory: new PacketEnvelopeFactory(),
+                        packetSerializer: new MuddyPacketSerializer(new MuddyProtocolLimits()),
+                        protocolLimits: new MuddyProtocolLimits(),
+                        cancellationToken: _connectionCts.Token);
+
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Wiring event handlers");
+                    newWorker.PacketReceived += OnWorkerPacketReceived;
+                    newWorker.PacketSent += OnWorkerPacketSent;
+                    newWorker.ConnectionClosed += OnWorkerConnectionClosed;
+                    newWorker.ErrorOccurred += OnWorkerErrorOccurred;
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Releasing lock");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Calling worker.Start()");
+                bool startResult = newWorker.Start();
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] worker.Start() returned: {startResult}");
+
+                if (!startResult)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: worker.Start() returned false");
                     _eventBus.Publish(
                         EventMessageType.Network,
                         new ClientNetworkEvents.Errors.NetworkError(
-                            "Cannot connect: already connected to server."));
+                            $"Failed to start connection worker for {serverAddress}:{serverPort}."));
                     return false;
                 }
 
-                // Validate parameters
-                if (string.IsNullOrWhiteSpace(serverAddress))
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Acquiring lock for assignment");
+                lock (_connectionLock)
                 {
-                    _eventBus.Publish(
-                        EventMessageType.Network,
-                        new ClientNetworkEvents.Errors.NetworkError(
-                            "Cannot connect: server address is null or empty."));
-                    return false;
+                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Assigning worker and setting IsConnected=true");
+                    _worker = newWorker;
+                    IsConnected = true;
                 }
 
-                if (serverPort <= 0 || serverPort > 65535)
-                {
-                    _eventBus.Publish(
-                        EventMessageType.Network,
-                        new ClientNetworkEvents.Errors.NetworkError(
-                            $"Cannot connect: invalid port number {serverPort}."));
-                    return false;
-                }
-
-                // Create cancellation token for this connection
-                CancellationTokenSource connectionCts =
-                    CancellationTokenSource.CreateLinkedTokenSource(_supervisorCts.Token);
-
-                // Create the worker
-                _worker = new ClientConnectionWorker(
-                    serverAddress: serverAddress,
-                    serverPort: serverPort,
-                    packetFactory: new MuddyPacketFactory(),
-                    envelopeFactory: new PacketEnvelopeFactory(),
-                    packetSerializer: new MuddyPacketSerializer(new MuddyProtocolLimits()),
-                    protocolLimits: new MuddyProtocolLimits(),
-                    cancellationToken: connectionCts.Token);
-
-                // Subscribe to worker infrastructure events
-                _worker.PacketReceived += OnWorkerPacketReceived;
-                _worker.PacketSent += OnWorkerPacketSent;
-                _worker.ConnectionClosed += OnWorkerConnectionClosed;
-                _worker.ErrorOccurred += OnWorkerErrorOccurred;                
-
-                // Start the worker
-                _worker.Start();
-
-                IsConnected = true;
-
-                // Publish domain event
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Publishing ConnectionStatusChangedEvent");
                 _eventBus.Publish(
                     EventMessageType.Network,
                     new ClientNetworkEvents.Lifecycle.ConnectionStatusChangedEvent(
-                        ConnectionStatus: IsConnected,
+                        ConnectionStatus: true,
                         Message: $"Connected to {serverAddress}:{serverPort}"));
 
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] SUCCESS: returning true");
                 return true;
             }
             catch (Exception ex)
             {
-                IsConnected = false;
+                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+
+                lock (_connectionLock)
+                {
+                    IsConnected = false;
+                }
 
                 _eventBus.Publish(
                     EventMessageType.Network,
                     new ClientNetworkEvents.Errors.NetworkError(
-                        $"Failed to establish connection to {serverAddress}:{serverPort}: {ex.Message}", ex));
+                        $"Failed to establish connection to {serverAddress}:{serverPort}: {ex.GetType().Name}: {ex.Message}",
+                        ex));
 
                 return false;
             }
@@ -167,13 +213,17 @@ namespace Client.Core.Network.Supervisor
         {
             try
             {
-                if (!IsConnected || _worker == null)
+                lock (_connectionLock)
                 {
-                    return true;
-                }
+                    if (!IsConnected || _worker == null)
+                    {
+                        return true;
+                    }
 
-                _worker.Stop();
-                IsConnected = false;
+                    _worker.Stop();
+                    _worker = null;
+                    IsConnected = false;
+                }
 
                 // Publish domain event
                 _eventBus.Publish(
@@ -384,23 +434,38 @@ namespace Client.Core.Network.Supervisor
         }
 
         /// <summary>
-        /// Handles the ConnectToServer command from the event bus and initiates a connection to the server.
+        /// Handles the ConnectToServer command from the event bus.
+        /// Dispatched onto a thread pool thread immediately so the event bus
+        /// caller's thread (typically the UI thread) is never blocked by the
+        /// TCP connect handshake.
         /// </summary>
-        /// <param name="serverAddress">Server IP address.</param>
-        /// <param name="serverPort">Server port number.</param>
         private void OnConnectToServerRequest(ClientNetworkEvents.Commands.ConnectToServer evnt)
         {
-            // Result is discarded because connection status will be published via event bus.
-            // Supervisor will emit success or failure events based on the result of the connection attempt
-            _ = StartConnectionAsync(evnt.serverAddress, evnt.serverPort);
+            Task.Run(() => StartConnectionAsync(evnt.serverAddress, evnt.serverPort))
+                .ContinueWith(
+                    task => _eventBus.Publish(
+                        EventMessageType.Network,
+                        new ClientNetworkEvents.Errors.NetworkError(
+                            $"Unhandled exception during connect: {task.Exception!.InnerException?.Message ?? task.Exception.Message}",
+                            task.Exception.InnerException ?? task.Exception)),
+                    TaskContinuationOptions.OnlyOnFaulted);
         }
 
         /// <summary>
-        /// Handles the DisconnectFromServer command from the event bus and initiates a disconnection from the server.
+        /// Handles the DisconnectFromServer command from the event bus.
+        /// Dispatched onto a thread pool thread so that socket teardown
+        /// does not block the event bus caller's thread.
         /// </summary>
         private void OnDisconnectFromServerRequest(ClientNetworkEvents.Commands.DisconnectFromServer evnt)
         {
-            StopConnection();
+            Task.Run(() => StopConnection())
+                .ContinueWith(
+                    task => _eventBus.Publish(
+                        EventMessageType.Network,
+                        new ClientNetworkEvents.Errors.NetworkError(
+                            $"Unhandled exception during disconnect: {task.Exception!.InnerException?.Message ?? task.Exception.Message}",
+                            task.Exception.InnerException ?? task.Exception)),
+                    TaskContinuationOptions.OnlyOnFaulted);
         }
 
         /// <summary>
@@ -462,6 +527,7 @@ namespace Client.Core.Network.Supervisor
 
                 // Dispose cancellation token source
                 _supervisorCts?.Dispose();
+                _connectionCts?.Dispose();
 
                 if (_worker is IDisposable disposableWorker)
                 {

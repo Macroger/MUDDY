@@ -154,20 +154,17 @@ namespace Server.Core.Network.Supervisor
             }
         }
 
-        /// <summary>
-        /// Processes a newly accepted TCP connection and registers it for active management.
-        /// </summary>
-        /// <param name="acceptedConnection">The accepted connection information provided by the TCP listener.</param>
-        /// <remarks>Creates a connection worker and context, registers event handlers for message receipt, closure and errors, and starts the worker. The new connection is added to the active connections dictionary. Any exceptions encountered during setup are published to the event bus.</remarks>
         public void ProcessNewConnection(AcceptedConnection acceptedConnection)
         {
             try
             {
-                // Create a linked cancellation token source for the connection
+                // Create a per-connection cancellation token source linked to the server token.
+                // This allows individual connections to be cancelled without affecting the server,
+                // and the server CTS cancelling will propagate down to all connections.
                 CancellationTokenSource connectionCts =
                     CancellationTokenSource.CreateLinkedTokenSource(_serverCts.Token);
 
-                // Create the connection worker
+                // Create the connection worker, passing the per-connection token.
                 TcpConnectionWorker worker = new TcpConnectionWorker(
                     acceptedConnection,
                     connectionCts.Token,
@@ -176,43 +173,40 @@ namespace Server.Core.Network.Supervisor
                     _packetLimits
                 );
 
-                // Create the connection context
+                // Store connectionCts (not _serverCts) so individual connections
+                // can be cancelled independently via CloseConnection().
                 ConnectionContext context = new ConnectionContext(
                     acceptedConnection,
                     worker,
-                    _serverCts
+                    connectionCts  
                 );
 
-                // Add to active connections
                 bool added = _activeConnections.TryAdd(acceptedConnection.connId, context);
                 if (!added)
                 {
-                    throw new Exception(
-                        $"Connection ID {acceptedConnection.connId} already exists in active connections."
-                    );
+                    connectionCts.Dispose();
+                    throw new InvalidOperationException(
+                        $"Connection ID {acceptedConnection.connId} already exists in active connections.");
                 }
 
-                // Register handlers
                 worker.MessageReceived += OnWorkerMessageReceived;
                 worker.ConnectionClosed += OnWorkerConnectionClosed;
                 worker.ErrorOccurred += OnWorkerErrorOccurred;
 
-                // Start processing
                 worker.Start();
 
-                _eventBus.Publish(EventMessageType.Network,
-                    new NetworkEvents.Lifecycle.ClientConnected(acceptedConnection.connId, $"New connection registered: {acceptedConnection.connId}"));
-
-
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    new NetworkEvents.Lifecycle.ClientConnected(
+                        acceptedConnection.connId,
+                        $"New connection registered: {acceptedConnection.connId}"));
             }
             catch (Exception ex)
             {
-                // Log failure
-                _eventBus.Publish(EventMessageType.Network,
-                    new NetworkEvents.Errors.NetworkError($"Exception while processing new connection {acceptedConnection.connId}: {ex.Message}", ex));
-
-               
-                // Rethrow here if higher-level code should react to this event, otherwise swallow to prevent crashing the server
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    new NetworkEvents.Errors.NetworkError(
+                        $"Exception while processing new connection {acceptedConnection.connId}: {ex.Message}", ex));
             }
         }
 

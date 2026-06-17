@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using static Client.Core.Infrastructure.Events.ClientNetworkEvents.Errors;
 
 namespace Client.GUI
 {
@@ -262,6 +263,12 @@ namespace Client.GUI
                 handler: OnConnectionStatusChanged
             ));
 
+            // Subscribe to network errors so connection failures are visible in the GUI
+            _subscriptions.Add(_eventBus.Subscribe<ClientNetworkEvents.Errors.NetworkError>(
+                eventType: EventMessageType.Network,
+                handler: OnNetworkError
+            ));
+
             // Subscribe to GUI errors
             _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Errors.GuiError>(
                 eventType: EventMessageType.Gui,
@@ -320,6 +327,14 @@ namespace Client.GUI
             // Note: We don't need to append to GUI output here because the caller
             // already does that for immediate user feedback. This subscription exists
             // solely so the logger can capture GUI-level errors.
+        }
+
+        private void OnNetworkError(ClientNetworkEvents.Errors.NetworkError evnt)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                AppendGameOutput($"[Network Error] {evnt.ErrorMessage}", "#FFFF6B6B");
+            });
         }
 
         private void OnAuthenticationMessageReceived(ClientGuiEvents.Notifications.ReceivedAuthenticationMessage evnt)

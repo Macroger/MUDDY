@@ -28,9 +28,10 @@ namespace Client.Core.Network.Worker
         public bool IsRunning { get; }
 
         /// <summary>
-        /// Starts the worker, initiates the TCP connection, and begins send/receive loops.
+        /// Starts the worker and establishes the TCP connection.
+        /// Returns <see langword="false"/> if already running; throws on connection failure.
         /// </summary>
-        void Start();
+        bool Start();
 
         /// <summary>
         /// Stops the worker and closes the connection gracefully.

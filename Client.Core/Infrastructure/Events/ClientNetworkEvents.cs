@@ -20,12 +20,6 @@ namespace Client.Core.Infrastructure.Events
             /// </summary>
             public sealed record DisconnectFromServer() : BusEvent(EventMessageType.Network, LogLevel.Information);
 
-            /// <summary>
-            /// Event raised on the event bus to request sending a message to the server.
-            /// </summary>
-            /// <param name="message">The message to send. </param>
-            public sealed record SendMessageToServer(string message) : BusEvent(EventMessageType.Network, LogLevel.Information);
-
             public sealed record SendPingToServer() : BusEvent(EventMessageType.Network, LogLevel.Trace);
         }
         public class Errors

@@ -149,7 +149,8 @@ namespace Server.Core.Infrastructure.Lifecycle
             (ServerStateEnum.MAINTENANCE, ServerStateEnum.ACTIVE),
             (ServerStateEnum.MAINTENANCE, ServerStateEnum.SHUTTING_DOWN),
     
-            // From SHUTTING_DOWN - no state changes allowed.
+            // From SHUTTING_DOWN - allow resuming into active for debugging purposes
+            (ServerStateEnum.SHUTTING_DOWN, ServerStateEnum.ACTIVE),
         };
 
     }
