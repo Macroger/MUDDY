@@ -11,6 +11,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Server.Core.Infrastructure.Events;
 using Server.Core.Infrastructure.Lifecycle;
@@ -175,6 +176,8 @@ namespace Server.GUI
             // Set initial player count (should be 0)
             PlayerCountText.Text = $"PLAYERS CONNECTED: {_activePlayers.Count}";
 
+            _serverStartTime = DateTime.Now;
+
             // Timer for server time
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += OnServerTimerTick;
@@ -182,7 +185,11 @@ namespace Server.GUI
 
             // Uptime timer
             _uptimeTimer.Interval = TimeSpan.FromSeconds(1);
-            _uptimeTimer.Tick += OnUptimeTimerTick;
+            _uptimeTimer.Tick += OnUptimeTimerTick;            
+            _uptimeTimer.Start();            
+
+            // Subscribe to double click event on the event log rows to show details (if needed)
+            EventLogDataGrid.DoubleTapped += OnEventLogRowDoubleTapped;
 
             // Subscribe to server state changes                
             SubscribeToEvents();
@@ -260,19 +267,6 @@ namespace Server.GUI
 
         private void OnServerStateChanged(SystemEvents.Lifecycle.ServerStateChangedEvent args)
         {
-            // Start uptime tracking the moment the server first becomes active
-            if (args.PreviousState == ServerStateEnum.LOADING && args.NewState == ServerStateEnum.ACTIVE)
-            {
-                _serverStartTime = DateTime.Now;
-                _uptimeTimer.Start();
-            }
-
-            // Stop uptime when the server shuts down
-            if (args.NewState == ServerStateEnum.SHUTTING_DOWN)
-            {
-                _uptimeTimer.Stop();
-            }
-
             DispatcherQueue.TryEnqueue(() =>
             {
                 switch (args.NewState)
@@ -336,6 +330,70 @@ namespace Server.GUI
             }
 
             LogEvent(busEvent.Category, busEvent.ToString() ?? "(unknown event)", busEvent.OccurredAt);
+        }
+
+        /// <summary>
+        /// Handles double-tap on an event log row. Displays a dialog showing the full
+        /// event message, allowing the user to read and copy details that were truncated
+        /// in the grid view.
+        /// </summary>
+        /// <remarks>
+        /// Uses async void — the only legitimate use of async void is for UI event handlers.
+        /// </remarks>
+        private async void OnEventLogRowDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (EventLogDataGrid.SelectedItem is not EventEntry entry)
+            {
+                return;
+            }
+
+            TextBlock textContent = new TextBlock
+            {
+                Text = $"Time:     {entry.OccurredAt.ToLocalTime():HH:mm:ss.fff}\n" +
+                       $"Source:   {entry.Source}\n" +
+                       $"Severity: {entry.Severity}\n\n" +
+                       $"Message:\n{entry.Message}",
+                TextWrapping = TextWrapping.Wrap,
+                IsTextSelectionEnabled = true,
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas")
+            };
+
+            ScrollViewer scrollViewer = new ScrollViewer
+            {
+                Content = textContent,
+                VerticalScrollMode = ScrollMode.Auto,
+                HorizontalScrollMode = ScrollMode.Disabled,
+                MaxHeight = 400,
+                MaxWidth = 700
+            };
+
+            Button closeButton = new Button
+            {
+                Content = "Close",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                MinWidth = 120,
+                Margin = new Thickness(0, 16, 0, 0)
+            };
+
+            StackPanel panel = new StackPanel
+            {
+                Children = { scrollViewer, closeButton }
+            };
+
+            ContentDialog dialog = new ContentDialog
+            {
+                Title = "Event Details",
+                //Title = $"{entry.Source} — {entry.OccurredAt.ToLocalTime():HH:mm:ss}",
+                Content = panel,
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            closeButton.Click += (s, args) =>
+            {
+                dialog.Hide();
+            };
+
+            await dialog.ShowAsync();
         }
 
         #endregion
