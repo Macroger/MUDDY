@@ -12,6 +12,7 @@
 using Client.Core.Infrastructure.Events;
 using Client.Core.Network.Worker;
 using Client.Core.Services.Authentication;
+using Client.Core.Services.Command;
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
@@ -31,6 +32,7 @@ namespace Client.Core.Network.Supervisor
         private readonly IEventBus _eventBus = null!;
         private readonly IAuthenticationService _authService = null!;
         private readonly List<ISubscriptionToken> _subscriptions = new();
+        private readonly ICommandSerializer _commandSerializer = null!;
 
         private IClientConnectionWorker? _worker = null;
         private CancellationTokenSource _supervisorCts = null!;
@@ -40,6 +42,7 @@ namespace Client.Core.Network.Supervisor
 
         private bool _isConnected = false;
         private bool _disposed = false;
+        private bool _isShuttingDown = false;
 
         #endregion
 
@@ -63,11 +66,12 @@ namespace Client.Core.Network.Supervisor
         /// </summary>
         /// <param name="eventBus">The event bus for publishing domain events.</param>
         /// <exception cref="ArgumentNullException">Thrown if eventBus is null.</exception>
-        public ClientNetworkSupervisor(IEventBus eventBus)
+        public ClientNetworkSupervisor(IEventBus eventBus, ICommandSerializer commandSerializer)
         {
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _supervisorCts = new CancellationTokenSource();
             _authService = new AuthenticationService(_eventBus);
+            _commandSerializer = commandSerializer ?? throw new ArgumentNullException(nameof(commandSerializer));
 
             // Subscribe to event bus commands
             SubscribeToEventBusCommands();
@@ -91,11 +95,10 @@ namespace Client.Core.Network.Supervisor
         /// <returns>True if connection was established; otherwise, false.</returns>
         public async Task<bool> StartConnectionAsync(string serverAddress, int serverPort)
         {
-            System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] ENTRY: serverAddress={serverAddress}, serverPort={serverPort}");
+            _isShuttingDown = false;
 
             if (string.IsNullOrWhiteSpace(serverAddress))
             {
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: serverAddress is null/empty");
                 _eventBus.Publish(
                     EventMessageType.Network,
                     new ClientNetworkEvents.Errors.NetworkError(
@@ -105,7 +108,6 @@ namespace Client.Core.Network.Supervisor
 
             if (serverPort <= 0 || serverPort > 65535)
             {
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: invalid port {serverPort}");
                 _eventBus.Publish(
                     EventMessageType.Network,
                     new ClientNetworkEvents.Errors.NetworkError(
@@ -117,14 +119,10 @@ namespace Client.Core.Network.Supervisor
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Acquiring lock...");
                 lock (_connectionLock)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Inside lock: IsConnected={IsConnected}, _worker!=null={_worker != null}");
-
                     if (IsConnected || _worker != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: already connected or worker exists");
                         _eventBus.Publish(
                             EventMessageType.Network,
                             new ClientNetworkEvents.Errors.NetworkError(
@@ -132,11 +130,9 @@ namespace Client.Core.Network.Supervisor
                         return false;
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Disposing old CTS and creating new one");
                     _connectionCts?.Dispose();
                     _connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_supervisorCts.Token);
 
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Creating ClientConnectionWorker");
                     newWorker = new ClientConnectionWorker(
                         serverAddress: serverAddress,
                         serverPort: serverPort,
@@ -146,21 +142,16 @@ namespace Client.Core.Network.Supervisor
                         protocolLimits: new MuddyProtocolLimits(),
                         cancellationToken: _connectionCts.Token);
 
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Wiring event handlers");
                     newWorker.PacketReceived += OnWorkerPacketReceived;
                     newWorker.PacketSent += OnWorkerPacketSent;
                     newWorker.ConnectionClosed += OnWorkerConnectionClosed;
                     newWorker.ErrorOccurred += OnWorkerErrorOccurred;
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Releasing lock");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Calling worker.Start()");
                 bool startResult = newWorker.Start();
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] worker.Start() returned: {startResult}");
 
                 if (!startResult)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EARLY EXIT: worker.Start() returned false");
                     _eventBus.Publish(
                         EventMessageType.Network,
                         new ClientNetworkEvents.Errors.NetworkError(
@@ -168,27 +159,22 @@ namespace Client.Core.Network.Supervisor
                     return false;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Acquiring lock for assignment");
                 lock (_connectionLock)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Assigning worker and setting IsConnected=true");
                     _worker = newWorker;
                     IsConnected = true;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] Publishing ConnectionStatusChangedEvent");
                 _eventBus.Publish(
                     EventMessageType.Network,
                     new ClientNetworkEvents.Lifecycle.ConnectionStatusChangedEvent(
                         ConnectionStatus: true,
                         Message: $"Connected to {serverAddress}:{serverPort}"));
 
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] SUCCESS: returning true");
                 return true;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[StartConnectionAsync] EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
 
                 lock (_connectionLock)
                 {
@@ -209,7 +195,7 @@ namespace Client.Core.Network.Supervisor
         /// Closes the connection to the server.
         /// </summary>
         /// <returns>True if disconnection was successful; otherwise, false.</returns>
-        public bool StopConnection()
+        public bool StopWorker()
         {
             try
             {
@@ -220,6 +206,7 @@ namespace Client.Core.Network.Supervisor
                         return true;
                     }
 
+                    _isShuttingDown = true;
                     _worker.Stop();
                     _worker = null;
                     IsConnected = false;
@@ -295,7 +282,7 @@ namespace Client.Core.Network.Supervisor
         {
             try
             {
-                StopConnection();
+                StopWorker();
                 _supervisorCts.Cancel();
 
                 _eventBus.Publish(
@@ -353,19 +340,33 @@ namespace Client.Core.Network.Supervisor
                 return null;
             }
 
-            // Generate a packet envelope from the message.
-            PacketEnvelope envelope = new(
-                sessionId: _authService.SessionId,
-                messageType: PacketType.Command,
-                payload: Encoding.UTF8.GetBytes(message)
-            );
+            try
+            {
+                // Use the command serializer service to convert text to JSON
+                string json = _commandSerializer.SerializeCommand(message);
 
-            return envelope;
+                // Generate a packet envelope from the JSON
+                PacketEnvelope envelope = new(
+                    sessionId: _authService.SessionId,
+                    messageType: PacketType.Command,
+                    payload: Encoding.UTF8.GetBytes(json)
+                );
+
+                return envelope;
+            }
+            catch (Exception ex)
+            {
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    new ClientNetworkEvents.Errors.SerializerError(
+                        $"Failed to serialize command: {ex.Message}"));
+                return null;
+            }
         }
 
         #endregion
 
-        #region Private Event Handlers
+        #region Event Handlers
 
         /// <summary>
         /// Emits an event on the event bus for the received packet from the worker.
@@ -415,6 +416,8 @@ namespace Client.Core.Network.Supervisor
         {
             IsConnected = false;
 
+            StopWorker();
+
             _eventBus.Publish(
                 EventMessageType.Network,
                 new ClientNetworkEvents.Lifecycle.ConnectionStatusChangedEvent(
@@ -427,6 +430,12 @@ namespace Client.Core.Network.Supervisor
         /// </summary>
         private void OnWorkerErrorOccurred(object? sender, Exception ex)
         {
+            // During intentional shutdown, I/O cancellation errors are expected - suppress them
+            if (_isShuttingDown && IsExpectedShutdownException(ex))
+            {
+                return;
+            }
+
             _eventBus.Publish(
                 EventMessageType.Network,
                 new ClientNetworkEvents.Errors.NetworkError(
@@ -458,7 +467,7 @@ namespace Client.Core.Network.Supervisor
         /// </summary>
         private void OnDisconnectFromServerRequest(ClientNetworkEvents.Commands.DisconnectFromServer evnt)
         {
-            Task.Run(() => StopConnection())
+            Task.Run(() => StopWorker())
                 .ContinueWith(
                     task => _eventBus.Publish(
                         EventMessageType.Network,
@@ -498,6 +507,34 @@ namespace Client.Core.Network.Supervisor
                 payload: Array.Empty<byte>());
 
             SendToServer(pingEnvelope);
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private bool IsExpectedShutdownException(Exception ex)
+        {
+            // IOException with "aborted" occurs when stream operations are cancelled
+            if (ex is IOException ioEx
+                && ioEx.Message.Contains("aborted", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // ObjectDisposedException can occur if stream is disposed during read/write
+            if (ex is ObjectDisposedException)
+            {
+                return true;
+            }
+
+            // OperationCanceledException is already handled in the worker, but just in case
+            if (ex is OperationCanceledException)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion

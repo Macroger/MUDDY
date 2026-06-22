@@ -151,11 +151,9 @@ namespace Client.Core.Network.Worker
         /// </remarks>
         public bool Start()
         {
-            System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] ENTRY");
 
             if (IsRunning)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] EARLY EXIT: already running");
+            {                
                 return false;
             }
 
@@ -163,42 +161,29 @@ namespace Client.Core.Network.Worker
             try
             {
                 // Attempt connection to server
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] Calling tcpClient.Connect({_serverAddress}, {_serverPort})");
                 tcpClient.Connect(_serverAddress, _serverPort);
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] tcpClient.Connect() returned successfully");
 
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] Calling tcpClient.GetStream()");
                 NetworkStream networkStream = tcpClient.GetStream();
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] tcpClient.GetStream() returned successfully");
 
                 // Establish connection container
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] Creating EstablishedConnection");
                 _establishedConnection = new EstablishedConnection
                 {
                     TcpClient = tcpClient,
                     NetworkStream = networkStream,
                     RemoteEndPoint = (System.Net.IPEndPoint)tcpClient.Client.RemoteEndPoint!
                 };
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] EstablishedConnection created");
 
                 // Start async loops — only after connection is fully established
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] Starting SendLoopAsync");
                 _sendTask = SendLoopAsync(_cancellationToken);
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] SendLoopAsync started, starting ReceiveLoopAsync");
                 _receiveTask = ReceiveLoopAsync(_cancellationToken);
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] ReceiveLoopAsync started");
 
                 // Mark as running only after all setup succeeds
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] Setting IsRunning = true");
                 IsRunning = true;
 
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] SUCCESS: returning true");
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"[ClientConnectionWorker.Start] EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-
                 // Clean up resources if any step fails
                 try
                 {
@@ -283,18 +268,13 @@ namespace Client.Core.Network.Worker
         /// </summary>
         private async Task SendLoopAsync(CancellationToken ct)
         {
-            System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] ENTRY");
-
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Starting channel reader loop");
                 await foreach (PacketEnvelope envelope in _sendChannel.Reader.ReadAllAsync(ct))
                 {
-                    System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Received envelope for sending");
 
                     if (_establishedConnection?.NetworkStream == null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] NetworkStream is null, breaking");
                         break;
                     }
 
@@ -307,30 +287,24 @@ namespace Client.Core.Network.Worker
 
                         // Signal successful transmission to supervisor
                         PacketSent?.Invoke(this, envelope);
-                        System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Packet sent successfully");
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Exception during send: {ex.GetType().Name}: {ex.Message}");
                         ErrorOccurred?.Invoke(this, ex);
                         break;
                     }
                 }
-                System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Channel reader loop completed");
             }
             catch (OperationCanceledException)
             {
-                System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] OperationCanceledException (expected on shutdown)");
                 // Expected on shutdown
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Unexpected exception: {ex.GetType().Name}: {ex.Message}");
                 ErrorOccurred?.Invoke(this, ex);
             }
             finally
             {
-                System.Diagnostics.Debug.WriteLine($"[SendLoopAsync] Finally block: calling InitiateShutdown");
                 InitiateShutdown();
             }
         }

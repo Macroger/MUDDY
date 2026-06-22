@@ -1,5 +1,6 @@
 ﻿using Client.Core.MessagePipeline;
 using Client.Core.Network.Supervisor;
+using Client.Core.Services.Command;
 using Shared.EventBus;
 using Shared.Logging;
 
@@ -11,6 +12,7 @@ namespace Client.Core.Application
         private readonly FileLogger _fileLogger = null!;
         private readonly ClientNetworkSupervisor _networkSupervisor = null!;
         private readonly MessagePipelineOrchestrator _messagePipeline = null!;
+        private readonly CommandSerializer _commandSerializer = null!;
 
         private bool _disposed = false;
 
@@ -24,7 +26,9 @@ namespace Client.Core.Application
             string logFilePath = LogPathHelper.CreateTimestampedLogPath("client_log");
             _fileLogger = new FileLogger(_eventBus, LogLevel.Debug, logFilePath);
 
-            _networkSupervisor = new ClientNetworkSupervisor(_eventBus);
+            _commandSerializer = new CommandSerializer();
+
+            _networkSupervisor = new ClientNetworkSupervisor(_eventBus, _commandSerializer);
             _messagePipeline = new MessagePipelineOrchestrator(_eventBus);
 
             // Start message processing

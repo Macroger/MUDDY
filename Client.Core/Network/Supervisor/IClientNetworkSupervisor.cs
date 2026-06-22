@@ -32,7 +32,7 @@ namespace Client.Core.Network.Supervisor
         /// Closes the connection to the server and stops the worker.
         /// </summary>
         /// <returns>True if disconnection was successful; otherwise, false.</returns>
-        bool StopConnection();
+        bool StopWorker();
 
         /// <summary>
         /// Sends a message to the server.
