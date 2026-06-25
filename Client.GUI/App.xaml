@@ -5,10 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Client.GUI">
     <Application.Resources>
-        <ResourceDictionary>
+        <ResourceDictionary>            
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
+
+            <FontFamily x:Key="ContentControlThemeFontFamily">Arial</FontFamily>
 
             <!-- Button Styles -->
             <Style x:Key="QuickActionButtonStyle" TargetType="Button">
@@ -19,8 +21,9 @@
                 <Setter Property="Padding" Value="10,8"/>
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
                 <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontFamily" Value="Arial"/>
             </Style>
-
+            
             <Style x:Key="MovementButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="#FF2D2D30"/>
                 <Setter Property="Foreground" Value="#FFE0E0E0"/>
@@ -29,6 +32,7 @@
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
                 <Setter Property="VerticalAlignment" Value="Stretch"/>
                 <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontFamily" Value="Arial"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="MinHeight" Value="45"/>
             </Style>
@@ -41,7 +45,8 @@
                 <Setter Property="Padding" Value="10,8"/>
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
                 <Setter Property="FontSize" Value="14"/>
-            </Style>
+                <Setter Property="FontFamily" Value="Arial"/>
+            </Style>            
         </ResourceDictionary>
     </Application.Resources>
 </Application>

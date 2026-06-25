@@ -9,6 +9,7 @@
 
 <ItemGroup>
   <ProjectReference Include="..\Shared\Shared.csproj" />
+  <None Include="app.manifest" />
 </ItemGroup>
 
 </Project>

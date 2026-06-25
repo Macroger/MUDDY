@@ -24,6 +24,9 @@ namespace Client.GUI
         private readonly List<string> _commandHistory = new();
         private int _historyIndex = -1;
 
+        private bool _isDragging = false;
+        private Windows.Foundation.Point _dragStartPoint;
+
         private readonly List<ISubscriptionToken> _subscriptions = new();
 
         public MainWindow(IEventBus eventBus)
@@ -50,15 +53,6 @@ namespace Client.GUI
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_isConnected)
-            {
-                _eventBus.Publish(
-                    EventMessageType.Gui,
-                    new ClientGuiEvents.Errors.GuiError("Already connected to server.", null));
-                AppendGameOutput("Already connected to server.", "#FFFF6B6B");
-                return;
-            }
-
             // Validate input
             string address = ServerAddressBox.Text;
             if (!int.TryParse(ServerPortBox.Text, out int port))
@@ -207,21 +201,143 @@ namespace Client.GUI
             AppendGameOutput("Settings panel not yet implemented.", "#FFAAAAAA");
         }
 
+        /// <summary>
+        /// Toggles the connection widget dropdown on/off.
+        /// </summary>
+        private void ToggleConnectionWidget_Click(object sender, RoutedEventArgs e)
+        {
+            // Toggle visibility of the entire container (backdrop + widget)
+            ConnectionWidgetContainer.Visibility =
+                ConnectionWidgetContainer.Visibility == Visibility.Visible
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+
+            // Reset position to center when opening
+            if (ConnectionWidgetContainer.Visibility == Visibility.Visible)
+            {
+                // Defer centering until layout is complete
+                ConnectionWidgetContainer.Loaded -= OnConnectionWidgetContainerLoaded;
+                ConnectionWidgetContainer.Loaded += OnConnectionWidgetContainerLoaded;
+            }
+        }
+
+        /// <summary>
+        /// Placeholder for About dialog.
+        /// </summary>
+        private void AboutButton_Click(object sender, RoutedEventArgs e)
+        {
+            AppendGameOutput("MUDDY v0.2 - Multi User Dungeon for Dynamic Learning.", "#FFDAA520");
+        }
+
+        /// <summary>
+        /// Closes the connection widget when clicking the backdrop.
+        /// </summary>
+        private void ConnectionBackdrop_Click(object sender, PointerRoutedEventArgs e)
+        {
+            ConnectionWidgetContainer.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Resets the widget to a centered position.
+        /// </summary>
+        private void ResetWidgetPosition()
+        {
+            // Center the widget horizontally
+            var containerWidth = ConnectionWidgetContainer.ActualWidth;
+            var widgetWidth = 420.0; // Match the Border Width
+            var leftMargin = (containerWidth - widgetWidth) / 2;
+
+            ConnectionBarOverlay.Margin = new Thickness(leftMargin, 20, 0, 0);
+        }
+
+        /// <summary>
+        /// Starts dragging the connection widget when the title bar is pressed.
+        /// </summary>
+        private void TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            var border = sender as Border;
+            if (border != null)
+            {
+                _isDragging = true;
+                _dragStartPoint = e.GetCurrentPoint(ConnectionWidgetContainer).Position;
+                border.CapturePointer(e.Pointer);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Moves the connection widget while dragging.
+        /// </summary>
+        private void TitleBar_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (_isDragging)
+            {
+                var currentPoint = e.GetCurrentPoint(ConnectionWidgetContainer).Position;
+                var deltaX = currentPoint.X - _dragStartPoint.X;
+                var deltaY = currentPoint.Y - _dragStartPoint.Y;
+
+                var currentMargin = ConnectionBarOverlay.Margin;
+                var newLeft = currentMargin.Left + deltaX;
+                var newTop = currentMargin.Top + deltaY;
+
+                // Constrain to parent container bounds
+                var containerWidth = ConnectionWidgetContainer.ActualWidth;
+                var containerHeight = ConnectionWidgetContainer.ActualHeight;
+                var widgetWidth = 420.0; // Match the Border Width in XAML
+                var widgetHeight = 300.0; // Approximate height (adjust if needed)
+
+                // Keep widget within bounds
+                newLeft = Math.Max(0, Math.Min(newLeft, containerWidth - widgetWidth));
+                newTop = Math.Max(0, Math.Min(newTop, containerHeight - widgetHeight));
+
+                ConnectionBarOverlay.Margin = new Thickness(newLeft, newTop, 0, 0);
+
+                // Update drag start point for next move
+                _dragStartPoint = currentPoint;
+
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Stops dragging the connection widget.
+        /// </summary>
+        private void TitleBar_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            if (_isDragging)
+            {
+                _isDragging = false;
+                var border = sender as Border;
+                border?.ReleasePointerCapture(e.Pointer);
+                e.Handled = true;
+            }
+        }
+
         private void UpdateConnectionStatus(bool connected)
         {
             DispatcherQueue.TryEnqueue(() =>
             {
                 if (connected)
                 {
-                    ConnectionStatusText.Text = "Connected";
+                    // Update title bar status
+                    ConnectionStatusIndicator.Fill = new SolidColorBrush(Microsoft.UI.Colors.LightGreen);
+                    ConnectionStatusText.Text = $"Connected: {ServerAddressBox.Text}:{ServerPortBox.Text}";
                     ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.LightGreen);
-                    ConnectButton.IsEnabled = false;
+
+                    // Update button visibility
+                    ConnectButton.Visibility = Visibility.Collapsed;
+                    DisconnectButton.Visibility = Visibility.Visible;
                 }
                 else
                 {
+                    // Update title bar status
+                    ConnectionStatusIndicator.Fill = new SolidColorBrush(Microsoft.UI.Colors.Red);
                     ConnectionStatusText.Text = "Disconnected";
-                    ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.OrangeRed);
-                    ConnectButton.IsEnabled = true;
+                    ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Red);
+
+                    // Update button visibility
+                    ConnectButton.Visibility = Visibility.Visible;
+                    DisconnectButton.Visibility = Visibility.Collapsed;
                 }
             });
         }
@@ -312,12 +428,23 @@ namespace Client.GUI
             ));
         }
 
+        /// <summary>
+        /// Centers the connection widget after the container has completed layout.
+        /// </summary>
+        private void OnConnectionWidgetContainerLoaded(object sender, RoutedEventArgs e)
+        {
+            // Unsubscribe to prevent multiple calls
+            ConnectionWidgetContainer.Loaded -= OnConnectionWidgetContainerLoaded;
+            ResetWidgetPosition();
+        }
+
         private void OnConnectionStatusChanged(ClientNetworkEvents.Lifecycle.ConnectionStatusChangedEvent evnt)
         {
+            _isConnected = evnt.ConnectionStatus;
+            UpdateConnectionStatus(evnt.ConnectionStatus);
+
             DispatcherQueue.TryEnqueue(() =>
-            {
-                _isConnected = evnt.ConnectionStatus;
-                UpdateConnectionStatus(evnt.ConnectionStatus);
+            {                
                 AppendGameOutput(evnt.Message, evnt.ConnectionStatus ? "#FF6BCF7F" : "#FFDAA520");
             });
         }
@@ -438,5 +565,7 @@ namespace Client.GUI
                 AppendGameOutput($"[System] {systemMessage}", "#FFDAA520"); // Gold/orange for system
             });
         }
+
+
     }
 }

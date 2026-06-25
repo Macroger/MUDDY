@@ -11,113 +11,334 @@
 
     <Grid Background="#FF1A1A1A">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="56"/>
+            <!-- Custom title bar -->
             <RowDefinition Height="*"/>
+            <!-- Main content -->
         </Grid.RowDefinitions>
 
-        <!-- Connection Bar -->
-        <Grid Grid.Row="0" Background="#FF2D2D30" Padding="10" BorderBrush="#FF3E3E42" BorderThickness="0,0,0,1">
+        <!-- Custom Title Bar -->
+        <Grid Grid.Row="0" 
+              Background="#FF252526" 
+              BorderBrush="#FF3E3E42" 
+              BorderThickness="0,0,0,1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="100"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="Server:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#FFCCCCCC"/>
-            <TextBox x:Name="ServerAddressBox" Grid.Column="1" Text="127.0.0.1" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <!-- Left: App branding -->
+            <StackPanel Grid.Column="0" 
+                        Orientation="Horizontal" 
+                        VerticalAlignment="Center"
+                        Margin="16,0,0,0">
+                <TextBlock Text="MUDDY - v0.2" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           Foreground="#FFDAA520"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
 
-            <TextBlock Grid.Column="2" Text="Port:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#FFCCCCCC"/>
-            <TextBox x:Name="ServerPortBox" Grid.Column="3" Text="30333" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <!-- Center: Connection status (clickable) -->
+            <StackPanel Grid.Column="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Orientation="Horizontal" 
+            Spacing="8">
+                <Ellipse x:Name="ConnectionStatusIndicator"
+             Width="10" 
+             Height="10" 
+             Fill="#FFFF6B6B"
+             VerticalAlignment="Center"/>
+                <TextBlock x:Name="ConnectionStatusText"
+               Text="Disconnected"
+               FontSize="12"
+               Foreground="#FFAAAAAA"
+               VerticalAlignment="Center"/>
+            </StackPanel>
 
-            <Button x:Name="ConnectButton" Grid.Column="5" Content="Connect" Click="ConnectButton_Click" 
-                    Background="#FF0E639C" Foreground="White" Padding="20,6" Margin="5,0,0,0"/>
+            <!-- Right: Settings and More -->
+            <StackPanel Grid.Column="2" 
+                        Orientation="Horizontal" 
+                        Spacing="12"
+                        VerticalAlignment="Center"
+                        Margin="0,0,20,0">
+
+                <!-- Settings button -->
+                <Button x:Name="SettingsTitleBarButton"
+            Click="ToggleConnectionWidget_Click"
+            ToolTipService.ToolTip="Connection Settings"
+            Background="Transparent"
+            BorderThickness="0"
+            Padding="12,10"
+            CornerRadius="4">
+                    <TextBlock Text="⚙" 
+                   FontSize="18"
+                   Foreground="#FFDDDDDD"/>
+                    <Button.Resources>
+                        <ResourceDictionary>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FF3E3E42"/>
+                        </ResourceDictionary>
+                    </Button.Resources>
+                </Button>
+
+                <!-- More menu button -->
+                <Button x:Name="MoreMenuButton"
+            ToolTipService.ToolTip="More options"
+            Background="Transparent"
+            BorderThickness="0"
+            Padding="12,10"
+            CornerRadius="4">
+                    <TextBlock Text="⋯" 
+                   FontSize="18"
+                   Foreground="#FFDDDDDD"/>
+                    <Button.Resources>
+                        <ResourceDictionary>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FF3E3E42"/>
+                        </ResourceDictionary>
+                    </Button.Resources>
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuFlyoutItem Text="Clear Output" Click="ClearOutputButton_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE74D;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Text="Disconnect" Click="DisconnectButton_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE10A;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Text="About" Click="AboutButton_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE946;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- Main Game Area -->
         <Grid Grid.Row="1" Padding="15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left Panel - Quick Actions -->
-            <Border Grid.Column="0" Background="#FF252526" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                    CornerRadius="4" Padding="10" Margin="0,0,10,0">
-                <StackPanel>
-                    <!-- Quick Actions Header -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,-10,-10,10" CornerRadius="2,2,0,0">
-                        <TextBlock Text="Quick Actions" FontSize="16" FontWeight="SemiBold" Foreground="#FFDAA520"/>
+            <!-- Left Panel - Character Info -->
+            <ScrollViewer Grid.Column="0" 
+              VerticalScrollBarVisibility="Auto"
+              Margin="0,0,10,0">
+
+                <StackPanel Spacing="0">
+
+                    <!-- Character Portrait Header (Fixed Anchor) -->
+                    <Border Background="#FF2B2B2B"
+                BorderBrush="#FF404040"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16"
+                Margin="0,0,0,12">
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Character Avatar -->
+                            <Border Grid.Column="0"
+                    Width="56"
+                    Height="56"
+                    CornerRadius="28"
+                    Background="#FF3E3E42"
+                    BorderBrush="#FFDAA520"
+                    BorderThickness="2"
+                    VerticalAlignment="Center">
+
+                                <TextBlock Text="🎭"
+                       FontSize="28"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Character Info -->
+                            <StackPanel Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Spacing="4">
+                                <TextBlock Text="Adventurer"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="#FFEEEEEE"/>
+                                <TextBlock Text="Level 5 Warrior"
+                       FontSize="12"
+                       Foreground="#FFAAAAAA"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                    <TextBlock Text="⚔️" FontSize="11"/>
+                                    <TextBlock Text="HP:"
+                           FontSize="11"
+                           Foreground="#FFAAAAAA"/>
+                                    <TextBlock Text="75/100"
+                           FontSize="11"
+                           Foreground="#FF4CAF50"
+                           FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
                     </Border>
 
-                    <!-- Quick Command Buttons -->
-                    <Button Content="Look" Click="QuickCommand_Click" Tag="look" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Inventory" Click="QuickCommand_Click" Tag="inventory" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Who" Click="QuickCommand_Click" Tag="who" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Help" Click="QuickCommand_Click" Tag="help" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
+                    <StackPanel Spacing="8">
 
-                    <!-- Spacer -->
-                    <Rectangle Height="20" Fill="Transparent"/>
+                        <!-- CHAR Section -->
+                        <Expander IsExpanded="True"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE77B;" 
+                              FontSize="16" 
+                              Foreground="#FFDAA520"/>
+                                    <TextBlock Text="CHAR" 
+                               FontSize="14" 
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
 
-                    <!-- Movement Buttons -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,0,-10,10" CornerRadius="2">
-                        <TextBlock Text="Movement" FontSize="16" FontWeight="SemiBold" Foreground="#FFDAA520"/>
-                    </Border>
+                            <StackPanel Spacing="8" Padding="8">
+                                <TextBlock Text="HP" 
+                           FontSize="12" 
+                           Foreground="#FFAAAAAA"/>
+                                <ProgressBar Value="75" 
+                             Maximum="100" 
+                             Height="20"
+                             Foreground="#FF4CAF50"
+                             Background="#FF2D2D30"/>
+                                <TextBlock Text="75 / 100" 
+                           FontSize="11" 
+                           Foreground="#FFAAAAAA"
+                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Expander>
 
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                        <!-- STATS Section -->
+                        <Expander IsExpanded="False"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE9D9;" 
+                              FontSize="16" 
+                              Foreground="#FFDAA520"/>
+                                    <TextBlock Text="STATS" 
+                               FontSize="14" 
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
 
-                        <!-- NW, N, NE -->
-                        <Button Grid.Row="0" Grid.Column="0" Content="NW" Click="MovementButton_Click" Tag="northwest" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="0" Grid.Column="1" Content="N" Click="MovementButton_Click" Tag="north" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="0" Grid.Column="2" Content="NE" Click="MovementButton_Click" Tag="northeast" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
+                            <StackPanel Spacing="6" Padding="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Strength" FontSize="12" Foreground="#FFAAAAAA"/>
+                                    <TextBlock Grid.Column="1" Text="10" FontSize="12" Foreground="#FFEEEEEE"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Dexterity" FontSize="12" Foreground="#FFAAAAAA"/>
+                                    <TextBlock Grid.Column="1" Text="12" FontSize="12" Foreground="#FFEEEEEE"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Constitution" FontSize="12" Foreground="#FFAAAAAA"/>
+                                    <TextBlock Grid.Column="1" Text="14" FontSize="12" Foreground="#FFEEEEEE"/>
+                                </Grid>
+                                <TextBlock Text="(Placeholder data)" 
+                           FontSize="10" 
+                           Foreground="#FF666666"
+                           FontStyle="Italic"
+                           Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Expander>
 
-                        <!-- W, -, E -->
-                        <Button Grid.Row="1" Grid.Column="0" Content="W" Click="MovementButton_Click" Tag="west" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="1" Grid.Column="1" Content="Look" Click="QuickCommand_Click" Tag="look" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2" FontSize="10"/>
-                        <Button Grid.Row="1" Grid.Column="2" Content="E" Click="MovementButton_Click" Tag="east" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
+                        <!-- INV Section -->
+                        <Expander IsExpanded="False"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7C5;" 
+                              FontSize="16" 
+                              Foreground="#FFDAA520"/>
+                                    <TextBlock Text="INV" 
+                               FontSize="14" 
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
 
-                        <!-- SW, S, SE -->
-                        <Button Grid.Row="2" Grid.Column="0" Content="SW" Click="MovementButton_Click" Tag="southwest" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="2" Grid.Column="1" Content="S" Click="MovementButton_Click" Tag="south" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="2" Grid.Column="2" Content="SE" Click="MovementButton_Click" Tag="southeast" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                    </Grid>
+                            <StackPanel Spacing="4" Padding="8">
+                                <TextBlock Text="• Rusty Sword" 
+                           FontSize="12" 
+                           Foreground="#FFAAAAAA"/>
+                                <TextBlock Text="• Health Potion (3)" 
+                           FontSize="12" 
+                           Foreground="#FFAAAAAA"/>
+                                <TextBlock Text="• Gold Coins (50)" 
+                           FontSize="12" 
+                           Foreground="#FFAAAAAA"/>
+                                <TextBlock Text="(Placeholder data)" 
+                           FontSize="10" 
+                           Foreground="#FF666666"
+                           FontStyle="Italic"
+                           Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Expander>
 
-                    <Rectangle Height="10" Fill="Transparent"/>
+                        <!-- FX Section -->
+                        <Expander IsExpanded="False"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE734;" 
+                              FontSize="16" 
+                              Foreground="#FFDAA520"/>
+                                    <TextBlock Text="FX" 
+                               FontSize="14" 
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
 
-                    <!-- Up/Down -->
-                    <Button Content="Up" Click="MovementButton_Click" Tag="up" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Down" Click="MovementButton_Click" Tag="down" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
+                            <StackPanel Spacing="4" Padding="8">
+                                <TextBlock Text="No active effects" 
+                           FontSize="12" 
+                           Foreground="#FF666666"
+                           FontStyle="Italic"/>
+                            </StackPanel>
+                        </Expander>
+
+                    </StackPanel>
                 </StackPanel>
-            </Border>
-
+            </ScrollViewer>
+            
             <!-- Center Panel - Game Output and Input -->
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
@@ -127,14 +348,14 @@
 
                 <!-- Game Output ScrollViewer -->
                 <Border Grid.Row="0" Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                        CornerRadius="4" Padding="0" Margin="0,0,0,10">
+                    CornerRadius="4" Padding="0" Margin="0,0,0,10">
                     <ScrollViewer x:Name="GameOutputScroller" VerticalScrollBarVisibility="Auto">
                         <RichTextBlock x:Name="GameOutputTextBlock" 
-                                       Padding="15"
-                                       TextWrapping="Wrap"
-                                       FontFamily="Consolas"
-                                       FontSize="14"
-                                       Foreground="#FFE0E0E0">
+                                    Padding="15"
+                                    TextWrapping="Wrap"
+                                    FontFamily="Cascadia Code"
+                                    FontSize="16"
+                                    Foreground="#FFE0E0E0">
                             <Paragraph>
                                 <Run Text="Welcome to the MUD Client!" FontWeight="Bold" Foreground="#FFDAA520"/>
                             </Paragraph>
@@ -153,33 +374,33 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBox x:Name="CommandInputBox" 
-                             Grid.Column="0"
-                             PlaceholderText="Type your command here..."
-                             Background="#FF2D2D30"
-                             Foreground="#FFE0E0E0"
-                             BorderBrush="#FF3E3E42"
-                             BorderThickness="2"
-                             Padding="10"
-                             FontFamily="Consolas"
-                             FontSize="14"
-                             KeyDown="CommandInputBox_KeyDown"
-                             Margin="0,0,10,0"/>
+                            Grid.Column="0"
+                            PlaceholderText="Type your command here..."
+                            Background="#FF2D2D30"
+                            Foreground="#FFE0E0E0"
+                            BorderBrush="#FF3E3E42"
+                            BorderThickness="2"
+                            Padding="10"
+                            FontFamily="Consolas"
+                            FontSize="14"
+                            KeyDown="CommandInputBox_KeyDown"
+                            Margin="0,0,10,0"/>
 
                     <Button x:Name="SendButton" 
-                            Grid.Column="1"
-                            Content="Send"
-                            Click="SendButton_Click"
-                            Background="#FF0E639C"
-                            Foreground="White"
-                            Padding="25,10"
-                            FontSize="14"
-                            FontWeight="SemiBold"/>
+                        Grid.Column="1"
+                        Content="Send"
+                        Click="SendButton_Click"
+                        Background="#FF0E639C"
+                        Foreground="White"
+                        Padding="25,10"
+                        FontSize="14"
+                        FontWeight="SemiBold"/>
                 </Grid>
             </Grid>
 
             <!-- Right Panel - Map and System Options -->
             <Border Grid.Column="2" Background="#FF252526" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                    CornerRadius="4" Padding="10" Margin="10,0,0,0">
+                CornerRadius="4" Padding="10" Margin="10,0,0,0">
                 <StackPanel>
                     <!-- Map Header -->
                     <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,-10,-10,10" CornerRadius="2,2,0,0">
@@ -188,13 +409,12 @@
 
                     <!-- Map Display Area -->
                     <Border Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="1" 
-                            Height="200" Margin="0,0,0,20" CornerRadius="2">
+                        Height="200" Margin="0,0,0,20" CornerRadius="2">
                         <Canvas x:Name="MapCanvas">
-                            <!-- Map grid will be drawn here programmatically -->
                             <TextBlock Text="Map not available" 
-                                       Canvas.Left="60" Canvas.Top="90"
-                                       Foreground="#FF666666" 
-                                       FontSize="12"/>
+                                    Canvas.Left="60" Canvas.Top="90"
+                                    Foreground="#FF666666" 
+                                    FontSize="12"/>
                         </Canvas>
                     </Border>
 
@@ -205,28 +425,182 @@
 
                     <!-- System Buttons -->
                     <Button Content="Settings" Click="SettingsButton_Click" 
-                            Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
+                        Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
                     <Button Content="Clear Output" Click="ClearOutputButton_Click" 
-                            Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
-                    <Button Content="Disconnect" Click="DisconnectButton_Click" 
-                            Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
-
-                    <!-- Spacer -->
-                    <Rectangle Height="20" Fill="Transparent"/>
-
-                    <!-- Connection Status -->
-                    <Border Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="1" 
-                            Padding="10" CornerRadius="2">
-                        <StackPanel>
-                            <TextBlock Text="Status" FontWeight="SemiBold" Foreground="#FFAAAAAA" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="ConnectionStatusText" 
-                                       Text="Disconnected" 
-                                       Foreground="#FFFF6B6B"
-                                       FontSize="12"/>
-                        </StackPanel>
-                    </Border>
+                        Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
                 </StackPanel>
             </Border>
+        </Grid>
+
+        <!-- Connection Widget Overlay Container -->
+        <Grid x:Name="ConnectionWidgetContainer"
+              Grid.Row="1"
+              Visibility="Collapsed">
+
+            <!-- Full-screen semi-transparent backdrop -->
+            <Rectangle Fill="#40000000"
+                PointerPressed="ConnectionBackdrop_Click"/>
+
+            <!-- Draggable connection widget -->
+            <Grid x:Name="ConnectionBarOverlay"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              Margin="0,20,0,0">
+
+                <!-- Floating window panel -->
+                <Border Background="#FF2B2B2B"
+                BorderBrush="#FF404040"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="0"
+                Width="420"
+                Margin="0,20,0,0"
+                Translation="0,0,64">
+
+                    <Border.Shadow>
+                        <ThemeShadow />
+                    </Border.Shadow>
+
+                    <Border.BackgroundTransition>
+                        <BrushTransition />
+                    </Border.BackgroundTransition>
+
+                    <!-- Inner highlight border for depth -->
+                    <Border BorderBrush="#20FFFFFF"
+                    BorderThickness="1"
+                    CornerRadius="12">
+
+                        <Grid>
+                            <!-- Title bar with close button -->
+                            <Border Background="#FF323233"
+                            CornerRadius="12,12,0,0"
+                            Height="40"
+                            VerticalAlignment="Top"
+                            PointerPressed="TitleBar_PointerPressed"
+                            PointerMoved="TitleBar_PointerMoved"
+                            PointerReleased="TitleBar_PointerReleased">
+
+                                <Grid>
+                                    <TextBlock Text="Connection Settings"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#FFEEEEEE"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   IsHitTestVisible="False"/>
+
+                                    <Button Content="&#xE10A;" 
+                                    Click="ToggleConnectionWidget_Click"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    Foreground="#FFAAAAAA"
+                                    BorderThickness="0"
+                                    ToolTipService.ToolTip="Close"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    FontSize="10"
+                                    Width="40"
+                                    Height="40"
+                                    Padding="0"
+                                    Margin="0,0,0,0">
+                                        <Button.Resources>
+                                            <ResourceDictionary>
+                                                <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#30FFFFFF"/>
+                                                <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White"/>
+                                            </ResourceDictionary>
+                                        </Button.Resources>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- Content area -->
+                            <StackPanel Margin="0,40,0,0"
+                            Padding="32,24,32,32"
+                            Spacing="20">
+
+                                <!-- Input fields -->
+                                <StackPanel Spacing="16">
+
+                                    <!-- Server input -->
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Server Address:" 
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FFB0B0B0"
+                                               HorizontalAlignment="Center"/>
+                                        <TextBox x:Name="ServerAddressBox" 
+                                             Text="127.0.0.1"
+                                             PlaceholderText="Enter server address"
+                                             Height="36"
+                                             Width="150"
+                                             TextAlignment="Center"
+                                             HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+
+                                    <!-- Port input -->
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Port:" 
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FFB0B0B0"
+                                               HorizontalAlignment="Center"/>
+                                        <TextBox x:Name="ServerPortBox" 
+                                             Text="30333"
+                                             PlaceholderText="Enter port"
+                                             Height="36"
+                                             Width="150"
+                                             TextAlignment="Center"
+                                             HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Action buttons -->
+                                <StackPanel Orientation="Horizontal" 
+                                        Spacing="12"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,8,0,0">
+
+                                    <Button x:Name="ConnectButton" 
+                                        Content="Connect" 
+                                        Click="ConnectButton_Click"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Height="40"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        MinWidth="160"
+                                        Padding="24,0">
+                                        <Button.Resources>
+                                            <ResourceDictionary>
+                                                <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+                                            </ResourceDictionary>
+                                        </Button.Resources>
+                                    </Button>
+
+                                    <Button x:Name="DisconnectButton" 
+                                        Content="Disconnect" 
+                                        Click="DisconnectButton_Click" 
+                                        Visibility="Collapsed"
+                                        Height="40"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        MinWidth="160"
+                                        Padding="24,0">
+                                        <Button.Resources>
+                                            <ResourceDictionary>
+                                                <SolidColorBrush x:Key="ButtonBackground" Color="#C42B1C"/>
+                                                <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#A52412"/>
+                                                <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#8A1F0F"/>
+                                                <SolidColorBrush x:Key="ButtonForeground" Color="White"/>
+                                                <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+                                            </ResourceDictionary>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
