@@ -67,12 +67,12 @@
 
                 <!-- Settings button -->
                 <Button x:Name="SettingsTitleBarButton"
-            Click="ToggleConnectionWidget_Click"
-            ToolTipService.ToolTip="Connection Settings"
-            Background="Transparent"
-            BorderThickness="0"
-            Padding="12,10"
-            CornerRadius="4">
+                    Click="ToggleConnectionWidget_Click"
+                    ToolTipService.ToolTip="Connection Settings"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="12,10"
+                    CornerRadius="4">
                     <TextBlock Text="⚙" 
                    FontSize="18"
                    Foreground="#FFDDDDDD"/>
@@ -85,11 +85,11 @@
 
                 <!-- More menu button -->
                 <Button x:Name="MoreMenuButton"
-            ToolTipService.ToolTip="More options"
-            Background="Transparent"
-            BorderThickness="0"
-            Padding="12,10"
-            CornerRadius="4">
+                    ToolTipService.ToolTip="More options"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="12,10"
+                    CornerRadius="4">
                     <TextBlock Text="⋯" 
                    FontSize="18"
                    Foreground="#FFDDDDDD"/>
@@ -126,25 +126,26 @@
         <!-- Main Game Area -->
         <Grid Grid.Row="1" Padding="15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="300" x:Name="LeftPanelColumn" />     <!-- Start collapsed -->
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="300" x:Name="RightPanelColumn"/>     <!-- Start collapsed -->
             </Grid.ColumnDefinitions>
 
             <!-- Left Panel - Character Info -->
             <ScrollViewer Grid.Column="0" 
-              VerticalScrollBarVisibility="Auto"
-              Margin="0,0,10,0">
+                VerticalScrollBarVisibility="Auto"
+                x:Name="LeftPanelScroller"
+                Margin="0,0,10,0">
 
                 <StackPanel Spacing="0">
 
                     <!-- Character Portrait Header (Fixed Anchor) -->
                     <Border Background="#FF2B2B2B"
-                BorderBrush="#FF404040"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="16"
-                Margin="0,0,0,12">
+                        BorderBrush="#FF404040"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16"
+                        Margin="0,0,0,12">
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -154,18 +155,18 @@
 
                             <!-- Character Avatar -->
                             <Border Grid.Column="0"
-                    Width="56"
-                    Height="56"
-                    CornerRadius="28"
-                    Background="#FF3E3E42"
-                    BorderBrush="#FFDAA520"
-                    BorderThickness="2"
-                    VerticalAlignment="Center">
+                                Width="56"
+                                Height="56"
+                                CornerRadius="28"
+                                Background="#FF3E3E42"
+                                BorderBrush="#FFDAA520"
+                                BorderThickness="2"
+                                VerticalAlignment="Center">
 
                                 <TextBlock Text="🎭"
-                       FontSize="28"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
+                                   FontSize="28"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
                             </Border>
 
                             <!-- Character Info -->
@@ -398,38 +399,243 @@
                 </Grid>
             </Grid>
 
-            <!-- Right Panel - Map and System Options -->
+            <!-- Right Panel - World View -->
             <Border Grid.Column="2" Background="#FF252526" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                CornerRadius="4" Padding="10" Margin="10,0,0,0">
-                <StackPanel>
-                    <!-- Map Header -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,-10,-10,10" CornerRadius="2,2,0,0">
-                        <TextBlock Text="Map" FontSize="16" FontWeight="SemiBold" Foreground="#FF6495ED"/>
-                    </Border>
+                CornerRadius="4" Padding="0" Margin="10,0,0,0">
+                
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                
+                    <StackPanel Spacing="8">
+                        <!-- Location Header (Fixed Anchor) -->
+                        <Border Background="#FF2B2B2B"
+                            BorderBrush="#FF404040"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="16"
+                            Margin="0,0,0,12">
 
-                    <!-- Map Display Area -->
-                    <Border Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="1" 
-                        Height="200" Margin="0,0,0,20" CornerRadius="2">
-                        <Canvas x:Name="MapCanvas">
-                            <TextBlock Text="Map not available" 
-                                    Canvas.Left="60" Canvas.Top="90"
-                                    Foreground="#FF666666" 
-                                    FontSize="12"/>
-                        </Canvas>
-                    </Border>
+                            <StackPanel Spacing="4">
+                                <!-- Location Icon + Title -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE707;" 
+                                        FontSize="20" 
+                                        Foreground="#FFDAA520"
+                                        VerticalAlignment="Center"/>
+                                    <TextBlock Text="LOCATION"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="#FFAAAAAA"
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
 
-                    <!-- System Options Header -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,0,-10,10" CornerRadius="2">
-                        <TextBlock Text="System Options" FontSize="16" FontWeight="SemiBold" Foreground="#FFDAA520"/>
-                    </Border>
+                                <!-- Room Name (Dynamic) -->
+                                <TextBlock x:Name="CurrentRoomNameText"
+                                    Text="Unknown Location"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="#FFEEEEEE"
+                                    Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
 
-                    <!-- System Buttons -->
-                    <Button Content="Settings" Click="SettingsButton_Click" 
-                        Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
-                    <Button Content="Clear Output" Click="ClearOutputButton_Click" 
-                        Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
-                </StackPanel>
+                        <!-- MAP Section -->
+                        <Expander IsExpanded="True"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE707;" 
+                                        FontSize="16" 
+                                        Foreground="#FFDAA520"/>
+                                    <TextBlock Text="MAP" 
+                                        FontSize="14" 
+                                        FontWeight="SemiBold"
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <!-- Map Canvas Content -->
+                            <Border Background="#FF1E1E1E" 
+                                BorderBrush="#FF3E3E42" 
+                                BorderThickness="1" 
+                                Height="200" 
+                                CornerRadius="4"
+                                Margin="8">
+                                <Canvas x:Name="MapCanvas">
+                                    <TextBlock Text="Map not available" 
+                                        Canvas.Left="60" 
+                                        Canvas.Top="90"
+                                        Foreground="#FF666666" 
+                                        FontSize="12"/>
+                                </Canvas>
+                            </Border>
+                        </Expander>
+
+
+                        <!-- NEARBY Section -->
+                        <Expander IsExpanded="True"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE716;" 
+                                        FontSize="16" 
+                                        Foreground="#FFDAA520"/>
+                                    <TextBlock Text="NEARBY" 
+                                        FontSize="14" 
+                                        FontWeight="SemiBold"
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <!-- Nearby Entities List -->
+                            <StackPanel Spacing="4" Padding="8">
+                                <!-- Placeholder entities - will be replaced with dynamic content later -->
+
+                                <!-- NPC Example -->
+                                <Border Background="#FF1E1E1E"
+                                    BorderBrush="#FF3E3E42"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="8"
+                                    PointerEntered="NearbyEntity_PointerEntered"
+                                    PointerExited="NearbyEntity_PointerExited">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="⚔️" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Goblin Scout" 
+                                            FontSize="12" 
+                                            Foreground="#FFEEEEEE"
+                                            VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Player Example -->
+                                <Border Background="#FF1E1E1E"
+                                    BorderBrush="#FF3E3E42"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="8"
+                                    PointerEntered="NearbyEntity_PointerEntered"
+                                    PointerExited="NearbyEntity_PointerExited">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="👤" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Text="TravelingMerchant" 
+                                            FontSize="12" 
+                                            Foreground="#FFEEEEEE"
+                                            VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Object Example -->
+                                <Border Background="#FF1E1E1E"
+                                    BorderBrush="#FF3E3E42"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="8"
+                                    PointerEntered="NearbyEntity_PointerEntered"
+                                    PointerExited="NearbyEntity_PointerExited">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="📦" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Wooden Chest" 
+                                            FontSize="12" 
+                                            Foreground="#FFEEEEEE"
+                                            VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Empty state placeholder -->
+                                <!-- This will be shown when no entities are nearby
+                                <TextBlock Text="No entities nearby" 
+                                    FontSize="12" 
+                                    Foreground="#FF666666"
+                                    Margin="8"
+                                    HorizontalAlignment="Center"/>
+                                -->
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- TARGET Section -->
+                        <Expander IsExpanded="False"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE1D3;" 
+                                        FontSize="16" 
+                                        Foreground="#FFDAA520"/>
+                                    <TextBlock x:Name="TargetHeaderText"
+                                        Text="TARGET • No target selected" 
+                                        FontSize="14" 
+                                        FontWeight="SemiBold"
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <!-- Target Details (when expanded) -->
+                            <StackPanel Spacing="8" Padding="8">
+                                <!-- Target Name -->
+                                <TextBlock x:Name="TargetNameText"
+                                    Text="No target selected"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="#FFEEEEEE"/>
+
+                                <!-- Target Level and Status -->
+                                <TextBlock x:Name="TargetInfoText"
+                                    Text=""
+                                    FontSize="12"
+                                    Foreground="#FFAAAAAA"/>
+
+                                <!-- HP Progress Bar -->
+                                <StackPanel x:Name="TargetHPContainer" 
+                                    Spacing="4"
+                                    Visibility="Collapsed">
+                                    <TextBlock Text="HP" 
+                                        FontSize="11" 
+                                        Foreground="#FFAAAAAA"/>
+                                    <ProgressBar x:Name="TargetHPBar"
+                                        Value="0" 
+                                        Maximum="100" 
+                                        Height="18"
+                                        Foreground="#FFFF6B6B"
+                                        Background="#FF2D2D30"/>
+                                    <TextBlock x:Name="TargetHPText"
+                                        Text="0 / 0" 
+                                        FontSize="11" 
+                                        Foreground="#FFAAAAAA"
+                                        HorizontalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Warning/Status Messages -->
+                                <Border x:Name="TargetWarningContainer"
+                                    Background="#40FF6B6B"
+                                    BorderBrush="#FFFF6B6B"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="8"
+                                    Margin="0,4,0,0"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="⚠️" 
+                                            FontSize="14" 
+                                            VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="TargetWarningText"
+                                            Text="Target not in current room"
+                                            FontSize="11"
+                                            Foreground="#FFEEEEEE"
+                                            TextWrapping="Wrap"
+                                            VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Expander>
+                        
+                        <!-- Add new sections here -->                        
+                        
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
+
         </Grid>
 
         <!-- Connection Widget Overlay Container -->

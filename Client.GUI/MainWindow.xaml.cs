@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using static Client.Core.Infrastructure.Events.AuthenticationEvents.Notifications;
 using static Client.Core.Infrastructure.Events.ClientNetworkEvents.Errors;
 
 namespace Client.GUI
@@ -26,6 +27,28 @@ namespace Client.GUI
 
         private bool _isDragging = false;
         private Windows.Foundation.Point _dragStartPoint;
+
+        // Track login state
+        private bool _isLoggedIn = false;
+
+        /// <summary>
+        /// Gets or sets the login state and triggers panel visibility updates.
+        /// </summary>
+        private bool IsLoggedIn
+        {
+            get => _isLoggedIn;
+            set
+            {
+                if (_isLoggedIn != value)
+                {
+                    _isLoggedIn = value;
+                    OnLoginStateChanged();
+                }
+            }
+        }
+
+
+        private bool _characterPanelVisible = false;
 
         private readonly List<ISubscriptionToken> _subscriptions = new();
 
@@ -230,6 +253,38 @@ namespace Client.GUI
         }
 
         /// <summary>
+        /// Handles pointer entering a nearby entity item to provide hover feedback.
+        /// </summary>
+        /// <param name="sender">The Border element representing the entity.</param>
+        /// <param name="e">Pointer event arguments.</param>
+        private void NearbyEntity_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(
+                    0xFF, 0x3E, 0x3E, 0x42)); // Lighter gray on hover
+                border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(
+                    0xFF, 0xDA, 0xA5, 0x20)); // Gold border on hover
+            }
+        }
+
+        /// <summary>
+        /// Handles pointer exiting a nearby entity item to restore normal appearance.
+        /// </summary>
+        /// <param name="sender">The Border element representing the entity.</param>
+        /// <param name="e">Pointer event arguments.</param>
+        private void NearbyEntity_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(
+                    0xFF, 0x1E, 0x1E, 0x1E)); // Original dark background
+                border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(
+                    0xFF, 0x3E, 0x3E, 0x42)); // Original gray border
+            }
+        }
+
+        /// <summary>
         /// Closes the connection widget when clicking the backdrop.
         /// </summary>
         private void ConnectionBackdrop_Click(object sender, PointerRoutedEventArgs e)
@@ -391,10 +446,10 @@ namespace Client.GUI
                 handler: OnGuiError
             ));
 
-            // Authentication messages (login success/failure, session established)
-            _subscriptions.Add(_eventBus.Subscribe<ClientGuiEvents.Notifications.ReceivedAuthenticationMessage>(
-                eventType: EventMessageType.Gui,
-                handler: OnAuthenticationMessageReceived
+            // Authentication messages - session established
+            _subscriptions.Add(_eventBus.Subscribe<AuthenticationEvents.Notifications.SessionEstablished>(
+                eventType: EventMessageType.Authentication,
+                handler: OnSessionEstablished
             ));
 
             // Binary transfer messages (images, files, etc.)
@@ -464,13 +519,15 @@ namespace Client.GUI
             });
         }
 
-        private void OnAuthenticationMessageReceived(ClientGuiEvents.Notifications.ReceivedAuthenticationMessage evnt)
+        /// <summary>
+        /// Handles session established event by showing game panels.
+        /// </summary>
+        private void OnSessionEstablished(AuthenticationEvents.Notifications.SessionEstablished evnt)
         {
-            // Marshal to UI thread before touching UI
             DispatcherQueue.TryEnqueue(() =>
             {
-                string message = Encoding.UTF8.GetString(evnt.envelope.Payload);
-                AppendGameOutput(message, "#FF6BCF7F"); // Green for success
+                IsLoggedIn = true;
+                AppendGameOutput($"Session established: {evnt.id}", "#FF6BCF7F");
             });
         }
 
@@ -565,6 +622,39 @@ namespace Client.GUI
                 AppendGameOutput($"[System] {systemMessage}", "#FFDAA520"); // Gold/orange for system
             });
         }
+
+        /// <summary>
+        /// Handles login state changes by showing/hiding game panels.
+        /// </summary>
+        private void OnLoginStateChanged()
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (IsLoggedIn)
+                {
+                    // Show panels on login
+                    LeftPanelScroller.Visibility = Visibility.Visible;
+                    LeftPanelColumn.Width = new GridLength(280);
+
+                    //RightPanelContainer.Visibility = Visibility.Visible;
+                    //RightPanelColumn.Width = new GridLength(300);
+
+                    _characterPanelVisible = true;
+                }
+                else
+                {
+                    // Hide panels on logout/disconnect
+                    LeftPanelScroller.Visibility = Visibility.Collapsed;
+                    LeftPanelColumn.Width = new GridLength(0);
+
+                    //RightPanelContainer.Visibility = Visibility.Collapsed;
+                    //RightPanelColumn.Width = new GridLength(0);
+
+                    _characterPanelVisible = false;
+                }
+            });
+        }
+
 
 
     }

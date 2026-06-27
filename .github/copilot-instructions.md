@@ -205,6 +205,39 @@ Do **not** include an author field — authorship is tracked by Git.
 
 Omit `@details` when there is nothing non-obvious to say — do not pad it with information already clear from the class name or summary.
 
+## Commit Messages
+
+When generating commit messages, follow the project's standard format:
+
+**Format:**
+- Start with a type prefix: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `style:`, `chore:`
+- Use imperative mood ("add" not "added", "fix" not "fixed")
+- Keep the first line (subject) under 50 characters
+- Leave a blank line after the subject
+- Add a bulleted list describing changes in detail
+- Reference issues when applicable: `Fixes #123`, `Related to #456`
+
+**Example:**
+```
+feat: add emote command for player expression
+
+- Implement new EmoteCommandHandler
+- Register emote command in SystemInitializer
+- Add unit tests for emote validation
+- Update documentation with emote syntax
+
+Fixes #42
+```
+
+**Type Prefixes:**
+- `feat:` — New feature or enhancement
+- `fix:` — Bug fix
+- `docs:` — Documentation changes
+- `refactor:` — Code restructuring without behavior change
+- `test:` — Test additions or corrections
+- `style:` — Formatting, whitespace, naming (no logic change)
+- `chore:` — Build, tooling, dependencies
+
 ## Project Details
 - Language: C# 14
 - Target framework: .NET 10
