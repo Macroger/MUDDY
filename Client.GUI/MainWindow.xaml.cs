@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,11 +35,27 @@ namespace Client.GUI
 
         private bool _isInitializing;
 
+        private bool _isUserNearBottom = true;
+
         private double _colorOffset = 0;
         private DispatcherTimer? _colorTimer = null;
 
         private Compositor _compositor;
         private ContainerVisual _effectsContainer;
+
+        private DispatcherTimer? _backgroundTimer;
+        private double _backgroundHue;
+        private GradientStop[]? _bgStops;
+
+        private LinearGradientBrush? _borderBrush;
+        private double _borderOffset = 0;
+
+
+
+        private double[] _bgStopOffsets = new double[] { 0, 90, 180, 270 };
+
+        private DateTime _lastBoundaryBurst = DateTime.MinValue;
+
 
         // Track login state
         private bool _isLoggedIn = false;
@@ -92,6 +109,8 @@ namespace Client.GUI
             this.Closed += MainWindow_Closed;
 
             ThemeManager.ThemeChanged += OnThemeChanged;
+
+            GameOutputScroller.ViewChanged += OnScrollChanged;
 
             SubscribeToEventBus();
 
@@ -203,6 +222,39 @@ namespace Client.GUI
 
             _isInitializing = false;
 
+        }
+
+        private void InitializeBackgroundAnimation()
+        {
+            if (!ThemeManager.GetCapabilities().EnableGradientAnimation)
+                return;
+
+            if (RootGrid.Background is not LinearGradientBrush brush)
+                return;
+
+            _bgStops = brush.GradientStops.ToArray();
+
+            _backgroundTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+
+
+            _backgroundTimer.Tick += (s, e) =>
+            {
+                if (_bgStops == null) return;
+
+                _backgroundHue += 0.05; // much slower
+
+                for (int i = 0; i < _bgStops.Length; i++)
+                {
+                    var hue = (_backgroundHue + i * 120) % 360;
+                    _bgStops[i].Color = ColorFromHSV(hue, 0.5, 0.8);
+                }
+
+            };
+
+            _backgroundTimer.Start();
         }
 
         #endregion
@@ -341,6 +393,18 @@ namespace Client.GUI
             }
         }
 
+
+        private void GameOutput_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            TriggerMouseBoundaryBurst(e, entering: true);
+        }
+
+        private void GameOutput_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            TriggerMouseBoundaryBurst(e, entering: false);
+        }
+
+
         private void MainWindow_Closed(object sender, WindowEventArgs args)
         {
             // Cleanup
@@ -472,6 +536,8 @@ namespace Client.GUI
         {
             AppendRenderedLine("Welcome to MUDDY!", "#FFFFFFFF");
             AppendRenderedLine("Connect to the server to begin your adventure...", "#FFFFFFFF");
+
+            InitializeBackgroundAnimation();
         }
 
         /// <summary>
@@ -537,6 +603,15 @@ namespace Client.GUI
             });
         }
 
+        private void OnScrollChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            var threshold = 50; // px tolerance
+
+            _isUserNearBottom =
+                GameOutputScroller.VerticalOffset >=
+                GameOutputScroller.ScrollableHeight - threshold;
+        }
+
         private void OnSystemMessageReceived(ClientGuiEvents.Notifications.ReceivedSystemMessage evnt)
         {
             DispatcherQueue.TryEnqueue(() =>
@@ -551,12 +626,29 @@ namespace Client.GUI
             var caps = ThemeManager.GetCapabilities();
 
             if (caps.EnableTextShimmer)
+            {
                 StartTextShimmer();
+            }
+                
             else
+            {
                 StopTextShimmer();
+            }
+
+            if (caps.EnableGradientAnimation)
+            {
+                InitializeBackgroundAnimation();
+            }
+            else
+            {
+                StopBackgroundAnimation();
+            }
+
 
             RebuildOutputText();
         }
+
+
 
         private void RememberServerToggle_Toggled(object sender, RoutedEventArgs e)
         {
@@ -592,6 +684,31 @@ namespace Client.GUI
                 ThemeManager.ApplyAndSave(theme);
             }
         }
+
+        private void TriggerMouseBoundaryBurst(PointerRoutedEventArgs e, bool entering)
+        {
+            if (!ThemeManager.GetCapabilities().EnableMouseEffects)
+                return;
+
+            // ✅ prevent rapid double-trigger jitter
+            if ((DateTime.Now - _lastBoundaryBurst).TotalMilliseconds < 150)
+                return;
+
+            _lastBoundaryBurst = DateTime.Now;
+
+            var pos = e.GetCurrentPoint(GameOutputScroller).Position;
+
+            pos = GameOutputScroller.TransformToVisual(RootGrid).TransformPoint(pos);
+
+            SpawnMouseBurst(pos);
+
+            if (!entering)
+            {
+                SpawnMouseBurst(pos); // double pulse on exit
+            }
+
+        }
+
 
 
         #endregion
@@ -785,58 +902,6 @@ namespace Client.GUI
             }
         }
 
-        private Windows.UI.Color ColorFromHSV(double hue, double saturation, double value)
-        {
-            double c = value * saturation;
-            double x = c * (1 - Math.Abs((hue / 60) % 2 - 1));
-            double m = value - c;
-
-            double r, g, b;
-
-            if (hue < 60) { r = c; g = x; b = 0; }
-            else if (hue < 120) { r = x; g = c; b = 0; }
-            else if (hue < 180) { r = 0; g = c; b = x; }
-            else if (hue < 240) { r = 0; g = x; b = c; }
-            else if (hue < 300) { r = x; g = 0; b = c; }
-            else { r = c; g = 0; b = x; }
-
-            return Windows.UI.Color.FromArgb(
-                255,
-                (byte)((r + m) * 255),
-                (byte)((g + m) * 255),
-                (byte)((b + m) * 255)
-            );
-        }
-
-        private (double h, double s, double v) ColorToHSV(Windows.UI.Color color)
-        {
-            double r = color.R / 255.0;
-            double g = color.G / 255.0;
-            double b = color.B / 255.0;
-
-            double max = Math.Max(r, Math.Max(g, b));
-            double min = Math.Min(r, Math.Min(g, b));
-            double delta = max - min;
-
-            double h = 0;
-
-            if (delta != 0)
-            {
-                if (max == r)
-                    h = 60 * (((g - b) / delta) % 6);
-                else if (max == g)
-                    h = 60 * (((b - r) / delta) + 2);
-                else
-                    h = 60 * (((r - g) / delta) + 4);
-            }
-
-            if (h < 0) h += 360;
-
-            double s = max == 0 ? 0 : delta / max;
-            double v = max;
-
-            return (h, s, v);
-        }
 
         private Windows.UI.Color GetColorForIndex(int index)
         {
@@ -846,6 +911,7 @@ namespace Client.GUI
         }
 
         #endregion
+        
 
         private void AppendGameOutput(Paragraph paragraph, string? colorHex = null)
         {
@@ -969,8 +1035,13 @@ namespace Client.GUI
             {
                 GameOutputTextBlock.Blocks.Add(paragraph);
 
-                // Auto-scroll to bottom
-                GameOutputScroller.ChangeView(null, GameOutputScroller.ScrollableHeight, null);
+                if (_isUserNearBottom)
+                {
+                    GameOutputScroller.ChangeView(
+                        null,
+                        GameOutputScroller.ScrollableHeight,
+                        null);
+                }
             });
             
         }
@@ -989,7 +1060,58 @@ namespace Client.GUI
             }
         }
 
+        private Windows.UI.Color ColorFromHSV(double hue, double saturation, double value)
+        {
+            double c = value * saturation;
+            double x = c * (1 - Math.Abs((hue / 60) % 2 - 1));
+            double m = value - c;
 
+            double r, g, b;
+
+            if (hue < 60) { r = c; g = x; b = 0; }
+            else if (hue < 120) { r = x; g = c; b = 0; }
+            else if (hue < 180) { r = 0; g = c; b = x; }
+            else if (hue < 240) { r = 0; g = x; b = c; }
+            else if (hue < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+
+            return Windows.UI.Color.FromArgb(
+                255,
+                (byte)((r + m) * 255),
+                (byte)((g + m) * 255),
+                (byte)((b + m) * 255)
+            );
+        }
+
+        private (double h, double s, double v) ColorToHSV(Windows.UI.Color color)
+        {
+            double r = color.R / 255.0;
+            double g = color.G / 255.0;
+            double b = color.B / 255.0;
+
+            double max = Math.Max(r, Math.Max(g, b));
+            double min = Math.Min(r, Math.Min(g, b));
+            double delta = max - min;
+
+            double h = 0;
+
+            if (delta != 0)
+            {
+                if (max == r)
+                    h = 60 * (((g - b) / delta) % 6);
+                else if (max == g)
+                    h = 60 * (((b - r) / delta) + 2);
+                else
+                    h = 60 * (((r - g) / delta) + 4);
+            }
+
+            if (h < 0) h += 360;
+
+            double s = max == 0 ? 0 : delta / max;
+            double v = max;
+
+            return (h, s, v);
+        }
 
         private void NavigateCommandHistory(int direction)
         {
@@ -1079,6 +1201,12 @@ namespace Client.GUI
             }
 
             CommandInputBox.Text = string.Empty;
+        }
+
+        private void StopBackgroundAnimation()
+        {
+            _backgroundTimer?.Stop();
+            _backgroundTimer = null;
         }
 
         private void UpdateConnectionStatus(bool connected)

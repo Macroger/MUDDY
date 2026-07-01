@@ -13,6 +13,7 @@
     <!-- ===== INTERNAL COLOR SYSTEM ===== -->
 
     <SolidColorBrush x:Key="NeonPinkBrush" Color="#FF00FF"/>
+    <SolidColorBrush x:Key="NeonPinkSoftBrush" Color="#CCFF00FF"/>
     <SolidColorBrush x:Key="NeonCyanBrush" Color="#00FFFF"/>
     <SolidColorBrush x:Key="NeonGreenBrush" Color="#39FF14"/>
     <SolidColorBrush x:Key="NeonYellowBrush" Color="#FFFF00"/>
@@ -20,9 +21,9 @@
     <SolidColorBrush x:Key="InputSurfaceBrush" Color="#EE000000"/>
 
     <!-- Translucent surfaces -->
-    <SolidColorBrush x:Key="GlassPanelBrush" Color="#AA120022"/>
-    <SolidColorBrush x:Key="GlassCardBrush" Color="#CC220044"/>
-    <SolidColorBrush x:Key="GlassHighlightBrush" Color="#DD330066"/>
+    <SolidColorBrush x:Key="GlassPanelBrush" Color="#AA100033"/>
+    <SolidColorBrush x:Key="GlassCardBrush" Color="#CC200044"/>
+    <SolidColorBrush x:Key="GlassHighlightBrush" Color="#88330088"/>
 
     <!-- Global rainbow -->
     <LinearGradientBrush x:Key="RainbowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
@@ -36,29 +37,34 @@
     </LinearGradientBrush>
 
 
-    <!-- Base Background Colors -->
-    <SolidColorBrush x:Key="PsychedelicAppBackgroundBrush" Color="#FF0A0014"/> <!-- Deep purple-black -->
-    <SolidColorBrush x:Key="PsychedelicTitleBarBrush" Color="#FF1A0033"/> <!-- Rich deep purple -->
-    <SolidColorBrush x:Key="PsychedelicPanelBrush" Color="#881F0A3D"/> <!-- Dark violet -->
+    <LinearGradientBrush 
+        x:Key="AnimatedBackgroundBrush"
+        StartPoint="0,0"
+        EndPoint="0.8,1">
+        <GradientStop x:Name="BgStop1" Offset="0.0" Color="#FF6A00FF"/>
+        <GradientStop x:Name="BgStop2" Offset="0.33" Color="#FF00FFFF"/>
+        <GradientStop x:Name="BgStop3" Offset="0.66" Color="#FFFF00FF"/>
+        <GradientStop x:Name="BgStop4" Offset="1.0" Color="#FFFF5500"/>
+    </LinearGradientBrush>
 
-    <!-- Neon Borders -->
-    <SolidColorBrush x:Key="PsychedelicBorderBrush" Color="#FFFF00FF"/> <!-- Hot magenta -->
 
-    <!-- Card/Section Background -->
-    <SolidColorBrush x:Key="PsychedelicCardBrush" Color="#FF2D1B4E"/> <!-- Medium violet -->
 
-    <!-- Psychedelic Accent Colors -->
-	<SolidColorBrush x:Key="AccentGoldBrush" Color="#FFFFFF00"/>	<!-- Electric yellow/gold -->
-	<SolidColorBrush x:Key="AccentRedBrush" Color="#FFFF0066"/>	    <!-- Hot neon pink/red -->
-	<SolidColorBrush x:Key="AccentGreenBrush" Color="#FF39FF14"/>	<!-- Acid green -->
-	<SolidColorBrush x:Key="AccentBlueBrush" Color="#FF00FFFF"/>	<!-- Electric cyan -->
-	<SolidColorBrush x:Key="AccentNeonPink" Color="#FFFF00FF"/>	    <!-- Bright magenta -->
-	<SolidColorBrush x:Key="AccentElectricCyan" Color="#FF00FFFF"/>	<!-- Cyan -->
+    <LinearGradientBrush x:Key="AnimatedBorderBrush"
+                     StartPoint="0,0"
+                     EndPoint="1,0"
+                     SpreadMethod="Repeat">
 
-    <!-- Text Colors -->
-    <SolidColorBrush x:Key="PsychedelicTextPrimaryBrush" Color="#FFFF00FF"/> <!-- Neon magenta -->
-    <SolidColorBrush x:Key="PsychedelicTextSecondaryBrush" Color="#FF00FFFF"/> <!-- Cyan -->
-    <SolidColorBrush x:Key="PsychedelicTextTertiaryBrush" Color="#FF39FF14"/> <!-- Acid green -->
+        <GradientStop Offset="0.0" Color="#FFFF00FF"/>
+        <GradientStop Offset="0.5" Color="#FF00FFFF"/>
+        <GradientStop Offset="1.0" Color="#FFFF00FF"/>
+
+        <LinearGradientBrush.RelativeTransform>
+            <TranslateTransform x:Name="BorderTransform" X="0" Y="0"/>
+        </LinearGradientBrush.RelativeTransform>
+
+    </LinearGradientBrush>
+
+
 
     <!-- Mind-Bending Multi-Color Gradient for Highlights -->
     <LinearGradientBrush x:Key="PsychedelicHighlightBrush" StartPoint="0,0" EndPoint="1,1">
@@ -150,7 +156,7 @@
     <!-- ===== CONTRACT MAPPING ===== -->
 
     <StaticResource x:Key="GlobalBackgroundBrush"
-                ResourceKey="RainbowBackgroundBrush"/>
+                ResourceKey="AnimatedBackgroundBrush"/>
 
     <StaticResource x:Key="PanelBrush"
                 ResourceKey="GlassPanelBrush"/>
@@ -162,7 +168,7 @@
                 ResourceKey="GlassHighlightBrush"/>
 
     <StaticResource x:Key="BorderBrush"
-                ResourceKey="NeonPinkBrush"/>
+                ResourceKey="NeonPinkSoftBrush"/>
 
     <!-- Text -->
     <StaticResource x:Key="TextPrimaryBrush"

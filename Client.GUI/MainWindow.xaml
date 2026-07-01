@@ -387,7 +387,8 @@
                 Style="{StaticResource PanelBorderStyle}"
                 Padding="0"
                 Margin="0,0,4,0"
-                PointerEntered="OnPanelPointerEntered">
+                
+                >
 
                 <ScrollViewer x:Name="LeftPanelScroller"
                   VerticalScrollBarVisibility="Auto"
@@ -656,15 +657,20 @@
                 </Grid.RowDefinitions>
                 
                 <!-- Game Output Window -->
-                <Border x:Name="CenterPanelBorder"
+                <Border 
+                    x:Name="CenterPanelBorder"
                     Grid.Row="0" 
                     Style="{StaticResource PanelBorderStyle}" 
                     Padding="8" 
-                    Margin="0,0,0,0" >
+                    Margin="0,0,0,0"
+                    
+                    >
 
                     <Border 
                         Style="{StaticResource CardBorderStyle}"
-                        Padding="8">
+                        Padding="8"
+                        PointerEntered="GameOutput_PointerEntered"
+                        PointerExited="GameOutput_PointerExited">
 
                         <ScrollViewer 
                             x:Name="GameOutputScroller">
@@ -688,8 +694,9 @@
                     Grid.Row="1"
                     Style="{StaticResource PanelBorderStyle}"
                     Margin="0,4,0,0"
-                    Padding="6">
-
+                    Padding="6"
+                    
+                    >
 
                     <Grid>
 
@@ -733,7 +740,8 @@
                 Style="{StaticResource PanelBorderStyle}"
                 Padding="0" 
                 Margin="4,0,0,0"
-                PointerEntered="OnPanelPointerEntered">
+                
+                >
 
                 <ScrollViewer 
                     x:Name="RightPanelScroller"
