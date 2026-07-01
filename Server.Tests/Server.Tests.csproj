@@ -25,4 +25,9 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Network\Packet\" />
+    <Folder Include="Persistence\" />
+  </ItemGroup>
+
 </Project>

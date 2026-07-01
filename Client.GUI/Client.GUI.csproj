@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Core app identity -->
 	<PropertyGroup>
@@ -28,8 +28,14 @@
 		<PublishReadyToRun>false</PublishReadyToRun>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="Styles\ComponentStyles.xaml" />
+	  <None Remove="Themes\ThemeContract.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Remove="Themes\DarkModernTheme.xaml" />
+	</ItemGroup>
 
-	<!-- Dependencies -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260317003" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1721" />
@@ -40,8 +46,26 @@
 		<ProjectReference Include="..\Client.Core\Client.Core.csproj" />
 		<ProjectReference Include="..\Shared\Shared.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Styles\ComponentStyles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <None Update="Themes\DarkModernTheme.xaml">
+		<Generator>MSBuild:Compile</Generator>
+	  </None>
+	  <Page Update="Themes\ThemeContract.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Themes\DefaultTheme.xaml">
+		<Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Themes\PsychedelicTheme.xaml">
+		<Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
 
-	<!-- Ensure compiled XAML (.xbf) and resource index (.pri) are included in publish output -->
 	<Target Name="PublishXamlResources" AfterTargets="Publish">
 		<ItemGroup>
 			<_XamlResources Include="$(OutDir)*.xbf" />

@@ -6,116 +6,646 @@
     xmlns:local="using:Client.GUI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
     Title="MUDDY - Client">
 
-    <Grid Background="#FF1A1A1A">
+    <Grid  
+        x:Name="RootGrid"
+        Loaded="OnLoaded"
+        Padding="4"
+        Background="{ThemeResource GlobalBackgroundBrush}">
+
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" x:Name="CommandBarRow" />
+            <RowDefinition Height="*"    x:Name="GameContentRow"/>
         </Grid.RowDefinitions>
 
-        <!-- Connection Bar -->
-        <Grid Grid.Row="0" Background="#FF2D2D30" Padding="10" BorderBrush="#FF3E3E42" BorderThickness="0,0,0,1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="100"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- Command Bar Header -->
+        <Border 
+            Grid.Row="0"
+            Background="{ThemeResource PanelBrush}"
+            Padding="0">
 
-            <TextBlock Grid.Column="0" Text="Server:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#FFCCCCCC"/>
-            <TextBox x:Name="ServerAddressBox" Grid.Column="1" Text="127.0.0.1" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/> <!-- Left: Branding -->
+                    <ColumnDefinition Width="Auto"/> <!-- Center: Status -->
+                    <ColumnDefinition Width="*"/> <!-- Right: Buttons -->
+                </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="2" Text="Port:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#FFCCCCCC"/>
-            <TextBox x:Name="ServerPortBox" Grid.Column="3" Text="30333" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <!-- Left: Branding -->
+                <StackPanel 
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    Spacing="12"
+                    Margin="12,8">
 
-            <Button x:Name="ConnectButton" Grid.Column="5" Content="Connect" Click="ConnectButton_Click" 
-                    Background="#FF0E639C" Foreground="White" Padding="20,6" Margin="5,0,0,0"/>
-        </Grid>
+                    <FontIcon Glyph="&#xE774;" 
+                        FontSize="24" 
+                        Foreground="{ThemeResource AccentPrimaryBrush}"/>
 
-        <!-- Main Game Area -->
-        <Grid Grid.Row="1" Padding="15">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="300"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Left Panel - Quick Actions -->
-            <Border Grid.Column="0" Background="#FF252526" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                    CornerRadius="4" Padding="10" Margin="0,0,10,0">
-                <StackPanel>
-                    <!-- Quick Actions Header -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,-10,-10,10" CornerRadius="2,2,0,0">
-                        <TextBlock Text="Quick Actions" FontSize="16" FontWeight="SemiBold" Foreground="#FFDAA520"/>
-                    </Border>
-
-                    <!-- Quick Command Buttons -->
-                    <Button Content="Look" Click="QuickCommand_Click" Tag="look" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Inventory" Click="QuickCommand_Click" Tag="inventory" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Who" Click="QuickCommand_Click" Tag="who" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Help" Click="QuickCommand_Click" Tag="help" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-
-                    <!-- Spacer -->
-                    <Rectangle Height="20" Fill="Transparent"/>
-
-                    <!-- Movement Buttons -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,0,-10,10" CornerRadius="2">
-                        <TextBlock Text="Movement" FontSize="16" FontWeight="SemiBold" Foreground="#FFDAA520"/>
-                    </Border>
-
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- NW, N, NE -->
-                        <Button Grid.Row="0" Grid.Column="0" Content="NW" Click="MovementButton_Click" Tag="northwest" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="0" Grid.Column="1" Content="N" Click="MovementButton_Click" Tag="north" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="0" Grid.Column="2" Content="NE" Click="MovementButton_Click" Tag="northeast" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-
-                        <!-- W, -, E -->
-                        <Button Grid.Row="1" Grid.Column="0" Content="W" Click="MovementButton_Click" Tag="west" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="1" Grid.Column="1" Content="Look" Click="QuickCommand_Click" Tag="look" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2" FontSize="10"/>
-                        <Button Grid.Row="1" Grid.Column="2" Content="E" Click="MovementButton_Click" Tag="east" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-
-                        <!-- SW, S, SE -->
-                        <Button Grid.Row="2" Grid.Column="0" Content="SW" Click="MovementButton_Click" Tag="southwest" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="2" Grid.Column="1" Content="S" Click="MovementButton_Click" Tag="south" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                        <Button Grid.Row="2" Grid.Column="2" Content="SE" Click="MovementButton_Click" Tag="southeast" 
-                                Style="{StaticResource MovementButtonStyle}" Margin="2"/>
-                    </Grid>
-
-                    <Rectangle Height="10" Fill="Transparent"/>
-
-                    <!-- Up/Down -->
-                    <Button Content="Up" Click="MovementButton_Click" Tag="up" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
-                    <Button Content="Down" Click="MovementButton_Click" Tag="down" 
-                            Style="{StaticResource QuickActionButtonStyle}" Margin="0,5"/>
+                    <TextBlock Text="MUDDY - Client" 
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Foreground="{ThemeResource TextPrimaryBrush}"/>
                 </StackPanel>
+
+                <!-- Center: Connection Status -->
+                <Border
+                    Grid.Column="1"
+                    Background="{ThemeResource PanelBrush}"
+                    BorderBrush="{ThemeResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="8"
+                    Margin="0,4"
+                    VerticalAlignment="Stretch"
+                    Tapped="ConnectionStatus_Tapped"
+                    PointerEntered="ConnectionStatus_PointerEntered"
+                    PointerExited="ConnectionStatus_PointerExited">
+
+                    <FlyoutBase.AttachedFlyout>
+                            <Flyout>
+                                <StackPanel Spacing="16" Width="320">
+                                    <TextBlock Text="Connect to Server" 
+                                        FontSize="18" 
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextPrimaryBrush}"
+                                        HorizontalAlignment="Center"/>
+
+                                    <TextBox x:Name="ServerAddressBox"
+                                        Header="Server Address" 
+                                        PlaceholderText="example.mudserver.com"
+                                        Text="127.0.0.1"
+                                        Background="{ThemeResource InputBackgroundBrush}"
+                                        Foreground="{ThemeResource InputForegroundBrush}"
+                                        BorderBrush="{ThemeResource InputBorderBrush}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalTextAlignment="Center"
+                                        FontFamily="Consolas"/>
+
+                                    <TextBox x:Name="ServerPortBox"
+                                        Header="Port" 
+                                        PlaceholderText="Enter port number"
+                                        Text="30333"
+                                        Background="{ThemeResource InputBackgroundBrush}"
+                                        Foreground="{ThemeResource InputForegroundBrush}"
+                                        BorderBrush="{ThemeResource InputBorderBrush}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalTextAlignment="Center"
+                                        FontFamily="Consolas"/>
+
+                                    <Grid ColumnSpacing="8" HorizontalAlignment="Center" Width="Auto">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button x:Name="FlyoutConnectButton"
+                                            Grid.Column="0"
+                                            Content="Connect" 
+                                            Width="120"
+                                            Style="{StaticResource PrimaryButtonStyle}"/>
+
+                                        <Button x:Name="FlyoutDisconnectButton"
+                                            Grid.Column="1"
+                                            Content="Disconnect" 
+                                            Width="120"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Visibility="Collapsed"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Flyout>
+                    </FlyoutBase.AttachedFlyout>
+
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+
+                        <FontIcon Glyph="&#xE703;" 
+                            Foreground="{ThemeResource AccentPrimaryBrush}" 
+                            FontSize="14"/>
+
+                        <TextBlock x:Name="ConnectionStatusText"
+                            Text="Disconnected" 
+                            FontSize="13" 
+                            Foreground="{ThemeResource AccentPrimaryBrush}"
+                            FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Right: CommandBar  -->
+                <CommandBar 
+                    Grid.Column="2"
+                    DefaultLabelPosition="Collapsed"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Background="Transparent">
+    
+                    <AppBarButton Label="Settings" Icon="Setting" Click="SettingsButton_Click">
+                        <ToolTipService.ToolTip>
+                            <ToolTip Content="Open application settings"/>
+                        </ToolTipService.ToolTip>
+        
+                       <AppBarButton.Flyout>
+                            <Flyout>
+                                <StackPanel 
+                                    Width="500" 
+                                    Height="550"
+                                    Background="{ThemeResource PanelBrush}">
+                                    
+                                    <!-- Settings Header -->
+                                    <TextBlock 
+                                        Text="Settings" 
+                                        FontSize="24" 
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextPrimaryBrush}"
+                                        Margin="0,0,0,12"/>
+            
+                                    <!-- Tabbed Navigation -->
+                                    <TabView Height="490" TabWidthMode="Equal">
+                                        
+                                        <!-- General Tab -->
+                                        <TabViewItem Header="General">
+
+                                            <TabViewItem.IconSource>
+                                                <SymbolIconSource Symbol="Setting"/>
+                                            </TabViewItem.IconSource>
+
+
+                                            <Border 
+                                                Style="{StaticResource CardBorderStyle}"
+                                                Padding="12"
+                                                Margin="4">
+
+                                                <ScrollViewer 
+                                                    VerticalScrollBarVisibility="Auto" 
+                                                    Padding="16">
+
+                                                    <StackPanel Spacing="16">
+                                                        <TextBlock 
+                                                            Text="General Settings" 
+                                                            FontSize="16" 
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{ThemeResource TextPrimaryBrush}"/>
+
+                                                        <ToggleSwitch x:Name="NotificationsToggle" 
+                                                            Header="Enable notifications" 
+                                                            IsOn="True"
+                                                            Toggled="NotificationsToggle_Toggled"/>
+
+                                                        <ToggleSwitch x:Name="AutoConnectToggle"
+                                                            Header="Auto-connect on startup" 
+                                                            IsOn="False"
+                                                            Toggled="AutoConnectToggle_Toggled"/>
+
+                                                        <ToggleSwitch x:Name="RememberServerToggle"
+                                                            Header="Remember last server" 
+                                                            IsOn="True"
+                                                            Toggled="RememberServerToggle_Toggled"/>
+
+                                                        <TextBlock Text="(More settings coming soon)" 
+                                                        FontSize="11" 
+                                                        Foreground="{ThemeResource TextSecondaryBrush}"
+                                                        FontStyle="Italic"
+                                                        Margin="0,16,0,0"/>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Border>
+                                        </TabViewItem>
+
+                                        <!-- Themes Tab -->
+                                        <TabViewItem Header="Themes">
+
+
+                                            <TabViewItem.IconSource>
+                                                <SymbolIconSource Symbol="ShowBcc"/>
+                                            </TabViewItem.IconSource>
+
+                                            <Border 
+                                              Style="{StaticResource CardBorderStyle}"
+                                              Padding="12"
+                                              Margin="4">
+
+                                                <ScrollViewer
+                                                    VerticalScrollBarVisibility="Auto"
+                                                    Padding="16">
+
+                                                    <StackPanel Spacing="16">
+                                                        <TextBlock 
+                                                            Text="Visual Theme" 
+                                                            FontSize="16" 
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{ThemeResource TextPrimaryBrush}"/>
+
+                                                        <RadioButtons 
+                                                            x:Name="ThemeRadioButtons" 
+                                                            Header="Select a theme:" 
+                                                            Foreground="{ThemeResource TextSecondaryBrush}"
+                                                            SelectionChanged="ThemeRadioButtons_SelectionChanged">
+                                                            
+                                                            <RadioButton Content="Default"      Tag="Default" IsChecked="True"/>
+                                                            <RadioButton Content="Psychedelic"  Tag="Psychedelic"/>
+                                                            <RadioButton Content="Dark Mode"    Tag="Dark"/>
+                                                            <RadioButton Content="Light Mode"   Tag="Light"/>
+                                                        </RadioButtons>
+
+                                                        <TextBlock Text="Font Size" 
+                                                            FontSize="14" 
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{ThemeResource TextPrimaryBrush}"
+                                                            Margin="0,16,0,0"/>
+
+                                                        <Slider x:Name="FontSizeSlider"
+                                                            Minimum="12" Maximum="20" Value="14" 
+                                                            Header="Output font size" 
+                                                            StepFrequency="1"
+                                                            TickFrequency="2"
+                                                            TickPlacement="BottomRight"
+                                                            ValueChanged="FontSizeSlider_ValueChanged"/>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Border>                                            
+                                        </TabViewItem>
+
+                                        <!-- Accessibility Tab -->
+                                        <TabViewItem Header="Accessibility">
+                                            <TabViewItem.IconSource>
+                                                <SymbolIconSource Symbol="View"/>
+                                            </TabViewItem.IconSource>
+
+
+
+                                            <Border 
+                                               Style="{StaticResource CardBorderStyle}"
+                                               Padding="12"
+                                               Margin="4">
+
+                                                <ScrollViewer
+                                                    VerticalScrollBarVisibility="Auto"
+                                                    Padding="16">
+
+                                                    <StackPanel Spacing="16">
+                                                        <TextBlock Text="Accessibility Options" 
+                                                            FontSize="16" 
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{ThemeResource TextPrimaryBrush}"/>
+
+                                                        <ToggleSwitch Header="High contrast mode" IsOn="False"/>
+                                                        <ToggleSwitch Header="Screen reader support" IsOn="False"/>
+                                                        <ToggleSwitch Header="Reduce animations" IsOn="False"/>
+                                                    </StackPanel>
+
+                                                </ScrollViewer>
+                                            </Border>  
+                                        </TabViewItem>
+
+                                        <!-- About Tab -->
+                                        <TabViewItem Header="About">
+                                            <TabViewItem.IconSource>
+                                                <SymbolIconSource Symbol="Help"/>
+                                            </TabViewItem.IconSource>
+
+                                            <Border 
+                                               Style="{StaticResource CardBorderStyle}"
+                                               Padding="12"
+                                               Margin="4">
+
+                                                <ScrollViewer
+                                                    VerticalScrollBarVisibility="Auto"
+                                                    Padding="16">
+
+                                                    <StackPanel Spacing="12">
+                                                        <TextBlock 
+                                                            Text="MUDDY Client" 
+                                                            FontSize="20" 
+                                                            FontWeight="Bold"
+                                                            Foreground="{ThemeResource TextPrimaryBrush}"/>
+
+                                                        <TextBlock 
+                                                            Text="Version 1.0.0" 
+                                                            FontSize="14" 
+                                                            Foreground="{ThemeResource TextSecondaryBrush}"/>
+
+                                                        <TextBlock 
+                                                            Text="A modern MUD client built with WinUI 3" 
+                                                            FontSize="12" 
+                                                            Foreground="{ThemeResource TextSecondaryBrush}"
+                                                            TextWrapping="Wrap"
+                                                            Margin="0,16,0,0"/>
+
+                                                        <HyperlinkButton 
+                                                            Content="Documentation" 
+                                                            NavigateUri="https://github.com/Macroger/MUDDY"
+                                                            Margin="0,8,0,0"/>
+
+                                                        <HyperlinkButton 
+                                                            Content="Report an issue" 
+                                                            NavigateUri="https://github.com/Macroger/MUDDY/issues"/>
+
+                                                        <TextBlock 
+                                                            Text="© 2026 MUDDY Project" 
+                                                            FontSize="11" 
+                                                            Foreground="{ThemeResource TextSecondaryBrush}"
+                                                            Margin="0,24,0,0"/>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Border>
+                                        </TabViewItem>
+                                    </TabView>
+                                </StackPanel>
+                            </Flyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
+    
+                    <AppBarButton Label="Help" Icon="Help">
+                        <ToolTipService.ToolTip>
+                            <ToolTip Content="View help documentation and guides"/>
+                        </ToolTipService.ToolTip>
+                    </AppBarButton>
+                </CommandBar>
+            </Grid>
+        </Border>
+        
+        <!-- Main Game Area -->
+        <Grid Grid.Row="1"
+              Margin="0,4,0,0">
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPanelColumn" Width="300" MinWidth="300"  MaxWidth="300"/>
+                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition x:Name="RightPanelColumn" Width="300" MinWidth="300" MaxWidth="300" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel - Character Info -->
+            <Border 
+                x:Name="LeftPanelBorder"
+                Grid.Column="0"   
+                Style="{StaticResource PanelBorderStyle}"
+                Padding="0"
+                Margin="0,0,4,0"
+                PointerEntered="OnPanelPointerEntered">
+
+                <ScrollViewer x:Name="LeftPanelScroller"
+                  VerticalScrollBarVisibility="Auto"
+                    Background="Transparent" 
+                    BorderBrush="{ThemeResource BorderBrush}" 
+                    BorderThickness="1"
+                    Padding="4,4,16,4">
+
+                    <StackPanel 
+                        Spacing="4">
+
+                        <!-- Character Portrait Header (Fixed Anchor) -->
+                        <Border 
+                            Style="{StaticResource CardBorderStyle}"
+                            Padding="12"
+                            Margin="0,0,0,8">
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Character Avatar -->
+                                <Border Grid.Column="0"
+                                    Width="56"
+                                    Height="56"
+                                    CornerRadius="28"
+                                    Background="{ThemeResource HighlightBrush}"
+                                    BorderBrush="{ThemeResource AccentPrimaryBrush}"
+                                    BorderThickness="2"
+                                    VerticalAlignment="Center">
+
+                                    <TextBlock Text="🎭"
+                                       FontSize="28"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Character Info -->
+                                <StackPanel Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Spacing="0"
+                                    Margin="12,0,0,0">
+                                    
+                                    <TextBlock 
+                                        Text="Adventurer"
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                    <TextBlock 
+                                        Text="Level 5 Warrior"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    
+                                    <StackPanel 
+                                        Orientation="Horizontal" 
+                                        Spacing="4" 
+                                        Margin="0,2,0,0"> 
+                                        
+                                        <TextBlock 
+                                            Text="⚔️" 
+                                            FontSize="11"/>
+                                       
+                                        <TextBlock 
+                                            Text="HP:"
+                                            FontSize="11"
+                                            Foreground="{ThemeResource TextSecondaryBrush}"/>
+
+                                        <TextBlock 
+                                            Text="75/100"
+                                            FontSize="11"
+                                            Foreground="{ThemeResource AccentSecondaryBrush}"
+                                            FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Spacing="8">
+
+                            <!-- CHAR Section -->
+                            <Expander IsExpanded="True"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                                    
+                                <Expander.Header>
+                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        
+                                        <FontIcon 
+                                            Glyph="&#xE77B;" 
+                                            FontSize="16" 
+                                            Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                        
+                                        <TextBlock 
+                                            Text="CHAR" 
+                                            Style="{StaticResource SectionHeaderTextStyle}"/>
+                                    </StackPanel>
+                                </Expander.Header>
+
+                                <StackPanel 
+                                    Spacing="6" 
+                                    Padding="8">
+                                    
+                                    <TextBlock 
+                                        Text="HP" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+    
+                                    <ProgressBar 
+                                        Value="75" 
+                                        Maximum="100" 
+                                        Height="20"
+                                        Foreground="{ThemeResource AccentSuccessBrush}"
+                                        Background="{ThemeResource CardBrush}"/>
+    
+                                    <TextBlock 
+                                        Text="75 / 100" 
+                                        FontSize="11" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"
+                                        HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander>
+
+                            <!-- STATS Section -->
+                            <Expander IsExpanded="False"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                                
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        
+                                        <FontIcon 
+                                            Glyph="&#xE9D9;" 
+                                            FontSize="16" 
+                                            Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                        
+                                        <TextBlock 
+                                            Text="STATS" 
+                                            Style="{StaticResource SectionHeaderTextStyle}"/>
+                                        
+                                    </StackPanel>
+                                    
+                                </Expander.Header>
+
+
+                                <StackPanel Spacing="6" Padding="8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Strength" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="10" FontSize="12" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Dexterity" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="12" FontSize="12" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Constitution" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="14" FontSize="12" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                    </Grid>
+                                    <TextBlock Text="(Placeholder data)" 
+                                   FontSize="10" 
+                                   Foreground="{ThemeResource TextSecondaryBrush}"
+                                   FontStyle="Italic"
+                                   Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Expander>
+
+                            <!-- INV Section -->
+                            <Expander 
+                                IsExpanded="False"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                                
+                                <Expander.Header>                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="8">                                       
+                                        <FontIcon 
+                                            Glyph="&#xE7C5;" 
+                                            FontSize="16" 
+                                            Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                        
+                                        <TextBlock 
+                                            Text="INV" 
+                                            Style="{StaticResource SectionHeaderTextStyle}"/>
+                                    </StackPanel>
+                                </Expander.Header>
+                                <StackPanel
+                                    Spacing="6" 
+                                    Padding="8">
+
+                                    <TextBlock 
+                                        Text="• Rusty Sword" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <TextBlock 
+                                        Text="• Health Potion (3)" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <TextBlock 
+                                        Text="• Gold Coins (50)" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <TextBlock 
+                                        Text="(Placeholder data)" 
+                                        FontSize="10" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"
+                                        FontStyle="Italic"
+                                        Margin="0,8,0,0"/>
+                                    </StackPanel>
+                            </Expander>
+
+                            <!-- Active Conditions Section -->
+                            <Expander 
+                                IsExpanded="False"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                                
+                                <Expander.Header>
+                                    <StackPanel 
+                                        Orientation="Horizontal" 
+                                        Spacing="8">
+                                        
+                                        <FontIcon 
+                                            Glyph="&#xE734;" 
+                                            FontSize="16" 
+                                            Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                        <TextBlock 
+                                            Text="Active Conditions" 
+                                            Style="{StaticResource SectionHeaderTextStyle}"/>
+                                    </StackPanel>
+                                </Expander.Header>
+                                
+                                <StackPanel 
+                                    Spacing="6" 
+                                    Padding="8">
+
+                                    <TextBlock 
+                                        Text="No active conditions" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"
+                                        FontStyle="Italic"/>
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
 
             <!-- Center Panel - Game Output and Input -->
@@ -124,108 +654,431 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+                
+                <!-- Game Output Window -->
+                <Border x:Name="CenterPanelBorder"
+                    Grid.Row="0" 
+                    Style="{StaticResource PanelBorderStyle}" 
+                    Padding="8" 
+                    Margin="0,0,0,0" >
 
-                <!-- Game Output ScrollViewer -->
-                <Border Grid.Row="0" Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                        CornerRadius="4" Padding="0" Margin="0,0,0,10">
-                    <ScrollViewer x:Name="GameOutputScroller" VerticalScrollBarVisibility="Auto">
-                        <RichTextBlock x:Name="GameOutputTextBlock" 
-                                       Padding="15"
-                                       TextWrapping="Wrap"
-                                       FontFamily="Consolas"
-                                       FontSize="14"
-                                       Foreground="#FFE0E0E0">
-                            <Paragraph>
-                                <Run Text="Welcome to the MUD Client!" FontWeight="Bold" Foreground="#FFDAA520"/>
-                            </Paragraph>
-                            <Paragraph>
-                                <Run Text="Connect to a server to begin your adventure..." Foreground="#FFAAAAAA"/>
-                            </Paragraph>
-                        </RichTextBlock>
-                    </ScrollViewer>
+                    <Border 
+                        Style="{StaticResource CardBorderStyle}"
+                        Padding="8">
+
+                        <ScrollViewer 
+                            x:Name="GameOutputScroller">
+                            
+                            <RichTextBlock 
+                                x:Name="GameOutputTextBlock" 
+                                Padding="0"
+                                TextWrapping="Wrap"
+                                FontFamily="Cascadia Code"
+                                FontSize="16"
+                                Foreground="{ThemeResource TextPrimaryBrush}">
+                            </RichTextBlock>
+                        </ScrollViewer>
+
+                    </Border>
                 </Border>
 
                 <!-- Command Input -->
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
 
-                    <TextBox x:Name="CommandInputBox" 
-                             Grid.Column="0"
-                             PlaceholderText="Type your command here..."
-                             Background="#FF2D2D30"
-                             Foreground="#FFE0E0E0"
-                             BorderBrush="#FF3E3E42"
-                             BorderThickness="2"
-                             Padding="10"
-                             FontFamily="Consolas"
-                             FontSize="14"
-                             KeyDown="CommandInputBox_KeyDown"
-                             Margin="0,0,10,0"/>
+                <Border 
+                    Grid.Row="1"
+                    Style="{StaticResource PanelBorderStyle}"
+                    Margin="0,4,0,0"
+                    Padding="6">
 
-                    <Button x:Name="SendButton" 
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox 
+                            x:Name="CommandInputBox" 
+                            Grid.Column="0"
+                            IsSpellCheckEnabled="False"
+                            PlaceholderText="Type your command here..."
+                            Style="{StaticResource CommandTextBoxStyle}"
+                            FontFamily="Consolas"
+                            Margin="0,0,4,0"
+                            Padding="2"
+                            FontSize="14"
+                            KeyDown="CommandInputBox_KeyDown"/>
+
+                        <Button 
+                            x:Name="SendButton" 
                             Grid.Column="1"
                             Content="Send"
                             Click="SendButton_Click"
-                            Background="#FF0E639C"
-                            Foreground="White"
-                            Padding="25,10"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Padding="8"
+                            Margin="0"
                             FontSize="14"
-                            FontWeight="SemiBold"/>
-                </Grid>
+                            FontWeight="SemiBold"                            
+                            VerticalAlignment="Center"
+                            MinHeight="36"/>
+                    </Grid>
+                </Border>
             </Grid>
 
-            <!-- Right Panel - Map and System Options -->
-            <Border Grid.Column="2" Background="#FF252526" BorderBrush="#FF3E3E42" BorderThickness="2" 
-                    CornerRadius="4" Padding="10" Margin="10,0,0,0">
-                <StackPanel>
-                    <!-- Map Header -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,-10,-10,10" CornerRadius="2,2,0,0">
-                        <TextBlock Text="Map" FontSize="16" FontWeight="SemiBold" Foreground="#FF6495ED"/>
-                    </Border>
+            <!-- Right Panel - World View -->
+            <Border                 
+                x:Name="RightPanelBorder"
+                Grid.Column="2"  
+                Style="{StaticResource PanelBorderStyle}"
+                Padding="0" 
+                Margin="4,0,0,0"
+                PointerEntered="OnPanelPointerEntered">
 
-                    <!-- Map Display Area -->
-                    <Border Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="1" 
-                            Height="200" Margin="0,0,0,20" CornerRadius="2">
-                        <Canvas x:Name="MapCanvas">
-                            <!-- Map grid will be drawn here programmatically -->
-                            <TextBlock Text="Map not available" 
-                                       Canvas.Left="60" Canvas.Top="90"
-                                       Foreground="#FF666666" 
-                                       FontSize="12"/>
-                        </Canvas>
-                    </Border>
+                <ScrollViewer 
+                    x:Name="RightPanelScroller"
+                    VerticalScrollBarVisibility="Auto"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="4,4,16,4">
 
-                    <!-- System Options Header -->
-                    <Border Background="#FF3E3E42" Padding="10,8" Margin="-10,0,-10,10" CornerRadius="2">
-                        <TextBlock Text="System Options" FontSize="16" FontWeight="SemiBold" Foreground="#FFDAA520"/>
-                    </Border>
+                    <StackPanel Spacing="8">
+                        
+                        <!--Location Header (Fixed Anchor)-->
+                        <Border
+                            Style="{StaticResource CardBorderStyle}"
+                            Padding="16"
+                            Margin="0,0,0,0">
 
-                    <!-- System Buttons -->
-                    <Button Content="Settings" Click="SettingsButton_Click" 
-                            Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
-                    <Button Content="Clear Output" Click="ClearOutputButton_Click" 
-                            Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
-                    <Button Content="Disconnect" Click="DisconnectButton_Click" 
-                            Style="{StaticResource SystemButtonStyle}" Margin="0,5"/>
+                            <StackPanel Spacing="4">
+                                
+                                <!--Location Icon + Title-->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE707;" 
+                                        FontSize="20" 
+                                        Foreground="{ThemeResource AccentPrimaryBrush}"
+                                        VerticalAlignment="Center"/>
+                                    <TextBlock Text="LOCATION"
+                                        Style="{StaticResource SectionHeaderTextStyle}"/>
+                                </StackPanel>
 
-                    <!-- Spacer -->
-                    <Rectangle Height="20" Fill="Transparent"/>
+                                <!-- Room Name -->
+                                <TextBlock x:Name="CurrentRoomNameText"
+                                    Text="Unknown Location"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="{ThemeResource TextPrimaryBrush}"
+                                    Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
 
-                    <!-- Connection Status -->
-                    <Border Background="#FF1E1E1E" BorderBrush="#FF3E3E42" BorderThickness="1" 
-                            Padding="10" CornerRadius="2">
-                        <StackPanel>
-                            <TextBlock Text="Status" FontWeight="SemiBold" Foreground="#FFAAAAAA" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="ConnectionStatusText" 
-                                       Text="Disconnected" 
-                                       Foreground="#FFFF6B6B"
-                                       FontSize="12"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                        <!--MAP Section-->
+                        <Expander 
+                            IsExpanded="True"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                            
+                            <Expander.Header>
+                                <StackPanel 
+                                    Orientation="Horizontal" 
+                                    Spacing="8">
+                                    
+                                    <FontIcon 
+                                        Glyph="&#xE707;" 
+                                        FontSize="16" 
+                                        Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                    <TextBlock 
+                                        Text="MAP" 
+                                        Style="{StaticResource SectionHeaderTextStyle}"/>
+                                    
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <!--Map Canvas Content-->
+                            <Border 
+                                Style="{StaticResource CardBorderStyle}"
+                                Height="200" 
+                                Margin="0,4,0,0">
+                                
+                                <Canvas x:Name="MapCanvas">
+                                    <TextBlock Text="Map not available" 
+                                        Canvas.Left="60" 
+                                        Canvas.Top="90"
+                                        Foreground="{ThemeResource TextSecondaryBrush}" 
+                                        FontSize="12"/>
+                                </Canvas>
+                            </Border>
+                        </Expander>
+
+
+                        <!--NEARBY Section-->
+                        <Expander 
+                            IsExpanded="True"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                            
+                            <Expander.Header>
+                                <StackPanel 
+                                    Orientation="Horizontal" 
+                                    Spacing="8">
+                                    
+                                    <FontIcon 
+                                        Glyph="&#xE716;" 
+                                        FontSize="16" 
+                                        Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                    
+                                    <TextBlock 
+                                        Text="NEARBY" 
+                                        Style="{StaticResource SectionHeaderTextStyle}"/>
+                                </StackPanel>
+                            </Expander.Header>
+
+
+                            <Border 
+                                Style="{StaticResource CardBorderStyle}"
+                                Margin="0,4,0,0">
+
+                                <!--Nearby Entities List-->
+                                <StackPanel Spacing="4" Padding="8">
+
+                                    <!--Placeholder entities - will be replaced with dynamic content later-->
+
+                                    <!--NPC Example-->
+                                    <Border 
+                                        Style="{StaticResource CardBorderStyle}"
+                                        Padding="8"
+                                        CornerRadius="4">
+
+                                        <StackPanel 
+                                            Orientation="Horizontal" 
+                                            Spacing="8">
+                                            
+                                            
+                                            <!-- FILTER PILLS -->
+                                            <StackPanel 
+                                                x:Name="NearbyFilterPanel"
+                                                Orientation="Horizontal"
+                                                Spacing="6"
+                                                HorizontalAlignment="Left">
+
+                                                <ToggleButton 
+                                                    Content="All"
+                                                    Style="{StaticResource FilterPillStyle}"                                                    
+                                                    PointerEntered="OnPillButtonHoverEnter"
+                                                    PointerExited="OnPillButtonHoverExit"
+                                                    Checked="OnFilterChecked"/>
+                                                
+                                                <ToggleButton 
+                                                    Content="Enemies"
+                                                    Style="{StaticResource FilterPillStyle}"
+                                                    PointerEntered="OnPillButtonHoverEnter"
+                                                    PointerExited="OnPillButtonHoverExit"
+                                                    Checked="OnFilterChecked"/>
+                                                
+                                                <ToggleButton 
+                                                    Content="NPCs" 
+                                                    Style="{StaticResource FilterPillStyle}"
+                                                    PointerEntered="OnPillButtonHoverEnter"
+                                                    PointerExited="OnPillButtonHoverExit"
+                                                    Checked="OnFilterChecked"/>
+                                                
+                                                <ToggleButton 
+                                                    Content="Players" 
+                                                    Style="{StaticResource FilterPillStyle}"
+                                                    PointerEntered="OnPillButtonHoverEnter"
+                                                    PointerExited="OnPillButtonHoverExit"
+                                                    Checked="OnFilterChecked"/>
+                                                
+                                                <ToggleButton 
+                                                    Content="Items"
+                                                    Style="{StaticResource FilterPillStyle}"
+                                                    PointerEntered="OnPillButtonHoverEnter"
+                                                    PointerExited="OnPillButtonHoverExit"
+                                                    Checked="OnFilterChecked"/>
+
+                                            </StackPanel>
+
+                                            
+                                            <TextBlock 
+                                                Text="⚔️" 
+                                                FontSize="14" 
+                                                VerticalAlignment="Center"/>
+                                            
+                                            <TextBlock 
+                                                Text="Goblin Scout"
+                                                FontSize="12"
+                                                Foreground="{ThemeResource TextPrimaryBrush}"
+                                                VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--Player Example-->
+                                    <Border 
+                                        Style="{StaticResource CardBorderStyle}"
+                                        Padding="8"
+                                        CornerRadius="4">
+
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            
+                                            <TextBlock 
+                                                Text="👤" 
+                                                FontSize="14" 
+                                                VerticalAlignment="Center"/>
+                                            
+                                            <TextBlock 
+                                                Text="TravelingMerchant" 
+                                                FontSize="12" 
+                                                Foreground="{ThemeResource TextPrimaryBrush}"
+                                                VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--Object Example-->
+                                    <Border 
+                                        Style="{StaticResource CardBorderStyle}"
+                                        Padding="8">
+                                        
+                                        <StackPanel 
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            
+                                            <TextBlock 
+                                                Text="📦" 
+                                                FontSize="14" 
+                                                VerticalAlignment="Center"/>
+                                            
+                                            <TextBlock 
+                                                Text="Wooden Chest"
+                                                FontSize="12" 
+                                                Foreground="{ThemeResource TextPrimaryBrush}"
+                                                VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--Empty state placeholder 
+                                    This will be shown when no entities are nearby-->                                    
+                                    <TextBlock Text="No entities nearby" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"
+                                        Margin="8"
+                                        HorizontalAlignment="Center"
+                                        Opacity="0.7"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!--TARGET Section-->
+                        <Expander 
+                            IsExpanded="False"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                            
+                            <Expander.Header>
+                                
+                                <StackPanel 
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    
+                                    <FontIcon 
+                                        Glyph="&#xE1D3;" 
+                                        FontSize="16" 
+                                        Foreground="{ThemeResource AccentPrimaryBrush}"/>
+                                    
+                                    <TextBlock 
+                                        x:Name="TargetHeaderText"
+                                        Text="TARGET • No target selected" 
+                                        Style="{StaticResource SectionHeaderTextStyle}"/>
+                                </StackPanel>
+                            </Expander.Header>
+                            
+                            <Border 
+                                Style="{StaticResource CardBorderStyle}"
+                                Margin="0,4,0,0">
+
+                                <!--Target Details (when expanded)-->
+                                <StackPanel Spacing="8" Padding="8">
+
+                                    <!--Target Name-->
+                                    <TextBlock 
+                                        x:Name="TargetNameText"
+                                        Text="No target selected"
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextPrimaryBrush}"/>
+
+                                    <!--Target Level and Status-->
+                                    <TextBlock 
+                                        x:Name="TargetInfoText"
+                                        Text=""
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+
+                                    <!--HP Progress Bar-->
+                                    <StackPanel 
+                                        x:Name="TargetHPContainer" 
+                                        Spacing="4"
+                                        Visibility="Collapsed">
+                                        
+                                        <TextBlock 
+                                            Text="HP" 
+                                            FontSize="11"
+                                            Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                        
+                                        <ProgressBar 
+                                            x:Name="TargetHPBar"
+                                            Value="0" 
+                                            Maximum="100"
+                                            Height="18"
+                                            Foreground="{ThemeResource AccentDangerBrush}"
+                                            Background="{ThemeResource CardBrush}"/>
+                                        
+                                        <TextBlock 
+                                            x:Name="TargetHPText"
+                                            Text="0 / 0"
+                                            FontSize="11" 
+                                            Foreground="{ThemeResource TextSecondaryBrush}"
+                                            HorizontalAlignment="Center"/>
+                                        
+                                    </StackPanel>
+
+                                    <!--Warning/Status Messages-->                                    
+                                    <Border 
+                                        x:Name="TargetWarningContainer"
+                                        Background="{ThemeResource HighlightBrush}"
+                                        BorderBrush="{ThemeResource AccentDangerBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8"
+                                        Margin="0,4,0,0"
+                                        Visibility="Collapsed"
+                                        Opacity="0.5">
+                                        
+                                        <StackPanel 
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            
+                                            <TextBlock 
+                                                Text="⚠️" 
+                                                FontSize="14" 
+                                                VerticalAlignment="Center"/>
+                                            
+                                            <TextBlock 
+                                                x:Name="TargetWarningText"
+                                                Text="Target not in current room"
+                                                FontSize="11"
+                                                Foreground="{ThemeResource TextPrimaryBrush}"
+                                                TextWrapping="Wrap"
+                                                VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!--Add new sections here-->
+
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
     </Grid>

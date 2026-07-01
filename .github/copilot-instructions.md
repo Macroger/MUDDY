@@ -209,3 +209,4 @@ Omit `@details` when there is nothing non-obvious to say — do not pad it with 
 - Language: C# 14
 - Target framework: .NET 10
 - GUI: WinUI 3 (Server.GUI project) — no reflection on UI thread, all UI updates via `DispatcherQueue.TryEnqueue`
+- **Only use WinUI 3 XAML syntax and APIs.** Do not use UWP (Windows.UI.Xaml), WPF (System.Windows), or any other Windows framework syntax. Common mistakes to avoid: ResourceDictionary.ThemeDictionaries (UWP-only), {ThemeResource} for custom resources (use {StaticResource} instead), Window.Resources must contain direct resource definitions or merged dictionaries.
