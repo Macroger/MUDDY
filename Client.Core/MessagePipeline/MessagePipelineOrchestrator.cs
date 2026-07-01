@@ -87,12 +87,30 @@ namespace Client.Core.MessagePipeline
 
             // Enqueue the packet for processing
             if (evnt.envelope == null)
-            { 
-                throw new ArgumentNullException(nameof(evnt.envelope));
+            {
+                _eventBus.Publish(
+                    EventMessageType.Network,
+                    new ClientNetworkEvents.Errors.NetworkError(
+                        "Received null packet envelope.",
+                        null));
+
+                return;
             }
 
-            _msgQueue.Add(evnt.envelope);
-        }     
+
+            if (!_msgQueue.IsAddingCompleted)
+            {
+                try
+                {
+                    _msgQueue.Add(evnt.envelope);
+                }
+                catch (InvalidOperationException)
+                {
+                    // queue is shutting down, ignore
+                }
+            }
+
+        }
 
         /// <summary>
         /// Starts the background message processing loop.
@@ -106,7 +124,7 @@ namespace Client.Core.MessagePipeline
             if (_started) return;
 
             _cts = new CancellationTokenSource();
-            _processingTask = Task.Run(() => ProcessMessagesAsync(_cts.Token));
+            _processingTask = Task.Run(() => ProcessMessagesAsync(_cts.Token), _cts.Token);
             _started = true;
         }
 
@@ -124,40 +142,54 @@ namespace Client.Core.MessagePipeline
             // Signal the processing loop to stop and wait for it to finish
             _msgQueue.CompleteAdding();
 
-            // Cancel the processing task if it's still running
-            _cts?.Cancel();
+            try
+            {
+                // 2. Wait for queue to drain naturally
+                if (_processingTask != null)
+                    await _processingTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Should be rare now, but safe
+            }
+            finally
+            {
+                // 3. Ensure cancellation if something stalled
+                _cts?.Cancel();
+                _cts?.Dispose();
+                _cts = null;
 
-            // Wait for the processing task to finish
-            if (_processingTask != null) await _processingTask.ConfigureAwait(false);
+                _started = false;
+            }
 
-            // Dispose of the cancellation token source
-            _cts?.Dispose();
-            _started = false;
         }
 
         private async Task ProcessMessagesAsync(CancellationToken cancellationToken)
         {
             try
             {
-                foreach (var envelope in _msgQueue.GetConsumingEnumerable(cancellationToken))
+                foreach (var envelope in _msgQueue.GetConsumingEnumerable())
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     try
                     {
                         await HandleMessageAsync(envelope);
                     }
                     catch (Exception ex)
                     {
-                        // Log or handle handler exceptions as needed
-                        _eventBus.Publish(EventMessageType.CmdPipeline,
+                        _eventBus.Publish(
+                            EventMessageType.CmdPipeline,
                             new MessagePipelineEvents.Errors.MessagePipelineError(
-                             $"Exception in message processing loop: {ex.Message}", ex)
+                                $"Error processing message of type {envelope?.GetType().Name}: {ex.Message}",
+                                ex)
                         );
                     }
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                // Normal on shutdown
+                // expected shutdown path
             }
         }
 
@@ -203,7 +235,10 @@ namespace Client.Core.MessagePipeline
             try
             {
                 // Graceful shutdown
-                StopAsync().GetAwaiter().GetResult();
+                if (_started)
+                {
+                    StopAsync().GetAwaiter().GetResult();
+                }
 
                 // Dispose subscriptions
                 foreach (ISubscriptionToken subscription in _subscriptions)
@@ -220,7 +255,6 @@ namespace Client.Core.MessagePipeline
 
                 // Dispose queue and cancellation token
                 _msgQueue?.Dispose();
-                _cts?.Dispose();
             }
             catch (Exception ex)
             {

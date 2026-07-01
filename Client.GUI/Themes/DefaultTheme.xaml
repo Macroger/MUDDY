@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ThemeMarker -->
+    <x:String x:Key="__ThemeMarker">Default</x:String>
+
+    <!-- Global background -->
+    <SolidColorBrush x:Key="AppBaseBrush" Color="#1E1E1E"/>
+
+    <StaticResource x:Key="GlobalBackgroundBrush"
+                ResourceKey="AppBaseBrush"/>
+
+    <!-- Panels -->
+    <SolidColorBrush x:Key="PanelBaseBrush" Color="#2A2A2A"/>
+
+    <StaticResource x:Key="PanelBrush"
+                ResourceKey="PanelBaseBrush"/>
+
+    <!-- Cards -->
+    <SolidColorBrush x:Key="CardBaseBrush" Color="#333333"/>
+
+    <StaticResource x:Key="CardBrush"
+                ResourceKey="CardBaseBrush"/>
+
+    <!-- Highlight -->
+    <SolidColorBrush x:Key="HighlightBaseBrush" Color="#0078D4"/>
+
+    <StaticResource x:Key="HighlightBrush"
+                ResourceKey="HighlightBaseBrush"/>
+
+    <!-- Borders -->
+    <SolidColorBrush x:Key="BorderBaseBrush" Color="#555555"/>
+
+    <StaticResource x:Key="BorderBrush"
+                ResourceKey="BorderBaseBrush"/>
+
+
+    <!-- Text -->
+    <SolidColorBrush x:Key="TextPrimaryBaseBrush" Color="White"/>
+    <SolidColorBrush x:Key="TextSecondaryBaseBrush" Color="#BBBBBB"/>
+
+    <StaticResource x:Key="TextPrimaryBrush"
+                ResourceKey="TextPrimaryBaseBrush"/>
+
+    <StaticResource x:Key="TextSecondaryBrush"
+                ResourceKey="TextSecondaryBaseBrush"/>
+
+    <SolidColorBrush x:Key="AccentPrimaryBaseBrush" Color="#0078D4"/>
+    <SolidColorBrush x:Key="AccentSecondaryBaseBrush" Color="#2B88D8"/>
+
+    <StaticResource x:Key="AccentPrimaryBrush"
+                ResourceKey="AccentPrimaryBaseBrush"/>
+
+    <StaticResource x:Key="AccentSecondaryBrush"
+                ResourceKey="AccentSecondaryBaseBrush"/>
+    
+    <!-- Input -->
+
+    <SolidColorBrush x:Key="InputSurfaceBrush" Color="White"/>
+
+    <StaticResource x:Key="InputBackgroundBrush"
+                ResourceKey="InputSurfaceBrush"/>
+
+    <StaticResource x:Key="InputForegroundBrush"
+                ResourceKey="TextPrimaryBrush"/>
+
+    <StaticResource x:Key="InputBorderBrush"
+                ResourceKey="BorderBrush"/>
+
+
+</ResourceDictionary>

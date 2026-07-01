@@ -1,0 +1,59 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================= -->
+    <!-- BACKGROUND / SURFACE LAYERS -->
+    <!-- ============================= -->
+
+    <!-- Global app background (entire window) -->
+    <SolidColorBrush x:Key="GlobalBackgroundBrush"/>
+
+    <!-- Large containers (panels) -->
+    <SolidColorBrush x:Key="PanelBrush"/>
+
+    <!-- Smaller content surfaces (cards, items) -->
+    <SolidColorBrush x:Key="CardBrush"/>
+
+    <!-- Borders -->
+    <SolidColorBrush x:Key="BorderBrush"/>
+
+    <!-- Highlight / selected / focus state -->
+    <SolidColorBrush x:Key="HighlightBrush"/>
+
+
+    <!-- ============================= -->
+    <!-- TEXT -->
+    <!-- ============================= -->
+
+    <SolidColorBrush x:Key="TextPrimaryBrush"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush"/>
+
+
+    <!-- ============================= -->
+    <!-- ACCENTS -->
+    <!-- ============================= -->
+
+    <SolidColorBrush x:Key="AccentPrimaryBrush"/>
+    <SolidColorBrush x:Key="AccentSecondaryBrush"/>
+    <SolidColorBrush x:Key="AccentDangerBrush"/>
+    <SolidColorBrush x:Key="AccentSuccessBrush"/>
+
+
+    <!-- ============================= -->
+    <!-- BUTTONS -->
+    <!-- ============================= -->
+
+    <SolidColorBrush x:Key="ButtonBackgroundBrush"/>
+    <SolidColorBrush x:Key="ButtonForegroundBrush"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush"/>
+
+    <!-- ============================= -->
+    <!-- INPUT FIELDS -->
+    <!-- ============================= -->
+    <SolidColorBrush x:Key="InputBackgroundBrush"/>
+    <SolidColorBrush x:Key="InputForegroundBrush"/>
+    <SolidColorBrush x:Key="InputBorderBrush"/>
+
+
+</ResourceDictionary>

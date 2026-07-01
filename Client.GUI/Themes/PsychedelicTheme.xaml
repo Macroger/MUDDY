@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- =================================================================== -->
+    <!-- PSYCHEDELIC THEME - Trippy Colors and Mind-Bending Gradients       -->
+    <!-- =================================================================== -->
+
+    <!-- ThemeMarker -->
+    <x:String x:Key="__ThemeMarker">Psychedelic</x:String>
+
+    <!-- ===== INTERNAL COLOR SYSTEM ===== -->
+
+    <SolidColorBrush x:Key="NeonPinkBrush" Color="#FF00FF"/>
+    <SolidColorBrush x:Key="NeonCyanBrush" Color="#00FFFF"/>
+    <SolidColorBrush x:Key="NeonGreenBrush" Color="#39FF14"/>
+    <SolidColorBrush x:Key="NeonYellowBrush" Color="#FFFF00"/>
+    <SolidColorBrush x:Key="DeepPurpleBrush" Color="#220033"/>
+    <SolidColorBrush x:Key="InputSurfaceBrush" Color="#EE000000"/>
+
+    <!-- Translucent surfaces -->
+    <SolidColorBrush x:Key="GlassPanelBrush" Color="#AA120022"/>
+    <SolidColorBrush x:Key="GlassCardBrush" Color="#CC220044"/>
+    <SolidColorBrush x:Key="GlassHighlightBrush" Color="#DD330066"/>
+
+    <!-- Global rainbow -->
+    <LinearGradientBrush x:Key="RainbowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF0000" Offset="0.0"/>
+        <GradientStop Color="#FF7F00" Offset="0.15"/>
+        <GradientStop Color="#FFFF00" Offset="0.3"/>
+        <GradientStop Color="#00FF00" Offset="0.45"/>
+        <GradientStop Color="#00FFFF" Offset="0.6"/>
+        <GradientStop Color="#0000FF" Offset="0.75"/>
+        <GradientStop Color="#8B00FF" Offset="1.0"/>
+    </LinearGradientBrush>
+
+
+    <!-- Base Background Colors -->
+    <SolidColorBrush x:Key="PsychedelicAppBackgroundBrush" Color="#FF0A0014"/> <!-- Deep purple-black -->
+    <SolidColorBrush x:Key="PsychedelicTitleBarBrush" Color="#FF1A0033"/> <!-- Rich deep purple -->
+    <SolidColorBrush x:Key="PsychedelicPanelBrush" Color="#881F0A3D"/> <!-- Dark violet -->
+
+    <!-- Neon Borders -->
+    <SolidColorBrush x:Key="PsychedelicBorderBrush" Color="#FFFF00FF"/> <!-- Hot magenta -->
+
+    <!-- Card/Section Background -->
+    <SolidColorBrush x:Key="PsychedelicCardBrush" Color="#FF2D1B4E"/> <!-- Medium violet -->
+
+    <!-- Psychedelic Accent Colors -->
+	<SolidColorBrush x:Key="AccentGoldBrush" Color="#FFFFFF00"/>	<!-- Electric yellow/gold -->
+	<SolidColorBrush x:Key="AccentRedBrush" Color="#FFFF0066"/>	    <!-- Hot neon pink/red -->
+	<SolidColorBrush x:Key="AccentGreenBrush" Color="#FF39FF14"/>	<!-- Acid green -->
+	<SolidColorBrush x:Key="AccentBlueBrush" Color="#FF00FFFF"/>	<!-- Electric cyan -->
+	<SolidColorBrush x:Key="AccentNeonPink" Color="#FFFF00FF"/>	    <!-- Bright magenta -->
+	<SolidColorBrush x:Key="AccentElectricCyan" Color="#FF00FFFF"/>	<!-- Cyan -->
+
+    <!-- Text Colors -->
+    <SolidColorBrush x:Key="PsychedelicTextPrimaryBrush" Color="#FFFF00FF"/> <!-- Neon magenta -->
+    <SolidColorBrush x:Key="PsychedelicTextSecondaryBrush" Color="#FF00FFFF"/> <!-- Cyan -->
+    <SolidColorBrush x:Key="PsychedelicTextTertiaryBrush" Color="#FF39FF14"/> <!-- Acid green -->
+
+    <!-- Mind-Bending Multi-Color Gradient for Highlights -->
+    <LinearGradientBrush x:Key="PsychedelicHighlightBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFF00FF" Offset="0.0"/> <!-- Magenta -->
+        <GradientStop Color="#FFFF0099" Offset="0.2"/> <!-- Hot pink -->
+        <GradientStop Color="#FF9900FF" Offset="0.4"/> <!-- Purple -->
+        <GradientStop Color="#FF0099FF" Offset="0.6"/> <!-- Blue -->
+        <GradientStop Color="#FF00FFFF" Offset="0.8"/> <!-- Cyan -->
+        <GradientStop Color="#FF39FF14" Offset="1.0"/> <!-- Acid green -->
+    </LinearGradientBrush>
+
+    <!-- Cosmic Swirl Gradient -->
+    <RadialGradientBrush x:Key="CosmicSwirlBrush">
+        <GradientStop Color="#FFFF00FF" Offset="0.0"/> <!-- Magenta center -->
+        <GradientStop Color="#FF9900FF" Offset="0.4"/> <!-- Purple -->
+        <GradientStop Color="#FF0066FF" Offset="0.7"/> <!-- Deep blue -->
+        <GradientStop Color="#FF0A0014" Offset="1.0"/> <!-- Dark edge -->
+    </RadialGradientBrush>
+
+    <!-- Electric Pulse Gradient (for active elements) -->
+    <LinearGradientBrush x:Key="ElectricPulseBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF00FFFF" Offset="0.0"/> <!-- Cyan -->
+        <GradientStop Color="#FF0099FF" Offset="0.5"/> <!-- Electric blue -->
+        <GradientStop Color="#FFFF00FF" Offset="1.0"/> <!-- Magenta -->
+    </LinearGradientBrush>
+
+    <!-- Laser Grid Pattern Brush (for advanced UI elements) -->
+    <LinearGradientBrush x:Key="LaserGridBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FF39FF14" Offset="0.0"/> <!-- Acid green -->
+        <GradientStop Color="#FF00FFFF" Offset="0.25"/> <!-- Cyan -->
+        <GradientStop Color="#FFFF00FF" Offset="0.5"/> <!-- Magenta -->
+        <GradientStop Color="#FFFFFF00" Offset="0.75"/> <!-- Yellow -->
+        <GradientStop Color="#FFFF6600" Offset="1.0"/> <!-- Orange -->
+    </LinearGradientBrush>
+
+    <!-- Holographic Shimmer (alternating bright colors) -->
+    <LinearGradientBrush x:Key="HolographicShimmerBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+        <GradientStop Color="#FFFF00FF" Offset="0.0"/>
+        <GradientStop Color="#FF00FFFF" Offset="0.2"/>
+        <GradientStop Color="#FFFFFF00" Offset="0.4"/>
+        <GradientStop Color="#FFFF00FF" Offset="0.6"/>
+        <GradientStop Color="#FF00FFFF" Offset="0.8"/>
+        <GradientStop Color="#FF39FF14" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <!-- Vaporwave Sunset Gradient -->
+    <LinearGradientBrush x:Key="VaporwaveSunsetBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFF00FF" Offset="0.0"/> <!-- Magenta top -->
+        <GradientStop Color="#FFFF6600" Offset="0.3"/> <!-- Orange -->
+        <GradientStop Color="#FFFFFF00" Offset="0.5"/> <!-- Yellow -->
+        <GradientStop Color="#FF9900FF" Offset="0.7"/> <!-- Purple -->
+        <GradientStop Color="#FF0A0014" Offset="1.0"/> <!-- Dark bottom -->
+    </LinearGradientBrush>
+
+    <!-- Rainbow Field -->
+    <LinearGradientBrush x:Key="RainbowFieldBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF0000" Offset="0.0"/>        <!-- Red -->
+        <GradientStop Color="#FF7F00" Offset="0.15"/>        <!-- Orange -->
+        <GradientStop Color="#FFFF00" Offset="0.3"/>        <!-- Yellow -->
+        <GradientStop Color="#00FF00" Offset="0.45"/>        <!-- Green -->
+        <GradientStop Color="#00FFFF" Offset="0.6"/>        <!-- Cyan -->
+        <GradientStop Color="#0000FF" Offset="0.75"/>        <!-- Blue -->
+        <GradientStop Color="#8B00FF" Offset="1.0"/>        <!-- Purple -->
+    </LinearGradientBrush>
+
+    <!-- Rainbow Burst -->
+    <RadialGradientBrush 
+        x:Key="RainbowBurstBrush"
+        Center="0.3,0.4"
+        GradientOrigin="0.7,0.2"
+        RadiusX="1.2"
+        RadiusY="1.0">
+
+        <GradientStop Color="#FF0000" Offset="0.0"/>
+        <GradientStop Color="#FF9900" Offset="0.2"/>
+        <GradientStop Color="#FFFF00" Offset="0.35"/>
+        <GradientStop Color="#00FF00" Offset="0.5"/>
+        <GradientStop Color="#00FFFF" Offset="0.65"/>
+        <GradientStop Color="#0000FF" Offset="0.8"/>
+        <GradientStop Color="#8B00FF" Offset="1.0"/>
+
+    </RadialGradientBrush>
+    
+    <!-- Neon Glow Effect Colors -->
+    <SolidColorBrush x:Key="NeonGlowPink" Color="#FFFF66FF"/>
+    <SolidColorBrush x:Key="NeonGlowCyan" Color="#FF66FFFF"/>
+    <SolidColorBrush x:Key="NeonGlowGreen" Color="#FF66FF33"/>
+
+    <!-- ===== CONTRACT MAPPING ===== -->
+
+    <StaticResource x:Key="GlobalBackgroundBrush"
+                ResourceKey="RainbowBackgroundBrush"/>
+
+    <StaticResource x:Key="PanelBrush"
+                ResourceKey="GlassPanelBrush"/>
+
+    <StaticResource x:Key="CardBrush"
+                ResourceKey="GlassCardBrush"/>
+
+    <StaticResource x:Key="HighlightBrush"
+                ResourceKey="GlassHighlightBrush"/>
+
+    <StaticResource x:Key="BorderBrush"
+                ResourceKey="NeonPinkBrush"/>
+
+    <!-- Text -->
+    <StaticResource x:Key="TextPrimaryBrush"
+                ResourceKey="NeonYellowBrush"/>
+
+    <StaticResource x:Key="TextSecondaryBrush"
+                ResourceKey="NeonCyanBrush"/>
+
+    <!-- Accents -->
+    <StaticResource x:Key="AccentPrimaryBrush"
+                ResourceKey="NeonPinkBrush"/>
+
+    <StaticResource x:Key="AccentSecondaryBrush"
+                ResourceKey="NeonCyanBrush"/>
+
+    <StaticResource x:Key="AccentDangerBrush"
+                ResourceKey="NeonPinkBrush"/>
+
+    <StaticResource x:Key="AccentSuccessBrush"
+                ResourceKey="NeonGreenBrush"/>
+
+    <!-- Buttons -->
+    <StaticResource x:Key="ButtonBackgroundBrush"
+                ResourceKey="GlassCardBrush"/>
+
+    <StaticResource x:Key="ButtonForegroundBrush"
+                ResourceKey="NeonYellowBrush"/>
+
+    <StaticResource x:Key="ButtonBorderBrush"
+                ResourceKey="NeonPinkBrush"/>
+
+
+    <!-- Input Fields -->
+    <StaticResource x:Key="InputBackgroundBrush"
+                ResourceKey="InputSurfaceBrush"/>
+
+    <StaticResource x:Key="InputForegroundBrush"
+                ResourceKey="NeonYellowBrush"/>
+
+    <StaticResource x:Key="InputBorderBrush"
+                ResourceKey="NeonCyanBrush"/>
+
+
+
+</ResourceDictionary>

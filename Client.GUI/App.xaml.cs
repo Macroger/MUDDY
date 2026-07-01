@@ -1,4 +1,5 @@
 ﻿// =============================================================================
+using Client.Core.Application;
 /// @file       App.xaml.cs
 /// @namespace  Client.GUI
 /// @brief      WinUI 3 application entry point for MUDDY client.
@@ -6,8 +7,8 @@
 // =============================================================================
 
 using Microsoft.UI.Xaml;
-using Client.Core.Application;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Client.GUI
@@ -19,6 +20,33 @@ namespace Client.GUI
     {
         private Window? _window = null;
         private ClientSystemInitializer? _clientCore = null;
+
+        /// <summary>
+        /// Current application settings loaded at startup.
+        /// </summary>
+        public static AppSettings Settings { get; private set; } = new AppSettings();
+
+
+        public enum AppTheme
+        {
+            Default,
+            Psychedelic,
+            Dark,
+            Light
+        }
+
+
+        private static readonly Dictionary<AppTheme, string> ThemeMap = new()
+        {
+            { AppTheme.Default,      "ms-appx:///Themes/DefaultTheme.xaml" },
+            { AppTheme.Psychedelic,  "ms-appx:///Themes/PsychedelicTheme.xaml" },
+            { AppTheme.Dark,         "ms-appx:///Themes/DarkTheme.xaml" },
+            { AppTheme.Light,        "ms-appx:///Themes/LightTheme.xaml" }
+        };
+
+        private AppTheme _currentTheme = AppTheme.Default;
+
+
 
         /// <summary>
         /// Initializes the singleton application object. This is the first line of authored code
@@ -79,11 +107,17 @@ namespace Client.GUI
         {
             try
             {
+                // Load settings first
+                Settings = AppSettingsManager.Load();
+
                 // Initialize client core systems (event bus, logger, network supervisor, message pipeline)
                 _clientCore = new ClientSystemInitializer();
 
                 // Create main window and pass event bus
                 _window = new MainWindow(_clientCore.EventBus);
+
+                ThemeManager.Initialize(_window);
+                ThemeManager.Apply(Settings.SelectedTheme);
 
                 // Cleanup when window closes
                 _window.Closed += Window_Closed;
@@ -95,6 +129,45 @@ namespace Client.GUI
                 System.Diagnostics.Debug.WriteLine($"App launch error: {ex}");
                 throw;
             }
+        }
+
+        private void LoadSavedTheme()
+        {
+            ApplyTheme(Settings.SelectedTheme);
+        }
+
+        public void ApplyTheme(AppTheme theme)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Theme] APPLY CALLED: {theme}");
+
+            var dictionaries = Application.Current.Resources.MergedDictionaries;
+
+            var newTheme = new ResourceDictionary
+            {
+                Source = new Uri(ThemeMap[theme])
+            };
+
+            // Find current theme using EXACT match (no guessing)
+            for (int i = 0; i < dictionaries.Count; i++)
+            {
+                var src = dictionaries[i].Source?.OriginalString;
+
+                if (src == ThemeMap[_currentTheme])
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Theme] Replacing {src}");
+
+                    dictionaries[i] = newTheme;
+
+                    _currentTheme = theme;
+                    return;
+                }
+            }
+
+            // fallback (only happens once at startup or if something is off)
+            System.Diagnostics.Debug.WriteLine("[Theme] No existing theme found, adding new one");
+            dictionaries.Add(newTheme);
+
+            _currentTheme = theme;
         }
 
         private void Window_Closed(object? sender, WindowEventArgs e)
