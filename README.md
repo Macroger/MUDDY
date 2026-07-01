@@ -19,7 +19,7 @@
 
 </div>
 
-Current Version: 0.1.1  
+Current Version: 0.3  
 Framework: .NET 10  
 Platform: Windows (WinUI 3)  
 Architecture: Event‑driven client/server system over async TCP
