@@ -26,9 +26,9 @@ public class StandardCommandParserTests
         _connectionId = new ConnectionId(Guid.NewGuid().ToString());
     }
 
-    private PacketEnvelope BuildEnvelope(string json)
+    private MessageEnvelope BuildEnvelope(string json)
     {
-        return new PacketEnvelope(
+        return new MessageEnvelope(
             messageId: new MessageId(1),
             messageType: PacketType.Command,
             flags: MessageFlags.None,

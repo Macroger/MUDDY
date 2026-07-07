@@ -1,5 +1,12 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
+﻿/**
+ * @file MessageEnvelope.cs
+ * @namespace Shared.Network.Transport
+ * @brief Encapsulates a network message payload with transport metadata.
+ * @details Represents an in-memory envelope used by client/server pipeline stages.
+ *          Includes optional message, connection, and session identities, message
+ *          type/flags, payload bytes, and creation timestamp.
+ */
+
 using Shared.Identity;
 using Shared.Network.Types;
 
@@ -9,7 +16,7 @@ namespace Shared.Network.Transport
     /// Encapsulates a protocol message with metadata and payload. 
     /// It envelopes a message coming across the wire and adds metadata such as the message type, flags, and timestamp.
     /// </summary>
-    public sealed class PacketEnvelope
+    public sealed class MessageEnvelope
     {
         /// <summary>Unique identifier for the message.</summary>
         public MessageId? MessageId { get; init; }
@@ -36,7 +43,7 @@ namespace Shared.Network.Transport
         public byte[] Payload { get; init; }
 
         /// <summary>
-        /// Construct a new PacketEnvelope instance.
+        /// Construct a new MessageEnvelope instance.
         /// </summary>
         /// <param name="messageId">Unique message identifier.</param>
         /// <param name="messageType">The protocol message type. Must not be null.</param>
@@ -44,7 +51,7 @@ namespace Shared.Network.Transport
         /// <param name="payload">Binary payload for the message. Must not be null.</param>
         /// <param name="connectionId">Optional connection ID associated with the message.</param>
         /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="payload"/> is null.</exception>
-        public PacketEnvelope(            
+        public MessageEnvelope(            
             PacketType messageType,            
             byte[] payload,
             MessageId? messageId = null,

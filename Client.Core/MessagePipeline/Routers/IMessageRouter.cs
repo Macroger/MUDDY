@@ -18,6 +18,6 @@ namespace Client.Core.MessagePipeline.Routers
         /// </summary>
         /// <param name="envelope">The envelope containing the command with verb and arguments.</param>
         /// <returns>The matching command handler, or null if the command is unknown.</returns>
-        Handlers.IMessageHandler? GetHandler(PacketEnvelope envelope);
+        Handlers.IMessageHandler? GetHandler(MessageEnvelope envelope);
     }
 }

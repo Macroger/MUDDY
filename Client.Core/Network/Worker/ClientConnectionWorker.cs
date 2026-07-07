@@ -27,13 +27,13 @@ namespace Client.Core.Network.Worker
         private readonly string _serverAddress = string.Empty;
         private readonly int _serverPort = 0;
         private readonly IPacketFactory _packetFactory = null!;
-        private readonly IPacketEnvelopeFactory _envelopeFactory = null!;
+        private readonly IMessageEnvelopeFactory _envelopeFactory = null!;
         private readonly IPacketSerializer _packetSerializer = null!;
         private readonly MuddyProtocolLimits _protocolLimits = null!;
         private readonly CancellationToken _cancellationToken = CancellationToken.None;
 
         private EstablishedConnection? _establishedConnection = null;
-        private readonly Channel<PacketEnvelope> _sendChannel = Channel.CreateUnbounded<PacketEnvelope>();
+        private readonly Channel<MessageEnvelope> _sendChannel = Channel.CreateUnbounded<MessageEnvelope>();
         private List<byte> _receiveBuffer = new();
 
         private volatile bool _isRunning = false;
@@ -64,7 +64,7 @@ namespace Client.Core.Network.Worker
         /// <summary>
         /// Raised when a complete packet is received.
         /// </summary>
-        public event EventHandler<PacketEnvelope>? PacketReceived = null;
+        public event EventHandler<MessageEnvelope>? PacketReceived = null;
 
         /// <summary>
         /// Raised when the connection closes.
@@ -79,7 +79,7 @@ namespace Client.Core.Network.Worker
         /// <summary>
         /// Raised after a packet is successfully transmitted.
         /// </summary>
-        public event EventHandler<PacketEnvelope>? PacketSent = null;
+        public event EventHandler<MessageEnvelope>? PacketSent = null;
 
         #endregion
 
@@ -99,7 +99,7 @@ namespace Client.Core.Network.Worker
             string serverAddress,
             int serverPort,
             IPacketFactory packetFactory,
-            IPacketEnvelopeFactory envelopeFactory,
+            IMessageEnvelopeFactory envelopeFactory,
             IPacketSerializer packetSerializer,
             MuddyProtocolLimits protocolLimits,
             CancellationToken cancellationToken)
@@ -246,7 +246,7 @@ namespace Client.Core.Network.Worker
         /// </summary>
         /// <param name="envelope">The envelope to send.</param>
         /// <returns>True if accepted; false if not running or queue is full.</returns>
-        public bool SendEnvelope(PacketEnvelope envelope)
+        public bool SendEnvelope(MessageEnvelope envelope)
         {
             if (!IsRunning)
             {
@@ -270,7 +270,7 @@ namespace Client.Core.Network.Worker
         {
             try
             {
-                await foreach (PacketEnvelope envelope in _sendChannel.Reader.ReadAllAsync(ct))
+                await foreach (MessageEnvelope envelope in _sendChannel.Reader.ReadAllAsync(ct))
                 {
 
                     if (_establishedConnection?.NetworkStream == null)
@@ -357,7 +357,7 @@ namespace Client.Core.Network.Worker
                         _receiveBuffer.RemoveRange(0, totalPacketSize);
 
                         MuddyPacket packet = _packetSerializer.Deserialize(fullPacketBytes);
-                        PacketEnvelope envelope = _envelopeFactory.CreateFromPacket(packet, _serverConnectionId);
+                        MessageEnvelope envelope = _envelopeFactory.CreateFromPacket(packet, _serverConnectionId);
 
                         PacketReceived?.Invoke(this, envelope);
                     }

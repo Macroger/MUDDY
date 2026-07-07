@@ -19,7 +19,7 @@ namespace Client.Core.MessagePipeline.Handlers
             _eventBus = eventBus;
         }
 
-        public async Task ExecuteAsync(PacketEnvelope envelope)
+        public async Task ExecuteAsync(MessageEnvelope envelope)
         {
             try
             {

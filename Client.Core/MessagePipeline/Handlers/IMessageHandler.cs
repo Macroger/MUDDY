@@ -18,6 +18,6 @@ namespace Client.Core.MessagePipeline.Handlers
         /// </summary>
         /// <param name="envelope">The transport envelope containing the message and metadata.</param>
         /// <returns>A task representing the command execution result.</returns>
-        Task ExecuteAsync(PacketEnvelope envelope);
+        Task ExecuteAsync(MessageEnvelope envelope);
     }
 }

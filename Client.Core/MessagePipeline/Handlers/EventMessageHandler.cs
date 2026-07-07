@@ -18,7 +18,7 @@ namespace Client.Core.MessagePipeline.Handlers
             _eventBus = eventBus;
         }
 
-        public async Task ExecuteAsync(PacketEnvelope envelope)
+        public async Task ExecuteAsync(MessageEnvelope envelope)
         {
             // Publish the message to the GUI via the event bus
             _eventBus.Publish(

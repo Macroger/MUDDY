@@ -6,6 +6,6 @@ namespace Server.Core.CommandPipeline.Policies
 {
     public interface IFirstPassPolicy
     {
-        Task<PolicyResult> CheckPolicyAsync(PacketEnvelope msg);
+        Task<PolicyResult> CheckPolicyAsync(MessageEnvelope msg);
     }
 }

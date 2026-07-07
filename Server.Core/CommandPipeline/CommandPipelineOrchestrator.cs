@@ -22,7 +22,7 @@ namespace Server.Core.CommandPipeline
 {
     public sealed class CommandPipelineOrchestrator : IStartable, IStoppable
     {
-        private readonly BlockingCollection<PacketEnvelope> _msgEnvelopeQueue = new BlockingCollection<PacketEnvelope>();
+        private readonly BlockingCollection<MessageEnvelope> _msgEnvelopeQueue = new BlockingCollection<MessageEnvelope>();
 
         private bool _started;
         #region Dependencies
@@ -68,7 +68,7 @@ namespace Server.Core.CommandPipeline
         /// Adds the specified transport envelope to the processing queue.
         /// </summary>
         /// <param name="envelope">The transport envelope to be queued for processing. Cannot be null.</param>
-        public void ProcessMessage(PacketEnvelope envelope)
+        public void ProcessMessage(MessageEnvelope envelope)
         {
             // Basic validation - check if null
             if (envelope == null) throw new ArgumentNullException(nameof(envelope), "Transport envelope cannot be null");
@@ -153,7 +153,7 @@ namespace Server.Core.CommandPipeline
             }
         }
 
-        private async Task HandleMessageAsync(PacketEnvelope msg)
+        private async Task HandleMessageAsync(MessageEnvelope msg)
         {
             // Validate that the msg is not null.
             if (msg == null)
@@ -193,7 +193,7 @@ namespace Server.Core.CommandPipeline
                             $"{result.ErrorMessage ?? "Authentication failed"} (Policy: {policy.GetType().Name}, MessageID: {msg.MessageId})")
                     );
 
-                    PacketEnvelope response = CreateErrorResponse(
+                    MessageEnvelope response = CreateErrorResponse(
                         errorType: PacketType.Error,
                         message: result.ErrorMessage ?? "Authentication failed",
                         connId: connId);
@@ -217,7 +217,7 @@ namespace Server.Core.CommandPipeline
             ParseResult parseResult = _cmdParser.Parse(msg);
             if (!parseResult.Success)
             {
-                PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
+                MessageEnvelope errorResponseEnvelope = new MessageEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
@@ -235,7 +235,7 @@ namespace Server.Core.CommandPipeline
             CommandContext context = await _contextBuilder.BuildContextAsync(connId, parseResult.Command!);
             if (!context.Success)
             {
-                PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
+                MessageEnvelope errorResponseEnvelope = new MessageEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
@@ -254,7 +254,7 @@ namespace Server.Core.CommandPipeline
                 var result = await policy.CheckPolicyAsync(context);
                 if (!result.IsValid)
                 {
-                    PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
+                    MessageEnvelope errorResponseEnvelope = new MessageEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
@@ -272,7 +272,7 @@ namespace Server.Core.CommandPipeline
             ICommandHandler? handler = _cmdRouter.GetHandler(parseResult.Command!);
             if (handler == null)
             {
-                PacketEnvelope errorResponseEnvelope = new PacketEnvelope(
+                MessageEnvelope errorResponseEnvelope = new MessageEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msg.MessageId,
@@ -304,7 +304,7 @@ namespace Server.Core.CommandPipeline
                 responseFlags = MessageFlags.None;
             }
 
-            PacketEnvelope successResponse = new PacketEnvelope(
+            MessageEnvelope successResponse = new MessageEnvelope(
                 messageId: _messageIdGenerator.New(),
                 sessionId: null,
                 messageCorrelationId: msg.MessageId,
@@ -316,9 +316,9 @@ namespace Server.Core.CommandPipeline
             _networkSupervisor.SendToClient(connId, successResponse);
         }
 
-        private PacketEnvelope CreateErrorResponse(PacketType? errorType, string? message, ConnectionId connId, MessageId? msgId = null)
+        private MessageEnvelope CreateErrorResponse(PacketType? errorType, string? message, ConnectionId connId, MessageId? msgId = null)
         {
-            PacketEnvelope response = new PacketEnvelope(
+            MessageEnvelope response = new MessageEnvelope(
                     messageId: _messageIdGenerator.New(),
                     sessionId: null,
                     messageCorrelationId: msgId,

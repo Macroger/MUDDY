@@ -39,7 +39,7 @@ namespace Client.Core.Network.Supervisor
         /// </summary>
         /// <param name="envelope">The transport envelope to send.</param>
         /// <returns>True if the message was accepted for sending; otherwise, false.</returns>
-        bool SendToServer(PacketEnvelope envelope);       
+        bool SendToServer(MessageEnvelope envelope);       
 
         /// <summary>
         /// Performs graceful shutdown of the supervisor and all resources.

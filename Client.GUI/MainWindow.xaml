@@ -106,12 +106,14 @@
                                             Grid.Column="0"
                                             Content="Connect" 
                                             Width="120"
+                                            Click="ConnectButton_Click"
                                             Style="{StaticResource PrimaryButtonStyle}"/>
 
                                         <Button x:Name="FlyoutDisconnectButton"
                                             Grid.Column="1"
                                             Content="Disconnect" 
                                             Width="120"
+                                            Click="DisconnectButton_Click"
                                             Style="{StaticResource PrimaryButtonStyle}"
                                             Visibility="Collapsed"/>
                                     </Grid>
@@ -125,7 +127,9 @@
                         VerticalAlignment="Center"
                         HorizontalAlignment="Center">
 
-                        <FontIcon Glyph="&#xE703;" 
+                        <FontIcon 
+                            x:Name="ConnectionStatusIcon"
+                            Glyph="&#xE703;" 
                             Foreground="{ThemeResource AccentPrimaryBrush}" 
                             FontSize="14"/>
 

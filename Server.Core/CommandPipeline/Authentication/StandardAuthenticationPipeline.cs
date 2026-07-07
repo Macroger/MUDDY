@@ -55,7 +55,7 @@ namespace Server.Core.CommandPipeline.Authentication
         /// Processes an authentication command.
         /// Parses the command, validates it, and creates a session if successful.
         /// </summary>
-        public async Task ProcessAuthCommandAsync(PacketEnvelope envelope)
+        public async Task ProcessAuthCommandAsync(MessageEnvelope envelope)
         {
             if(envelope.ConnId == null)
             {
@@ -236,7 +236,7 @@ namespace Server.Core.CommandPipeline.Authentication
                     $"Authentication error for connection {connId.Value}: {message}")
             );
 
-            var response = new PacketEnvelope(
+            var response = new MessageEnvelope(
                 messageId: _messageIdGenerator.New(),
                 messageType: PacketType.Error,
                 flags: Shared.Network.Types.MessageFlags.None,
@@ -263,7 +263,7 @@ namespace Server.Core.CommandPipeline.Authentication
                     $"Authentication success for connection {connId.Value}, session {sessionId.Value}: {message}")
             );
 
-            var envelope = new PacketEnvelope(
+            var envelope = new MessageEnvelope(
                 messageId: _messageIdGenerator.New(),
                 messageType: PacketType.Authentication,
                 flags: Shared.Network.Types.MessageFlags.None,

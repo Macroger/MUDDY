@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using static Client.GUI.App;
 
-namespace Client.GUI
+namespace Client.GUI.Application
 {
     /// <summary>
     /// Represents all user-configurable settings for the MUDDY client.

@@ -24,7 +24,7 @@ namespace Server.Core.Network.Worker
         /// <summary>
         /// Queue of outbound protocol envelopes to be sent to the remote endpoint.
         /// </summary>
-        private BlockingCollection<PacketEnvelope> sendQue = new BlockingCollection<PacketEnvelope>(new ConcurrentQueue<PacketEnvelope>());
+        private BlockingCollection<MessageEnvelope> sendQue = new BlockingCollection<MessageEnvelope>(new ConcurrentQueue<MessageEnvelope>());
 
         /// <summary>
         /// Accumulator buffer used for assembling bytes read from the socket until complete packets are available.
@@ -77,7 +77,7 @@ namespace Server.Core.Network.Worker
         #region Events for message reception, connection closure, and error reporting
 
         /// <summary>Raised when a complete protocol message has been received and parsed.</summary>
-        public event EventHandler<PacketEnvelope>? MessageReceived;
+        public event EventHandler<MessageEnvelope>? MessageReceived;
 
         /// <summary>Raised when the connection has been closed or the worker has shut down.</summary>
         public event EventHandler? ConnectionClosed;
@@ -179,7 +179,7 @@ namespace Server.Core.Network.Worker
         /// </summary>
         /// <param name="msg">The protocol envelope to send.</param>
         /// <returns>true if the message was accepted for sending; false if the worker is not running or the queue cannot accept the message.</returns>
-        public bool SendMessage(PacketEnvelope msg)
+        public bool SendMessage(MessageEnvelope msg)
         {
             if (!IsRunning)
                 return false;
@@ -250,8 +250,8 @@ namespace Server.Core.Network.Worker
 
                             MuddyPacket pkt = _packetSerializer.Deserialize(fullPacketBytes);
 
-                            // Create a PacketEnvelope from the deserialized packet
-                            var msg = new PacketEnvelope(
+                            // Create a MessageEnvelope from the deserialized packet
+                            var msg = new MessageEnvelope(
                                 sessionId: new SessionId(pktHeader.SessionId),
                                 messageId: new MessageId(_incommingMessageCounter++),
                                 messageType: (PacketType)pktHeader.MsgType,
@@ -260,7 +260,7 @@ namespace Server.Core.Network.Worker
                                 connectionId: ConnId
                             );
 
-                            // Pass the received message to subscribers via the MessageReceived event
+                            // Pass the received message to the supervisor - to be distributed to others via the MessageReceived event
                             OnMessageReceived(msg);
                         }
                     }
@@ -295,7 +295,7 @@ namespace Server.Core.Network.Worker
                     var loopObject = sendQue.GetConsumingEnumerable();
 
                     // Process each message in the queue and send it over the socket
-                    foreach (PacketEnvelope msg in loopObject)
+                    foreach (MessageEnvelope msg in loopObject)
                     {
                         // Optional secondary cancellation guard - to ensure we don't attempt to send messages after cancellation has been requested
                         if (ct.IsCancellationRequested) break;
@@ -323,7 +323,7 @@ namespace Server.Core.Network.Worker
         #region Event invokers for raising events to subscribers
 
         /// <summary>Invokes the MessageReceived event with the provided protocol envelope.</summary>
-        private void OnMessageReceived(PacketEnvelope msg)
+        private void OnMessageReceived(MessageEnvelope msg)
         {
             MessageReceived?.Invoke(this, msg);
         }

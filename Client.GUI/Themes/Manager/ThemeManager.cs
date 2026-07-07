@@ -1,4 +1,5 @@
 using Client.GUI;
+using Client.GUI.Application;
 using Client.GUI.Themes.Manager;
 using Microsoft.UI.Xaml;
 using System;

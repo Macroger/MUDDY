@@ -43,7 +43,7 @@ namespace Client.Core.MessagePipeline.Routers
 			return true;
         }
 
-		public IMessageHandler? GetHandler(PacketEnvelope envelope)
+		public IMessageHandler? GetHandler(MessageEnvelope envelope)
 		{
 			if (envelope == null)
 				throw new ArgumentNullException(nameof(envelope), "MessageEnvelope cannot be null");

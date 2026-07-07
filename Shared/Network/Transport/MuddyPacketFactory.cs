@@ -7,7 +7,7 @@ namespace Shared.Network.Transport
 {
     public class MuddyPacketFactory : IPacketFactory
     {
-        public MuddyPacket CreateMuddyPacket(PacketEnvelope message)
+        public MuddyPacket CreateMuddyPacket(MessageEnvelope message)
         {
             if (message == null) throw new ArgumentNullException("message cannot be null.");
 

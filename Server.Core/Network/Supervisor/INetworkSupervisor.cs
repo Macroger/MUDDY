@@ -47,14 +47,14 @@ namespace Server.Core.Network.Supervisor
         /// Sends a transport message to all connected clients. The message will be broadcasted to every client currently connected to the server.
         /// </summary>
         /// <param name="msg"></param>
-        void BroadcastMessage(PacketEnvelope msg);
+        void BroadcastMessage(MessageEnvelope msg);
 
         /// <summary>
         /// Sends a transport message to a specific client identified by their connection ID.
         /// </summary>
         /// <param name="client"></param>
         /// <param name="msg"></param>
-        void SendToClient(ConnectionId client, PacketEnvelope msg);
+        void SendToClient(ConnectionId client, MessageEnvelope msg);
 
         /// <summary>
         /// Sends a transport message to multiple clients identified by their connection IDs.
@@ -62,7 +62,7 @@ namespace Server.Core.Network.Supervisor
         /// <param name="clients">A collection of connection identifiers representing the clients to which the message will be sent. Cannot be
         /// null or contain null elements.</param>
         /// <param name="msg">The transport envelope containing the message to send to the specified clients. Cannot be null.</param>
-        void SendToMultipleClients(IEnumerable<ConnectionId> clients, PacketEnvelope msg);
+        void SendToMultipleClients(IEnumerable<ConnectionId> clients, MessageEnvelope msg);
 
         /// <summary>
         /// Sets the command pipeline orchestrator to be used for processing commands.

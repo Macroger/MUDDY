@@ -1,5 +1,8 @@
 ﻿// =============================================================================
 using Client.Core.Application;
+using Client.GUI.Application;
+using XamlApplication = Microsoft.UI.Xaml.Application;
+
 /// @file       App.xaml.cs
 /// @namespace  Client.GUI
 /// @brief      WinUI 3 application entry point for MUDDY client.
@@ -16,7 +19,7 @@ namespace Client.GUI
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
-    public partial class App : Application
+    public partial class App : XamlApplication
     {
         private Window? _window = null;
         private ClientSystemInitializer? _clientCore = null;
@@ -140,7 +143,7 @@ namespace Client.GUI
         {
             System.Diagnostics.Debug.WriteLine($"[Theme] APPLY CALLED: {theme}");
 
-            var dictionaries = Application.Current.Resources.MergedDictionaries;
+            var dictionaries = XamlApplication.Current.Resources.MergedDictionaries;
 
             var newTheme = new ResourceDictionary
             {

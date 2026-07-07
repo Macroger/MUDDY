@@ -90,7 +90,7 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <param name="msg">The message to broadcast to all clients.</param>
         /// <remarks>Publishes a network event indicating a broadcast is taking place and iterates through all active connections, sending the provided message to each client's connection worker. If sending to a particular client fails, an error event is published and the broadcast continues for remaining clients.</remarks>
-        public void BroadcastMessage(PacketEnvelope msg)
+        public void BroadcastMessage(MessageEnvelope msg)
         {
             // Loop through the active connections and send the message to each client using the connection worker.
             foreach (var connection in _activeConnections.Values)
@@ -216,7 +216,7 @@ namespace Server.Core.Network.Supervisor
         /// <param name="client">The identifier of the client connection to which the message will be sent.</param>
         /// <param name="msg">The protocol envelope containing the message to send to the client.</param>
         /// <remarks>If the specified client connection is not active, the message is not sent and an error event is published to the event bus. This method logs both successful and failed send attempts using the event bus.</remarks>
-        public void SendToClient(ConnectionId client, PacketEnvelope msg)
+        public void SendToClient(ConnectionId client, MessageEnvelope msg)
         {
             try
             {
@@ -510,7 +510,7 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <param name="clients">A list of the clients to send to</param>
         /// <param name="msg">The message to send to each client</param>
-        public void SendToMultipleClients(IEnumerable<ConnectionId> clients, PacketEnvelope msg)
+        public void SendToMultipleClients(IEnumerable<ConnectionId> clients, MessageEnvelope msg)
         {
             if (clients == null || !clients.Any())
             {
@@ -563,7 +563,7 @@ namespace Server.Core.Network.Supervisor
         private void OnOutboundMessageRequested(NetworkEvents.Commands.SendMessageToClients evnt)
         {
             // Generate a transport envelope to send to clients based on the event data.
-            var envelope = new PacketEnvelope(
+            var envelope = new MessageEnvelope(
                 messageId: _messageIdGenerator.New(),
                 sessionId: null,
                 messageType: evnt.MessageType,
@@ -650,7 +650,7 @@ namespace Server.Core.Network.Supervisor
         /// </summary>
         /// <param name="sender">The source of the event. This parameter can be null.</param>
         /// <param name="e">The protocol envelope containing the message data received from the client.</param>
-        private void OnWorkerMessageReceived(object? sender, PacketEnvelope e)
+        private void OnWorkerMessageReceived(object? sender, MessageEnvelope e)
         {
             // Check if we are in an acceptable state to receive messages.
             ValidationResult result = ValidateSystemCanAcceptMessages();
@@ -669,7 +669,7 @@ namespace Server.Core.Network.Supervisor
                 // If not, send rejection response back to client and return without processing message.
                 if (sender is IConnectionWorker worker)
                 {
-                    PacketEnvelope responseEnvelope = new PacketEnvelope(
+                    MessageEnvelope responseEnvelope = new MessageEnvelope(
                         messageId: _messageIdGenerator.New(),
                         sessionId: null,
                         messageType: PacketType.Error,

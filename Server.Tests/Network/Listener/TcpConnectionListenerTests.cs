@@ -26,10 +26,10 @@ namespace Server.Core.Network.Listener.Tests
             {
                 LastConnection = connection;
             }
-            public void BroadcastMessage(PacketEnvelope msg) { }
-            public void SendToClient(ConnectionId client, PacketEnvelope msg) { }
+            public void BroadcastMessage(MessageEnvelope msg) { }
+            public void SendToClient(ConnectionId client, MessageEnvelope msg) { }
 
-            public void SendToMultipleClients(IEnumerable<ConnectionId> clients, PacketEnvelope msg)
+            public void SendToMultipleClients(IEnumerable<ConnectionId> clients, MessageEnvelope msg)
             {
                 throw new NotImplementedException();
             }

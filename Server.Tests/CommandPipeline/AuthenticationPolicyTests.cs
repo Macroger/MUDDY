@@ -28,9 +28,9 @@ public class AuthenticationPolicyTests
         _connectionId = new ConnectionId(Guid.NewGuid().ToString());
     }
 
-    private PacketEnvelope BuildEnvelope(SessionId? sessionId)
+    private MessageEnvelope BuildEnvelope(SessionId? sessionId)
     {
-        return new PacketEnvelope(
+        return new MessageEnvelope(
             messageId: new MessageId(1),
             messageType: PacketType.Command,
             flags: MessageFlags.None,

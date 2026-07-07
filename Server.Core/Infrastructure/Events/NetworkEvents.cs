@@ -80,9 +80,9 @@ namespace Server.Core.Infrastructure.Events
             /// An event that is raised when a message is sent to a client. 
             /// This can be used for logging, monitoring, or triggering other actions.
             /// </summary>
-            public sealed record PacketSent(PacketEnvelope envelope) : BusEvent(EventMessageType.Network, LogLevel.Trace);
+            public sealed record PacketSent(MessageEnvelope envelope) : BusEvent(EventMessageType.Network, LogLevel.Trace);
 
-            public sealed record PacketReceived(PacketEnvelope envelope) : BusEvent(EventMessageType.Network, LogLevel.Trace);
+            public sealed record PacketReceived(MessageEnvelope envelope) : BusEvent(EventMessageType.Network, LogLevel.Trace);
         }
     }
 }
