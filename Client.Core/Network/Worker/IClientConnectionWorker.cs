@@ -43,13 +43,13 @@ namespace Client.Core.Network.Worker
         /// </summary>
         /// <param name="envelope">The transport envelope to send.</param>
         /// <returns>True if the message was accepted for sending; false if worker is not running.</returns>
-        bool SendEnvelope(MessageEnvelope envelope);
+        bool SendEnvelope(PacketEnvelope envelope);
 
         /// <summary>
         /// INFRASTRUCTURE EVENT: Raised when a complete packet is received from the server.
         /// Supervisor subscribes and translates to domain event via event bus.
         /// </summary>
-        event EventHandler<MessageEnvelope>? PacketReceived;
+        event EventHandler<PacketEnvelope>? PacketReceived;
 
         /// <summary>
         /// INFRASTRUCTURE EVENT: Raised when the connection is closed or worker shuts down.
@@ -67,6 +67,6 @@ namespace Client.Core.Network.Worker
         /// INFRASTRUCTURE EVENT: Raised after a packet is successfully sent to the server.
         /// Supervisor subscribes and translates to domain event via event bus.
         /// </summary>
-        event EventHandler<MessageEnvelope>? PacketSent;
+        event EventHandler<PacketEnvelope>? PacketSent;
     }
 }

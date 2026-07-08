@@ -1,13 +1,11 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-using Shared.Identity;
+﻿using Shared.Identity;
 using Shared.Network.Types;
 
 namespace Shared.Network.Transport
 {
     public class MuddyPacketFactory : IPacketFactory
     {
-        public MuddyPacket CreateMuddyPacket(MessageEnvelope message)
+        public MuddyPacket CreateMuddyPacket(PacketEnvelope message)
         {
             if (message == null) throw new ArgumentNullException("message cannot be null.");
 

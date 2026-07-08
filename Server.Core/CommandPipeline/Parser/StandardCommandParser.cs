@@ -10,7 +10,7 @@ namespace Server.Core.CommandPipeline.Parser
 {
     public class StandardCommandParser : ICommandParser
     {
-        public ParseResult Parse(MessageEnvelope envelope)
+        public ParseResult Parse(PacketEnvelope envelope)
         {
             if(envelope.MessageId == null)
             {

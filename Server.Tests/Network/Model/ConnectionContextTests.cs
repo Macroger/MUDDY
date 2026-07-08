@@ -31,7 +31,7 @@ namespace Server.Core.Network.Model.Tests
         {
             public bool IsRunning => false;
             public ConnectionId ConnId => new();
-            public event EventHandler<MessageEnvelope>? MessageReceived
+            public event EventHandler<PacketEnvelope>? MessageReceived
             {
                 add { }
                 remove { }
@@ -46,7 +46,7 @@ namespace Server.Core.Network.Model.Tests
                 add { }
                 remove { }
             }
-            public bool SendMessage(MessageEnvelope msg) => true;
+            public bool SendMessage(PacketEnvelope msg) => true;
             public void Start() { }
             public void Stop() { }
         }

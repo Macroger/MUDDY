@@ -19,7 +19,13 @@
 - Always use braces for `if`, `for`, `foreach`, and `while`.
 - Naming: fields `_camelCase`; properties/methods/types/constants `PascalCase`; locals/parameters `camelCase`; interfaces `IPascalCase`.
 - All `public` and `internal` members require XML docs (`<summary>`, `<param>`, `<returns>` as applicable).
-- Use Doxygen-compatible file header comments (with tags like `@file`, `@namespace`, `@brief`, and optional `@details`) for source files.
+- Use Doxygen-compatible file header comments for all generated or edited files with the following format:
+// =============================================================================
+/// @file       
+/// @namespace  
+/// @brief      
+/// @details  
+// =============================================================================
 
 ## Events
 - Default: use event bus for domain/cross-subsystem communication.

@@ -18,7 +18,7 @@ namespace Client.Core.MessagePipeline.Handlers
             _eventBus = eventBus;
         }
 
-        public async Task ExecuteAsync(MessageEnvelope envelope)
+        public async Task ExecuteAsync(PacketEnvelope envelope)
         {
             // Respond to the ping message by sending a ping back to the server.
             _eventBus.Publish(

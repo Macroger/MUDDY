@@ -33,7 +33,7 @@ namespace Client.Core.Network.Worker
         private readonly CancellationToken _cancellationToken = CancellationToken.None;
 
         private EstablishedConnection? _establishedConnection = null;
-        private readonly Channel<MessageEnvelope> _sendChannel = Channel.CreateUnbounded<MessageEnvelope>();
+        private readonly Channel<PacketEnvelope> _sendChannel = Channel.CreateUnbounded<PacketEnvelope>();
         private List<byte> _receiveBuffer = new();
 
         private volatile bool _isRunning = false;
@@ -64,7 +64,7 @@ namespace Client.Core.Network.Worker
         /// <summary>
         /// Raised when a complete packet is received.
         /// </summary>
-        public event EventHandler<MessageEnvelope>? PacketReceived = null;
+        public event EventHandler<PacketEnvelope>? PacketReceived = null;
 
         /// <summary>
         /// Raised when the connection closes.
@@ -79,7 +79,7 @@ namespace Client.Core.Network.Worker
         /// <summary>
         /// Raised after a packet is successfully transmitted.
         /// </summary>
-        public event EventHandler<MessageEnvelope>? PacketSent = null;
+        public event EventHandler<PacketEnvelope>? PacketSent = null;
 
         #endregion
 
@@ -246,7 +246,7 @@ namespace Client.Core.Network.Worker
         /// </summary>
         /// <param name="envelope">The envelope to send.</param>
         /// <returns>True if accepted; false if not running or queue is full.</returns>
-        public bool SendEnvelope(MessageEnvelope envelope)
+        public bool SendEnvelope(PacketEnvelope envelope)
         {
             if (!IsRunning)
             {
@@ -270,7 +270,7 @@ namespace Client.Core.Network.Worker
         {
             try
             {
-                await foreach (MessageEnvelope envelope in _sendChannel.Reader.ReadAllAsync(ct))
+                await foreach (PacketEnvelope envelope in _sendChannel.Reader.ReadAllAsync(ct))
                 {
 
                     if (_establishedConnection?.NetworkStream == null)
@@ -357,7 +357,7 @@ namespace Client.Core.Network.Worker
                         _receiveBuffer.RemoveRange(0, totalPacketSize);
 
                         MuddyPacket packet = _packetSerializer.Deserialize(fullPacketBytes);
-                        MessageEnvelope envelope = _envelopeFactory.CreateFromPacket(packet, _serverConnectionId);
+                        PacketEnvelope envelope = _envelopeFactory.CreateFromPacket(packet, _serverConnectionId);
 
                         PacketReceived?.Invoke(this, envelope);
                     }

@@ -11,9 +11,9 @@ namespace Server.Core.Network.Worker
         public ConnectionId ConnId { get; }
         void Start();
         void Stop();
-        bool SendMessage(MessageEnvelope msg);
+        bool SendMessage(PacketEnvelope msg);
 
-        event EventHandler<MessageEnvelope> MessageReceived;
+        event EventHandler<PacketEnvelope> MessageReceived;
         event EventHandler ConnectionClosed;
         event EventHandler<Exception> ErrorOccurred;
     }

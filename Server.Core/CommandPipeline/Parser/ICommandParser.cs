@@ -12,6 +12,6 @@ namespace Server.Core.CommandPipeline.Parser
         /// </summary>
         /// <param name="envelope">The transport envelope with JSON command body.</param>
         /// <returns>Parse result with parsed command or error information.</returns>
-        ParseResult Parse(MessageEnvelope msg);
+        ParseResult Parse(PacketEnvelope msg);
     }
 }

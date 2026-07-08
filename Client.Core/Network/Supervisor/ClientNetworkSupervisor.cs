@@ -137,7 +137,7 @@ namespace Client.Core.Network.Supervisor
                         serverAddress: serverAddress,
                         serverPort: serverPort,
                         packetFactory: new MuddyPacketFactory(),
-                        envelopeFactory: new MessageEnvelopeFactory(),
+                        envelopeFactory: new PacketEnvelopeFactory(),
                         packetSerializer: new MuddyPacketSerializer(new MuddyProtocolLimits()),
                         protocolLimits: new MuddyProtocolLimits(),
                         cancellationToken: _connectionCts.Token);
@@ -239,7 +239,7 @@ namespace Client.Core.Network.Supervisor
         /// </summary>
         /// <param name="envelope">The transport envelope to send.</param>
         /// <returns>True if message was sent successfully; otherwise, false.</returns>
-        public bool SendToServer(MessageEnvelope envelope)
+        public bool SendToServer(PacketEnvelope envelope)
         {
             try
             {
@@ -329,7 +329,7 @@ namespace Client.Core.Network.Supervisor
             ));
         }
 
-        private MessageEnvelope? ConvertMessageToPacketEnvelope(string message)
+        private PacketEnvelope? ConvertMessageToPacketEnvelope(string message)
         {
             if (message == null) 
             {
@@ -346,7 +346,7 @@ namespace Client.Core.Network.Supervisor
                 string json = _commandSerializer.SerializeCommand(message);
 
                 // Generate a packet envelope from the JSON
-                MessageEnvelope envelope = new(
+                PacketEnvelope envelope = new(
                     sessionId: _authService.SessionId,
                     messageType: PacketType.Command,
                     payload: Encoding.UTF8.GetBytes(json)
@@ -371,7 +371,7 @@ namespace Client.Core.Network.Supervisor
         /// <summary>
         /// Emits an event on the event bus for the received packet from the worker.
         /// </summary>
-        private void OnWorkerPacketReceived(object? sender, MessageEnvelope envelope)
+        private void OnWorkerPacketReceived(object? sender, PacketEnvelope envelope)
         {
             try
             {
@@ -392,7 +392,7 @@ namespace Client.Core.Network.Supervisor
         /// <summary>
         /// Emits an event on the event bus when the worker signals that a packet has been sent to the server.
         /// </summary>
-        private void OnWorkerPacketSent(object? sender, MessageEnvelope envelope)
+        private void OnWorkerPacketSent(object? sender, PacketEnvelope envelope)
         {
             try
             {
@@ -478,7 +478,7 @@ namespace Client.Core.Network.Supervisor
         }
 
         /// <summary>
-        /// Handles the SendMessageToServer command from the event bus, converts the message to a MessageEnvelope,
+        /// Handles the SendMessageToServer command from the event bus, converts the message to a PacketEnvelope,
         /// and sends it to the server via the worker.
         /// </summary>
         /// <param name="evnt">The event containing the message to send to the server.</param>
@@ -494,14 +494,14 @@ namespace Client.Core.Network.Supervisor
         }
 
         /// <summary>
-        /// Handles the SendPingToServer command from the event bus, creates a ping MessageEnvelope,
+        /// Handles the SendPingToServer command from the event bus, creates a ping PacketEnvelope,
         /// and sends it to the server via the worker.
         /// </summary>
         /// <param name="evnt">The event indicating that a ping should be sent to the server.</param>
         private void OnSendPingRequest(ClientNetworkEvents.Commands.SendPingToServer evnt)
         {
             // Create a ping packet envelope
-            MessageEnvelope pingEnvelope = new(
+            PacketEnvelope pingEnvelope = new(
                 sessionId: _authService.SessionId,
                 messageType: PacketType.Ping,
                 payload: Array.Empty<byte>());

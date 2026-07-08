@@ -26,7 +26,7 @@ namespace Client.Core.MessagePipeline
     /// 
     public class MessagePipelineOrchestrator : IDisposable
     {
-        private readonly System.Collections.Concurrent.BlockingCollection<MessageEnvelope> _msgQueue = new();
+        private readonly System.Collections.Concurrent.BlockingCollection<PacketEnvelope> _msgQueue = new();
         private Task? _processingTask = null;
         private CancellationTokenSource? _cts = null;
         private bool _started = false;
@@ -96,7 +96,6 @@ namespace Client.Core.MessagePipeline
 
                 return;
             }
-
 
             if (!_msgQueue.IsAddingCompleted)
             {
@@ -193,7 +192,7 @@ namespace Client.Core.MessagePipeline
             }
         }
 
-        private async Task HandleMessageAsync(MessageEnvelope envelope)
+        private async Task HandleMessageAsync(PacketEnvelope envelope)
         {
             var handler = _msgRouter.GetHandler(envelope);
             
