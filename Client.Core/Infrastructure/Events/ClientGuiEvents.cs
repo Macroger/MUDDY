@@ -3,6 +3,7 @@
 /// @namespace  Client.Core.Infrastructure.Events
 /// @brief      GUI-specific events.
 // =============================================================================
+using Client.Core.State.Player;
 using Shared.EventBus.EventTypes;
 using Shared.Logging;
 using Shared.Network.Transport;
@@ -37,6 +38,8 @@ namespace Client.Core.Infrastructure.Events
 
         public class Notifications
         {
+            public sealed record PlayerStateUpdate(PlayerState currentState) : BusEvent(EventMessageType.Gui, LogLevel.Debug);
+
             public sealed record ReceivedAuthenticationMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
             public sealed record ReceivedBinaryTransferMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
@@ -44,7 +47,7 @@ namespace Client.Core.Infrastructure.Events
             public sealed record ReceivedErrorMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
             public sealed record ReceivedEventMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
-
+                        
             public sealed record ReceivedResponseMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);
 
             public sealed record ReceivedSystemMessage(PacketEnvelope envelope) : BusEvent(EventMessageType.Gui, LogLevel.Information);

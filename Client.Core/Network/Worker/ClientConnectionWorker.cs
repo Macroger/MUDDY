@@ -27,7 +27,7 @@ namespace Client.Core.Network.Worker
         private readonly string _serverAddress = string.Empty;
         private readonly int _serverPort = 0;
         private readonly IPacketFactory _packetFactory = null!;
-        private readonly IPacketEnvelopeFactory _envelopeFactory = null!;
+        private readonly IMessageEnvelopeFactory _envelopeFactory = null!;
         private readonly IPacketSerializer _packetSerializer = null!;
         private readonly MuddyProtocolLimits _protocolLimits = null!;
         private readonly CancellationToken _cancellationToken = CancellationToken.None;
@@ -99,7 +99,7 @@ namespace Client.Core.Network.Worker
             string serverAddress,
             int serverPort,
             IPacketFactory packetFactory,
-            IPacketEnvelopeFactory envelopeFactory,
+            IMessageEnvelopeFactory envelopeFactory,
             IPacketSerializer packetSerializer,
             MuddyProtocolLimits protocolLimits,
             CancellationToken cancellationToken)

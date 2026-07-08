@@ -1,7 +1,13 @@
 ﻿
-using ABI.Windows.UI;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using System.Threading.Tasks;
 using Client.Core.Infrastructure.Events;
-using Microsoft.UI;
+using Client.GUI.Application;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -13,24 +19,15 @@ using Microsoft.UI.Xaml.Media;
 using Shared.EventBus;
 using Shared.EventBus.EventTypes;
 using Shared.EventBus.SubscriptionToken;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.UI;
 using static Client.GUI.App;
 
 namespace Client.GUI
 {
     public sealed partial class MainWindow : Window
     {
-        private IEventBus _eventBus;
+        private readonly IEventBus _eventBus;
         private bool _isConnected = false;
-        private readonly List<string> _commandHistory = new();
+        private readonly List<string> _commandHistory = [];
         private int _historyIndex = -1;
 
         private bool _isInitializing;
@@ -40,19 +37,17 @@ namespace Client.GUI
         private double _colorOffset = 0;
         private DispatcherTimer? _colorTimer = null;
 
-        private Compositor _compositor;
-        private ContainerVisual _effectsContainer;
+        private Compositor? _compositor;
+        private ContainerVisual? _effectsContainer;
 
         private DispatcherTimer? _backgroundTimer;
         private double _backgroundHue;
         private GradientStop[]? _bgStops;
 
-        private LinearGradientBrush? _borderBrush;
-        private double _borderOffset = 0;
+        //private readonly LinearGradientBrush? _borderBrush;
+        //private readonly double _borderOffset = 0;
 
-
-
-        private double[] _bgStopOffsets = new double[] { 0, 90, 180, 270 };
+        private readonly double[] _bgStopOffsets = [ 0, 90, 180, 270 ];
 
         private DateTime _lastBoundaryBurst = DateTime.MinValue;
 
@@ -60,7 +55,7 @@ namespace Client.GUI
         // Track login state
         private bool _isLoggedIn = false;
 
-        private readonly List<OutputLine> _outputLines = new();
+        private readonly List<OutputLine> _outputLines = [];
 
         /// <summary>
         /// Gets or sets the login state and triggers panel visibility updates.
@@ -78,23 +73,16 @@ namespace Client.GUI
             }
         }
 
-        private readonly List<ISubscriptionToken> _subscriptions = new();
+        private readonly List<ISubscriptionToken> _subscriptions = [];
 
         #region Construction / Startup
 
         public MainWindow(IEventBus eventBus)
         {
-            if (eventBus == null) throw new ArgumentNullException(nameof(eventBus));
+            ArgumentNullException.ThrowIfNull(eventBus);
 
             _eventBus = eventBus;
-            InitializeComponent();
-
-            var visual = ElementCompositionPreview.GetElementVisual(this.Content as UIElement);
-            _compositor = visual.Compositor;
-
-            // Create container for all effects
-            _effectsContainer = _compositor.CreateContainerVisual();
-            ElementCompositionPreview.SetElementChildVisual(this.Content as UIElement, _effectsContainer);                        
+            InitializeComponent();                 
 
             // Set minimum window size using OverlappedPresenter
             var presenter = Microsoft.UI.Windowing.OverlappedPresenter.Create();
@@ -107,9 +95,7 @@ namespace Client.GUI
             this.AppWindow.SetPresenter(presenter);
 
             this.Closed += MainWindow_Closed;
-
             ThemeManager.ThemeChanged += OnThemeChanged;
-
             GameOutputScroller.ViewChanged += OnScrollChanged;
 
             SubscribeToEventBus();
@@ -121,6 +107,13 @@ namespace Client.GUI
             {
                 StartTextShimmer();
             }
+
+            if (ThemeManager.GetCapabilities().EnableMouseEffects)
+            {
+                InitializeMouseEffects();
+            }
+
+            UpdateConnectionStatus(false);
         }
 
         private void SubscribeToEventBus()
@@ -232,13 +225,13 @@ namespace Client.GUI
             if (RootGrid.Background is not LinearGradientBrush brush)
                 return;
 
-            _bgStops = brush.GradientStops.ToArray();
+            // Equivalent to brush.GradientStops.ToArray() - using C# 14.0 collection spread operator
+            _bgStops = [.. brush.GradientStops];
 
             _backgroundTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(100)
             };
-
 
             _backgroundTimer.Tick += (s, e) =>
             {
@@ -257,6 +250,43 @@ namespace Client.GUI
             _backgroundTimer.Start();
         }
 
+        /// <summary>
+        /// Initializes the Composition API visual tree required for mouse burst effects.
+        /// Only called when the active theme has <see cref="ThemeCapabilities.EnableMouseEffects"/> set.
+        /// </summary>
+        private void InitializeMouseEffects()
+        {
+            ArgumentNullException.ThrowIfNull(this.Content, "Content must be a UIElement to initialize mouse effects.");
+            
+            if (_compositor != null) return;    // Incase compositor is already initialized
+
+            var visual = ElementCompositionPreview.GetElementVisual(this.Content as UIElement);
+            _compositor = visual.Compositor;
+            _effectsContainer = _compositor.CreateContainerVisual();
+            ElementCompositionPreview.SetElementChildVisual(this.Content as UIElement, _effectsContainer);
+        }
+
+        /// <summary>
+        /// Tears down the Composition API visual tree used for mouse burst effects
+        /// and releases associated resources.
+        /// </summary>
+        private void TearDownMouseEffects()
+        {
+            if (_effectsContainer != null)
+            {
+                foreach (var child in _effectsContainer.Children)
+                {
+                    child.Dispose();
+                }
+
+                ElementCompositionPreview.SetElementChildVisual(this.Content as UIElement, null);
+                _effectsContainer.Dispose();
+                _effectsContainer = null;
+            }
+
+            _compositor = null;
+        }
+
         #endregion
 
         #region Event Handlers
@@ -264,9 +294,9 @@ namespace Client.GUI
         /// <summary>
         /// Placeholder for About dialog.
         /// </summary>
-        private void AboutButton_Click(object sender, RoutedEventArgs e)
+        private void AboutButton_Click()
         {
-            AppendGameOutput("MUDDY v0.2 - Multi User Dungeon for Dynamic Learning.", "#FFDAA520");
+            WriteOutput("MUDDY v0.2 - Multi User Dungeon for Dynamic Learning.", "#FFDAA520");
         }
 
         private void AutoConnectToggle_Toggled(object sender, RoutedEventArgs e)
@@ -275,25 +305,22 @@ namespace Client.GUI
             {
                 App.Settings.AutoConnectOnStartup = toggle.IsOn;
                 AppSettingsManager.Save(App.Settings);
-                AppendGameOutput($"Auto-connect on startup: {(toggle.IsOn ? "Enabled" : "Disabled")}", "#FFDAA520");
+                WriteOutput($"Auto-connect on startup: {(toggle.IsOn ? "Enabled" : "Disabled")}", "#FFDAA520");
             }
         }
 
-        private void Border_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        private void Border_PointerWheelChanged(object sender)
         {
-            AppendGameOutput($"Border wheel: {((Border)sender).Name ?? "unnamed"}", "#FFFF6B6B");
+            WriteOutput($"Border wheel: {((Border)sender).Name ?? "unnamed"}", "#FFFF6B6B");
             // Don't set e.Handled - let it bubble
         }
 
-        private void Border_PointerEntered(object sender, PointerRoutedEventArgs e)
+        private static void Border_PointerEntered(object sender)
         {
             if (sender is Border border)
             {
                 // Store original brush in Tag if not already stored
-                if (border.Tag == null)
-                {
-                    border.Tag = border.BorderBrush;
-                }
+                border.Tag ??= border.BorderBrush;
 
                 // Make it glow with a bright cyan border
                 border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(
@@ -302,7 +329,7 @@ namespace Client.GUI
             }
         }
 
-        private void Border_PointerExited(object sender, PointerRoutedEventArgs e)
+        private static void Border_PointerExited(object sender)
         {
             if (sender is Border border && border.Tag is Brush originalBrush)
             {
@@ -312,10 +339,10 @@ namespace Client.GUI
             }
         }
 
-        private void ClearOutputButton_Click(object sender, RoutedEventArgs e)
+        private void ClearOutputButton_Click()
         {
             GameOutputTextBlock.Blocks.Clear();
-            AppendGameOutput("Output cleared.", "#FFAAAAAA");
+            WriteOutput("Output cleared.", "#FFAAAAAA");
         }
 
         private void CommandInputBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -361,15 +388,36 @@ namespace Client.GUI
                 FlyoutBase.ShowAttachedFlyout(element);
             }
         }
+        
+        private void ConnectButton_Click(object _sender, RoutedEventArgs _e)
+        {
+            // Validate input
+            string address = ServerAddressBox.Text;
+            if (!int.TryParse(ServerPortBox.Text, out int port))
+            {
+                _eventBus.Publish(
+                    EventMessageType.Gui,
+                    new ClientGuiEvents.Errors.GuiError("Invalid port number.", null));
+                WriteOutput("Invalid port number.", "#FFFF6B6B");
+                return;
+            }
 
-        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
+            // Publish connect command - NetworkSupervisor will handle it
+            WriteOutput($"Connecting to {address}:{port}...", "#FFDAA520");
+
+            _eventBus.Publish(
+                EventMessageType.Network,
+                new ClientNetworkEvents.Commands.ConnectToServer(address, port));
+        }
+
+        private void DisconnectButton_Click(object _sender, RoutedEventArgs _e)
         {
             if (!_isConnected)
             {
                 _eventBus.Publish(
                     EventMessageType.Gui,
                     new ClientGuiEvents.Errors.GuiError("Not connected to any server.", null));
-                AppendGameOutput("Not connected to any server.", "#FFFF6B6B");
+                WriteOutput("Not connected to any server.", "#FFFF6B6B");
                 return;
             }
 
@@ -389,10 +437,9 @@ namespace Client.GUI
                 App.Settings.GameOutputFontSize = newSize;
                 AppSettingsManager.Save(App.Settings);
 
-                AppendGameOutput($"Font size changed to: {newSize:F0}", "#FFDAA520");
+                WriteOutput($"Font size changed to: {newSize:F0}", "#FFDAA520");
             }
         }
-
 
         private void GameOutput_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -403,7 +450,6 @@ namespace Client.GUI
         {
             TriggerMouseBoundaryBurst(e, entering: false);
         }
-
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
         {
@@ -442,7 +488,7 @@ namespace Client.GUI
                     new ClientGuiEvents.Errors.GuiError("Received empty image data", null));
                 DispatcherQueue.TryEnqueue(() =>
                 {
-                    AppendGameOutput("Error: Received empty image data", "#FFFF6B6B");
+                    WriteOutput("Error: Received empty image data", "#FFFF6B6B");
                 });
                 return;
             }
@@ -472,14 +518,14 @@ namespace Client.GUI
                     // Add to canvas
                     MapCanvas.Children.Add(image);
 
-                    AppendGameOutput($"Image received ({dataLength:N0} bytes)", "#FF88DD88");
+                    WriteOutput($"Image received ({dataLength:N0} bytes)", "#FF88DD88");
                 }
                 catch (Exception ex)
                 {
                     _eventBus.Publish(
                         EventMessageType.Gui,
                         new ClientGuiEvents.Errors.GuiError($"Error displaying image: {ex.Message}", ex));
-                    AppendGameOutput($"Error displaying image: {ex.Message}", "#FFFF6B6B");
+                    WriteOutput($"Error displaying image: {ex.Message}", "#FFFF6B6B");
                 }
             });
         }
@@ -491,7 +537,7 @@ namespace Client.GUI
 
             DispatcherQueue.TryEnqueue(() =>
             {
-                AppendGameOutput(evnt.Message, evnt.ConnectionStatus ? "#FF6BCF7F" : "#FFDAA520");
+                WriteOutput(evnt.Message, evnt.ConnectionStatus ? "#FF6BCF7F" : "#FFDAA520");
             });
         }
 
@@ -500,7 +546,7 @@ namespace Client.GUI
             DispatcherQueue.TryEnqueue(() =>
             {
                 string errorMessage = Encoding.UTF8.GetString(evnt.envelope.Payload);
-                AppendGameOutput($"Error: {errorMessage}", "#FFFF6B6B"); // Red
+                WriteOutput($"Error: {errorMessage}", "#FFFF6B6B"); // Red
             });
         }
 
@@ -509,7 +555,7 @@ namespace Client.GUI
             DispatcherQueue.TryEnqueue(() =>
             {
                 string eventMessage = Encoding.UTF8.GetString(evnt.envelope.Payload);
-                AppendGameOutput(eventMessage, "#FFFFFF"); // White for events
+                WriteOutput(eventMessage, "#FFFFFF"); // White for events
             });
         }
 
@@ -534,8 +580,8 @@ namespace Client.GUI
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            AppendRenderedLine("Welcome to MUDDY!", "#FFFFFFFF");
-            AppendRenderedLine("Connect to the server to begin your adventure...", "#FFFFFFFF");
+            WriteOutput("Welcome to MUDDY!", "#FFFFFFFF");
+            WriteOutput("Connect to the server to begin your adventure...", "#FFFFFFFF");
 
             InitializeBackgroundAnimation();
         }
@@ -555,11 +601,11 @@ namespace Client.GUI
         {
             DispatcherQueue.TryEnqueue(() =>
             {
-                AppendGameOutput($"[Network Error] {evnt.ErrorMessage}", "#FFFF6B6B");
+                WriteOutput($"[Network Error] {evnt.ErrorMessage}", "#FFFF6B6B");
             });
         }
 
-        private void OnPanelPointerEntered(object sender, PointerRoutedEventArgs e)
+        private void OnPanelPointerEntered(PointerRoutedEventArgs e)
         {
 
             if (!ThemeManager.GetCapabilities().EnableMouseEffects)
@@ -590,7 +636,7 @@ namespace Client.GUI
             DispatcherQueue.TryEnqueue(() =>
             {
                 IsLoggedIn = true;
-                AppendGameOutput($"Session established: {evnt.id}", "#FF6BCF7F");
+                WriteOutput($"Session established: {evnt.id}", "#FF6BCF7F");
             });
         }
 
@@ -599,11 +645,11 @@ namespace Client.GUI
             DispatcherQueue.TryEnqueue(() =>
             {
                 string response = Encoding.UTF8.GetString(evnt.envelope.Payload);
-                AppendGameOutput(response, "#FFD3D3D3"); // Light gray for responses
+                WriteOutput(response, "#FFD3D3D3"); // Light gray for responses
             });
         }
 
-        private void OnScrollChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        private void OnScrollChanged(object? sender, ScrollViewerViewChangedEventArgs e)
         {
             var threshold = 50; // px tolerance
 
@@ -617,7 +663,7 @@ namespace Client.GUI
             DispatcherQueue.TryEnqueue(() =>
             {
                 string systemMessage = Encoding.UTF8.GetString(evnt.envelope.Payload);
-                AppendGameOutput($"[System] {systemMessage}", "#FFDAA520"); // Gold/orange for system
+                WriteOutput($"[System] {systemMessage}", "#FFDAA520"); // Gold/orange for system
             });
         }
 
@@ -628,8 +674,7 @@ namespace Client.GUI
             if (caps.EnableTextShimmer)
             {
                 StartTextShimmer();
-            }
-                
+            }                
             else
             {
                 StopTextShimmer();
@@ -644,11 +689,18 @@ namespace Client.GUI
                 StopBackgroundAnimation();
             }
 
+            if (caps.EnableMouseEffects)
+            {
+                InitializeMouseEffects();
+            }
+            else
+            {
+                TearDownMouseEffects();
+            }
+
 
             RebuildOutputText();
         }
-
-
 
         private void RememberServerToggle_Toggled(object sender, RoutedEventArgs e)
         {
@@ -709,14 +761,17 @@ namespace Client.GUI
 
         }
 
-
-
         #endregion
 
         #region Mouse Effects
 
         private void SpawnMouseBurst(Windows.Foundation.Point position)
         {
+            if (_compositor == null || _effectsContainer == null)
+            {
+                return;
+            }
+
             float size = Random.Shared.Next(30, 60);
 
             var origin = new Vector3(
@@ -779,6 +834,11 @@ namespace Client.GUI
 
         private void SpawnSpark(Vector3 origin)
         {
+            if (_compositor == null || _effectsContainer == null)
+            {
+                return;
+            }
+
             var spark = _compositor.CreateSpriteVisual();
 
             float size = Random.Shared.Next(4, 10);
@@ -902,7 +962,6 @@ namespace Client.GUI
             }
         }
 
-
         private Windows.UI.Color GetColorForIndex(int index)
         {
             double hue = (index * 20 + _colorOffset) % 360;
@@ -911,156 +970,145 @@ namespace Client.GUI
         }
 
         #endregion
-        
 
-        private void AppendGameOutput(Paragraph paragraph, string? colorHex = null)
+        #region Game Output
+
+        /// <summary>
+        /// Accepts raw text, records it in the output history, and forwards it for display.
+        /// This is the sole entry point for writing text to the game output window.
+        /// </summary>
+        /// <param name="text">The text to display.</param>
+        /// <param name="colorHex">
+        /// An ARGB hex colour string of the form <c>#AARRGGBB</c> used to colour the text.
+        /// Defaults to opaque white (<c>#FFFFFFFF</c>) if not provided.
+        /// </param>
+        private void WriteOutput(string text, string? colorHex = null)
         {
+            colorHex ??= "#FFFFFFFF"; // Default to white if no color is provided
 
-        }
-
-        private void AppendGameOutput(string text, string? colorHex = null)
-        {
-            if(colorHex == null)
-            {
-                colorHex = "#FFFFFFFF"; // Default to white if no color is provided
-            }
+            OutputLine newLine = new(text, colorHex);
 
             // Store the data first
-            _outputLines.Add(new OutputLine
-            {
-                Text = text,
-                ColorHex = colorHex
-            });
+            _outputLines.Add(newLine);
 
             // Render based on current theme
-            AppendRenderedLine(text, colorHex);
-
-
-            //if (ThemeManager.GetCapabilities().EnableTextShimmer)
-            //{
-            //    var shimmerText = CreateShimmerText(text);
-
-            //    DispatcherQueue.TryEnqueue(() =>
-            //    {
-            //        GameOutputTextBlock.Blocks.Add(shimmerText);
-
-            //        // Auto-scroll to bottom
-            //        GameOutputScroller.ChangeView(null, GameOutputScroller.ScrollableHeight, null);
-            //    });
-            //}
-            //else
-            //{
-            //    var paragraph = new Paragraph();
-            //    var run = new Run { Text = text };
-
-            //    if (colorHex == null)
-            //    {
-            //        run.Foreground = new SolidColorBrush(Microsoft.UI.Colors.White);
-            //    }
-            //    else
-            //    {
-            //        // Parse color
-            //        try
-            //        {
-            //            byte a = byte.Parse(colorHex.Substring(1, 2), System.Globalization.NumberStyles.HexNumber);
-            //            byte r = byte.Parse(colorHex.Substring(3, 2), System.Globalization.NumberStyles.HexNumber);
-            //            byte g = byte.Parse(colorHex.Substring(5, 2), System.Globalization.NumberStyles.HexNumber);
-            //            byte b = byte.Parse(colorHex.Substring(7, 2), System.Globalization.NumberStyles.HexNumber);
-            //            run.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(a, r, g, b));
-            //        }
-            //        catch
-            //        {
-            //            run.Foreground = new SolidColorBrush(Microsoft.UI.Colors.White);
-            //        }
-            //    }
-
-            //    paragraph.Inlines.Add(run);
-
-            //DispatcherQueue.TryEnqueue(() =>
-            //{
-            //    GameOutputTextBlock.Blocks.Add(paragraph);
-
-            //    // Auto-scroll to bottom
-            //    GameOutputScroller.ChangeView(null, GameOutputScroller.ScrollableHeight, null);
-            //});
-            //}
+            DisplayOutputLine(newLine);
         }
 
-        private void AppendRenderedLine(string text, string colorHex)
+        /// <summary>
+        /// Creates a single-run paragraph with the specified text and foreground colour.
+        /// </summary>
+        /// <param name="text">The line text.</param>
+        /// <param name="color">The foreground colour.</param>
+        /// <returns>A <see cref="Paragraph"/> ready to add to the output block.</returns>
+        private static Paragraph CreatePlainParagraph(string text, Windows.UI.Color color)
         {
-
-            if (ThemeManager.GetCapabilities().EnableTextShimmer)
-            {
-                Windows.UI.Color baseColor;
-
-                try
-                {
-                    byte a = byte.Parse(colorHex.Substring(1, 2), System.Globalization.NumberStyles.HexNumber);
-                    byte r = byte.Parse(colorHex.Substring(3, 2), System.Globalization.NumberStyles.HexNumber);
-                    byte g = byte.Parse(colorHex.Substring(5, 2), System.Globalization.NumberStyles.HexNumber);
-                    byte b = byte.Parse(colorHex.Substring(7, 2), System.Globalization.NumberStyles.HexNumber);
-
-                    baseColor = Windows.UI.Color.FromArgb(a, r, g, b);
-                }
-                catch
-                {
-                    baseColor = Microsoft.UI.Colors.White;
-                }
-
-                GameOutputTextBlock.Blocks.Add(CreateShimmerText(text, baseColor));
-                return;
-            }
-
-
             var paragraph = new Paragraph();
-            var run = new Run { Text = text };
-
-            try
+            paragraph.Inlines.Add(new Run
             {
-                byte a = byte.Parse(colorHex.Substring(1, 2), System.Globalization.NumberStyles.HexNumber);
-                byte r = byte.Parse(colorHex.Substring(3, 2), System.Globalization.NumberStyles.HexNumber);
-                byte g = byte.Parse(colorHex.Substring(5, 2), System.Globalization.NumberStyles.HexNumber);
-                byte b = byte.Parse(colorHex.Substring(7, 2), System.Globalization.NumberStyles.HexNumber);
-
-                run.Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(a, r, g, b));
-            }
-            catch
-            {
-                run.Foreground = new SolidColorBrush(Microsoft.UI.Colors.White);
-            }
-
-            paragraph.Inlines.Add(run);
-
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                GameOutputTextBlock.Blocks.Add(paragraph);
-
-                if (_isUserNearBottom)
-                {
-                    GameOutputScroller.ChangeView(
-                        null,
-                        GameOutputScroller.ScrollableHeight,
-                        null);
-                }
+                Text = text,
+                Foreground = new SolidColorBrush(color)
             });
-            
+            return paragraph;
         }
 
-        private void ApplyHoverScale(UIElement element, float scale)
+        /// <summary>
+        /// Stores a line in the output history and forwards it for display.
+        /// Dispatches to the UI thread if called from a background thread.
+        /// </summary>
+        /// <param name="line">The output line to display.</param>
+        private void DisplayOutputLine(OutputLine line)
+        {
+            if (DispatcherQueue.HasThreadAccess)
+            {
+                RenderLine(line);
+            }
+            else
+            {
+                DispatcherQueue.TryEnqueue(() => RenderLine(line));
+            }
+        }
+
+        /// <summary>
+        /// Builds and appends a paragraph for the given line directly into the output block.
+        /// Must be called on the UI thread.
+        /// </summary>
+        /// <param name="line">The output line to render.</param>
+        private void RenderLine(OutputLine line)
+        {
+            Windows.UI.Color color = ParseColorHex(line.ColorHex);
+
+            Paragraph paragraph = ThemeManager.GetCapabilities().EnableTextShimmer
+                ? CreateShimmerText(line.Text, color)
+                : CreatePlainParagraph(line.Text, color);
+
+            GameOutputTextBlock.Blocks.Add(paragraph);
+
+            if (_isUserNearBottom)
+            {
+                GameOutputScroller.ChangeView(null, GameOutputScroller.ScrollableHeight, null);
+            }
+        }
+
+        /// <summary>
+        /// Clears the output block and re-renders all stored lines using the current theme.
+        /// </summary>
+        private void RebuildOutputText()
+        {
+            GameOutputTextBlock.Blocks.Clear();
+
+            foreach (OutputLine line in _outputLines)
+            {
+                DisplayOutputLine(line);
+            }
+        }
+
+        #endregion
+
+
+        /// <summary>
+        /// Parses an ARGB hex colour string of the form <c>#AARRGGBB</c> into a
+        /// <see cref="Windows.UI.Color"/>. Returns opaque white on any parse failure.
+        /// </summary>
+        /// <param name="colorHex">The hex colour string to parse.</param>
+        /// <returns>The parsed colour, or <see cref="Microsoft.UI.Colors.White"/> if parsing fails.</returns>
+        private static Windows.UI.Color ParseColorHex(string colorHex)
+        {
+            if (colorHex.Length == 9 && colorHex[0] == '#'
+                && uint.TryParse(colorHex.AsSpan(1), System.Globalization.NumberStyles.HexNumber, null, out uint value))
+            {
+                byte a = (byte)(value >> 24);
+                byte r = (byte)(value >> 16);
+                byte g = (byte)(value >> 8);
+                byte b = (byte)(value);
+                return Windows.UI.Color.FromArgb(a, r, g, b);
+            }
+
+            return Microsoft.UI.Colors.White;
+        }
+
+        private static void ApplyHoverScale(UIElement element, float scale)
         {
             element.Scale = new System.Numerics.Vector3(scale, scale, 1f);
         }
 
         private void ClearAllEffects()
         {
-            foreach (var visual in _effectsContainer.Children)
+            if (_effectsContainer == null)
             {
-                _effectsContainer.Children.Remove(visual);
-                visual.Dispose();
+                return;
+            }
+
+            Visual[] children = [.. _effectsContainer.Children];
+            _effectsContainer.Children.RemoveAll();
+
+            foreach (Visual child in children)
+            {
+                child.Dispose();
             }
         }
 
-        private Windows.UI.Color ColorFromHSV(double hue, double saturation, double value)
+        private static Windows.UI.Color ColorFromHSV(double hue, double saturation, double value)
         {
             double c = value * saturation;
             double x = c * (1 - Math.Abs((hue / 60) % 2 - 1));
@@ -1083,7 +1131,7 @@ namespace Client.GUI
             );
         }
 
-        private (double h, double s, double v) ColorToHSV(Windows.UI.Color color)
+        private static (double h, double s, double v) ColorToHSV(Windows.UI.Color color)
         {
             double r = color.R / 255.0;
             double g = color.G / 255.0;
@@ -1132,36 +1180,7 @@ namespace Client.GUI
             CommandInputBox.Text = _commandHistory[_historyIndex];
         }
 
-        //private void ConnectButton_Click(object sender, RoutedEventArgs e)
-        //{
-        //    // Validate input
-        //    string address = ServerAddressBox.Text;
-        //    if (!int.TryParse(ServerPortBox.Text, out int port))
-        //    {
-        //        _eventBus.Publish(
-        //            EventMessageType.Gui,
-        //            new ClientGuiEvents.Errors.GuiError("Invalid port number.", null));
-        //        AppendGameOutput("Invalid port number.", "#FFFF6B6B");
-        //        return;
-        //    }
 
-        //    // Publish connect command - NetworkSupervisor will handle it
-        //    AppendGameOutput($"Connecting to {address}:{port}...", "#FFDAA520");
-
-        //    _eventBus.Publish(
-        //        EventMessageType.Network,
-        //        new ClientNetworkEvents.Commands.ConnectToServer(address, port));
-        //}        
-
-        private void RebuildOutputText()
-        {
-            GameOutputTextBlock.Blocks.Clear();
-
-            foreach (var line in _outputLines)
-            {
-                AppendRenderedLine(line.Text, line.ColorHex);
-            }
-        }
 
         private async Task SendCommandAsync()
         {
@@ -1173,7 +1192,7 @@ namespace Client.GUI
 
             if (!_isConnected)
             {
-                AppendGameOutput("Not connected to server. Please connect first.", "#FFFF6B6B");
+                WriteOutput("Not connected to server. Please connect first.", "#FFFF6B6B");
                 return;
             }
 
@@ -1182,7 +1201,7 @@ namespace Client.GUI
             _historyIndex = _commandHistory.Count;
 
             // Echo command
-            AppendGameOutput($"> {command}", "#FF6495ED");
+            WriteOutput($"> {command}", "#FF6495ED");
 
             try
             {
@@ -1211,31 +1230,27 @@ namespace Client.GUI
 
         private void UpdateConnectionStatus(bool connected)
         {
-            //DispatcherQueue.TryEnqueue(() =>
-            //{
-            //    if (connected)
-            //    {
-            //        // Update title bar status
-            //        ConnectionStatusIndicator.Fill = new SolidColorBrush(Microsoft.UI.Colors.LightGreen);
-            //        ConnectionStatusText.Text = $"Connected: {ServerAddressBox.Text}:{ServerPortBox.Text}";
-            //        ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.LightGreen);
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (connected)
+                {
+                    ConnectionStatusIcon.Foreground = new SolidColorBrush(Microsoft.UI.Colors.LightGreen);
+                    ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.LightGreen);
+                    ConnectionStatusText.Text = $"Connected: {ServerAddressBox.Text}:{ServerPortBox.Text}";
 
-            //        // Update button visibility
-            //        ConnectButton.Visibility = Visibility.Collapsed;
-            //        DisconnectButton.Visibility = Visibility.Visible;
-            //    }
-            //    else
-            //    {
-            //        // Update title bar status
-            //        ConnectionStatusIndicator.Fill = new SolidColorBrush(Microsoft.UI.Colors.Red);
-            //        ConnectionStatusText.Text = "Disconnected";
-            //        ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Red);
+                    FlyoutConnectButton.Visibility = Visibility.Collapsed;
+                    FlyoutDisconnectButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    ConnectionStatusIcon.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Red);
+                    ConnectionStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Red);
+                    ConnectionStatusText.Text = "Disconnected";
 
-            //        // Update button visibility
-            //        ConnectButton.Visibility = Visibility.Visible;
-            //        DisconnectButton.Visibility = Visibility.Collapsed;
-            //    }
-            //});
+                    FlyoutConnectButton.Visibility = Visibility.Visible;
+                    FlyoutDisconnectButton.Visibility = Visibility.Collapsed;
+                }
+            });
         }
 
     }

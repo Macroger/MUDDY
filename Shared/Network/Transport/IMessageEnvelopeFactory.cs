@@ -1,12 +1,11 @@
 ﻿using Shared.Identity;
-using Shared.Network.Transport;
 
 namespace Shared.Network.Transport
 {
     /// <summary>
-    /// Factory for creating PacketEnvelopes from deserialized packets.
+    /// Factory for creating MessageEnvelopes from deserialized packets.
     /// </summary>
-    public interface IPacketEnvelopeFactory
+    public interface IMessageEnvelopeFactory
     {
         /// <summary>
         /// Creates a PacketEnvelope from a deserialized packet.

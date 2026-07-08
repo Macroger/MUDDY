@@ -6,7 +6,7 @@ namespace Shared.Network.Transport
     /// <summary>
     /// Concrete implementation of IEnvelopeFactory that converts MuddyPackets to PacketEnvelopes.
     /// </summary>
-    public sealed class PacketEnvelopeFactory : IPacketEnvelopeFactory
+    public sealed class PacketEnvelopeFactory : IMessageEnvelopeFactory
     {
         /// <summary>
         /// Creates a PacketEnvelope from a deserialized MuddyPacket.

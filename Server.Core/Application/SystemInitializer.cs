@@ -43,7 +43,7 @@ namespace Server.Core.Application
         private IWorldQueryService _worldQueryService = null!;
         private IPlayerQueryService _playerQueryService = null!;
 
-        private FileLogger _fileLogger = null!;
+        private readonly FileLogger _fileLogger = null!;
         private ISubscriptionToken _stateChangeToken = null!;
 
         public SystemInitializer()

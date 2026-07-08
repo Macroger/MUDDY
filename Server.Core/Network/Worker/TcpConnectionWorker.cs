@@ -260,7 +260,7 @@ namespace Server.Core.Network.Worker
                                 connectionId: ConnId
                             );
 
-                            // Pass the received message to subscribers via the MessageReceived event
+                            // Pass the received message to the supervisor - to be distributed to others via the MessageReceived event
                             OnMessageReceived(msg);
                         }
                     }

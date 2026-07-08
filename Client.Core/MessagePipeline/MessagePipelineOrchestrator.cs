@@ -97,7 +97,6 @@ namespace Client.Core.MessagePipeline
                 return;
             }
 
-
             if (!_msgQueue.IsAddingCompleted)
             {
                 try

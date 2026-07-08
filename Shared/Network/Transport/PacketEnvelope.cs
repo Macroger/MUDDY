@@ -1,5 +1,12 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
+﻿/**
+ * @file PacketEnvelope.cs
+ * @namespace Shared.Network.Transport
+ * @brief Encapsulates a network message payload with transport metadata.
+ * @details Represents an in-memory envelope used by client/server pipeline stages.
+ *          Includes optional message, connection, and session identities, message
+ *          type/flags, payload bytes, and creation timestamp.
+ */
+
 using Shared.Identity;
 using Shared.Network.Types;
 
