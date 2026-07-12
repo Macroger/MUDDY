@@ -11,12 +11,6 @@ namespace Server.Core.CommandPipeline.ContextBuilder
         /// <summary>The original parsed command.</summary>
         public ParsedCommand Command { get; init; }
 
-        /// <summary>Current state of the player executing the command.</summary>
-        public PlayerState? PlayerState { get; init; }
-
-        /// <summary>Current state of the game world.</summary>
-        public WorldState? WorldState { get; init; }
-
         /// <summary>Indicates if context building succeeded.</summary>
         public bool Success { get; init; }
 
@@ -25,14 +19,10 @@ namespace Server.Core.CommandPipeline.ContextBuilder
 
         public CommandContext(
             ParsedCommand command,
-            PlayerState? playerState,
-            WorldState? worldState,
             bool success,
             string? errorMessage)
         {
             Command = command;
-            PlayerState = playerState;
-            WorldState = worldState;
             Success = success;
             ErrorMessage = errorMessage;
         }

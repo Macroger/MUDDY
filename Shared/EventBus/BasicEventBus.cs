@@ -54,6 +54,7 @@ namespace Shared.EventBus
         }
 
         private bool _disposed = false;
+        private readonly ReaderWriterLockSlim _lock = new();
 
         /// <summary>
         /// A collection holding the subscribers for each event category and type.
@@ -78,14 +79,15 @@ namespace Shared.EventBus
             // Ensure the event bus has not been disposed before attempting to publish an event.
             ObjectDisposedException.ThrowIf(_disposed, this);
 
+            // Validate the newEvent argument
+            if (newEvent == null) throw new ArgumentNullException(nameof(newEvent));
+
+            // Get the type of the event being published
+            var eventType = typeof(T);
+
+            _lock.EnterReadLock();
             try
             {
-                // Validate the newEvent argument
-                if (newEvent == null) throw new ArgumentNullException(nameof(newEvent));
-
-                // Get the type of the event being published
-                var eventType = typeof(T);
-
                 // Check if there are any typed subscribers for this category
                 if (_subscribers.TryGetValue(category, out var typeBucket))
                 {
@@ -122,7 +124,7 @@ namespace Shared.EventBus
                             // Log observer exception but continue processing other observers
                             System.Diagnostics.Debug.WriteLine($"[EventBus] Exception in global observer handler for {eventType.Name}: {observerEx.Message}");
                             System.Diagnostics.Debug.WriteLine($"[EventBus] Stack trace: {observerEx.StackTrace}");
-                        }                        
+                        }
                     }
                 }
             }
@@ -133,6 +135,11 @@ namespace Shared.EventBus
                 System.Diagnostics.Debug.WriteLine($"[EventBus] Stack trace: {ex.StackTrace}");
                 throw; // Re-throw to signal failure
             }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+
         }
 
         /// <summary>
@@ -148,36 +155,43 @@ namespace Shared.EventBus
 
             if (handler == null) throw new ArgumentNullException(nameof(handler), $"Unable to subscribe - action handler is null. Category: {eventCategory} ");
 
-            // Get the type of the event being published.
-            var eventType = typeof(T);
-
-            // Create a new subscriber instance for the provided handler.
-            var subscriber = new EventSubscriber<T>(handler);
-
-            // Ensure the category bucket exists in the subscribers dictionary.
-            if (!_subscribers.ContainsKey(eventCategory))
+            _lock.EnterWriteLock();
+            try
             {
-                _subscribers[eventCategory] = new Dictionary<Type, HashSet<IEventSubscriber>>();
+                // Get the type of the event being published.
+                var eventType = typeof(T);
+
+                // Create a new subscriber instance for the provided handler.
+                var subscriber = new EventSubscriber<T>(handler);
+
+                // Ensure the category bucket exists in the subscribers dictionary.
+                if (!_subscribers.ContainsKey(eventCategory))
+                {
+                    _subscribers[eventCategory] = new Dictionary<Type, HashSet<IEventSubscriber>>();
+                }
+
+                // Get the type bucket for the specified category.
+                var typeBucket = _subscribers[eventCategory];
+
+                // Check the typeBucket, see if the event type exists within - if not, create a HashSet for it.
+                if (!typeBucket.ContainsKey(eventType))
+                {
+                    typeBucket[eventType] = new HashSet<IEventSubscriber>();
+                }
+
+                // Get the set of handlers for this event type within the category.
+                var handlers = typeBucket[eventType];
+
+                // Add the subscriber - the HashSet will ensure no duplicates based on the overridden Equals method in EventSubscriber<T>.
+                handlers.Add(subscriber);
+
+                // Return a token that removes the subscription when disposed
+                return new BasicSubscriptionToken(() => handlers.Remove(subscriber));
             }
-
-            // Get the type bucket for the specified category.
-            var typeBucket = _subscribers[eventCategory];
-
-            // Check the typeBucket, see if the event type exists within - if not, create a HashSet for it.
-            if (!typeBucket.ContainsKey(eventType))
+            finally
             {
-                typeBucket[eventType] = new HashSet<IEventSubscriber>();
+                _lock.ExitWriteLock();
             }
-
-            // Get the set of handlers for this event type within the category.
-            var handlers = typeBucket[eventType];
-
-            // Add the subscriber - the HashSet will ensure no duplicates based on the overridden Equals method in EventSubscriber<T>.
-            handlers.Add(subscriber);
-
-            // Return a token that removes the subscription when disposed
-            return new BasicSubscriptionToken(() => handlers.Remove(subscriber));
-
         }
 
         public ISubscriptionToken SubscribeToCategory(EventMessageType category, Action<object> handler)
@@ -216,33 +230,42 @@ namespace Shared.EventBus
         
         public void Dispose()
         {
-            // Check if the event bus has already been disposed to prevent redundant cleanup operations.
-            if (_disposed) return;
-
-            // Mark the event bus as disposed to prevent further operations and allow for garbage collection.
-            _disposed = true;
-
-            // Clearing the specific event subscribers
-            foreach (var typeBucket in _subscribers.Values)
+            _lock.EnterWriteLock();
+            try
             {
-                // Clearing collection of handlers for each event type within the category
-                foreach (var handlerSet in typeBucket.Values)
-                    handlerSet.Clear();
+                // Check if the event bus has already been disposed to prevent redundant cleanup operations.
+                if (_disposed) return;
 
-                // Clearing the collection of event types for the category
-                typeBucket.Clear();
+                // Mark the event bus as disposed to prevent further operations and allow for garbage collection.
+                _disposed = true;
+
+                // Clearing the specific event subscribers
+                foreach (var typeBucket in _subscribers.Values)
+                {
+                    // Clearing collection of handlers for each event type within the category
+                    foreach (var handlerSet in typeBucket.Values)
+                        handlerSet.Clear();
+
+                    // Clearing the collection of event types for the category
+                    typeBucket.Clear();
+                }
+
+                // Remove the category buckets themselves
+                _subscribers.Clear();
+
+                // Clearing category observers
+                foreach (var observerSet in _categorySubscribers.Values)
+                    observerSet.Clear();
+                _categorySubscribers.Clear();
+
+                // Clearing global observers
+                _globalSubscribers.Clear();
             }
-
-            // Remove the category buckets themselves
-            _subscribers.Clear();
-
-            // Clearing category observers
-            foreach (var observerSet in _categorySubscribers.Values)
-                observerSet.Clear();
-            _categorySubscribers.Clear();
-
-            // Clearing global observers
-            _globalSubscribers.Clear();
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+            
         }
     }
 }

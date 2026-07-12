@@ -24,11 +24,14 @@ namespace Server.Core.Persistence
             _eventBus = eventBus;
             _players = new ConcurrentDictionary<ConnectionId, PlayerState>();
             _subscriptions = new List<ISubscriptionToken>();
+            
             _subscriptions.Add(_eventBus.Subscribe<NetworkEvents.Lifecycle.ClientDisconnected>
                 (EventMessageType.Network,
                 HandleDisconnect));
+            
             _subscriptions.Add(_eventBus.Subscribe<ChatEvents.MutePlayerRequestEvent>
-                (EventMessageType.Player, HandleMutePlayer));
+                (EventMessageType.Player,
+                HandleMutePlayer));
         }
 
         /// <summary>

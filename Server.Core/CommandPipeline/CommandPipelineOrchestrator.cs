@@ -1,6 +1,4 @@
-﻿// Copyright 2026 Matthew Schatz
-// SPDX-License-Identifier: Apache-2.0
-using Server.Core.CommandPipeline.Authentication;
+﻿using Server.Core.CommandPipeline.Authentication;
 using Server.Core.CommandPipeline.CommandHandler;
 using Server.Core.CommandPipeline.ContextBuilder;
 using Server.Core.CommandPipeline.Parser;
@@ -20,7 +18,7 @@ using System.Text;
 
 namespace Server.Core.CommandPipeline
 {
-    public sealed class CommandPipelineOrchestrator : IStartable, IStoppable
+    public sealed class CommandPipelineOrchestrator : IStartable, IStoppable, IDisposable
     {
         private readonly BlockingCollection<PacketEnvelope> _msgEnvelopeQueue = new BlockingCollection<PacketEnvelope>();
 
@@ -41,6 +39,7 @@ namespace Server.Core.CommandPipeline
 
         private Task? _msgProcessingTask;
         private CancellationTokenSource? _cts;
+        private bool _disposed;
 
         public CommandPipelineOrchestrator(
         IEventBus eventBus,
@@ -65,9 +64,9 @@ namespace Server.Core.CommandPipeline
         }
 
         /// <summary>
-        /// Adds the specified transport envelope to the processing queue.
+        /// Adds the specified PacketEnvelope to the processing queue.
         /// </summary>
-        /// <param name="envelope">The transport envelope to be queued for processing. Cannot be null.</param>
+        /// <param name="envelope">The PacketEnvelope to be queued for processing. Cannot be null.</param>
         public void ProcessMessage(PacketEnvelope envelope)
         {
             // Basic validation - check if null
@@ -331,6 +330,17 @@ namespace Server.Core.CommandPipeline
             return response;
         }
 
+        public void Dispose()
+        {
+            if (_disposed) return;
 
+            _ = StopAsync().ConfigureAwait(false); // Ensure graceful shutdown
+
+            _msgEnvelopeQueue?.Dispose();
+            _cts?.Dispose();
+
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
     }
 }

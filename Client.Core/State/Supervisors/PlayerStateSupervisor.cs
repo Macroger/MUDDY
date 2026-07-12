@@ -8,10 +8,11 @@ namespace Client.Core.State.Supervisors
 {
     public class PlayerStateSupervisor: IDisposable
     {
-        private readonly IEventBus _eventBus = null!;
-        private PlayerState? _player = null!;
+        private readonly IEventBus _eventBus = null!;        
         private readonly List<ISubscriptionToken> _subscriptions = new();
         private bool _disposed = false;
+
+        private PlayerState? _player = null!;
 
         public PlayerStateSupervisor(IEventBus eventBus) 
         {

@@ -10,7 +10,7 @@ namespace Client.Core.MessagePipeline.Handlers
 
         public PacketType MessageType { get; init; } = PacketType.PlayerStateEvent;
 
-        PlayerStateEventHandler(IEventBus eventBus)
+        public PlayerStateEventHandler(IEventBus eventBus)
         {
             _eventBus = eventBus;
         }

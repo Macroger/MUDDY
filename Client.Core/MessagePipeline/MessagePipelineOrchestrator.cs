@@ -5,8 +5,7 @@
 ///             Validates and dispatches messages to registered handlers.
 /// @details    Manages background message processing with subscription token
 ///             lifecycle. Implements IDisposable and must be disposed to clean up
-///             subscriptions. Thread-unsafe by design — intended for single-threaded
-///             use on the game loop only.
+///             subscriptions. 
 // =============================================================================
 
 using Client.Core.Infrastructure.Events;
@@ -52,6 +51,7 @@ namespace Client.Core.MessagePipeline
                 new ErrorMessageHandler(_eventBus),
                 new EventMessageHandler(_eventBus),
                 new PingMessageHandler(_eventBus),
+                new PlayerStateEventHandler(_eventBus),
                 new ResponseMessageHandler(_eventBus),
                 new SystemMessageHandler(_eventBus)
             };
