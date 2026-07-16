@@ -20,6 +20,7 @@
 - Naming: fields `_camelCase`; properties/methods/types/constants `PascalCase`; locals/parameters `camelCase`; interfaces `IPascalCase`.
 - All `public` and `internal` members require XML docs (`<summary>`, `<param>`, `<returns>` as applicable).
 - Use Doxygen-compatible file header comments for all generated or edited files with the following format:
+- 
 // =============================================================================
 /// @file       
 /// @namespace  
@@ -54,6 +55,10 @@
 - Required fields: `@file`, `@namespace`, `@brief`.
 - Optional field: `@details` only for non-obvious context.
 - Do not include author metadata.
+
+## Commit Messages
+- Type (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`), imperative mood, first line <50 chars.
+- Blank line, then bullet points for details. Reference issues: `Fixes #123`, `Related to #456`.
 
 ## Baseline
 - Language: C# 14
